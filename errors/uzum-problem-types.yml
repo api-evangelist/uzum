@@ -1,0 +1,137 @@
+generated: '2026-09-02'
+method: derived
+source: openapi/*.yaml 4xx/5xx responses, enriched from the Error Codes sections published in each contract's info.description
+docs: https://developer.uzumbank.uz/en/
+format: vendor-json
+rfc9457: false
+note: >-
+  No Uzum contract uses application/problem+json (RFC 9457). All 114 documented 4xx/5xx
+  responses are application/json carrying a vendor envelope, and two of the nine contracts
+  (Fast Pay, Dynamic QR) deliberately return HTTP 200 for failures with the outcome carried
+  only in an `error_code` body field — an agent that branches on HTTP status alone will read
+  a declined payment as a success on those two APIs.
+envelopes:
+- apis: [Uzum Fast Pay, Uzum Dynamic QR]
+  http_status_on_error: 200
+  fields:
+    error_code: integer, 0 on success
+    error_message: string description, null on success
+  note: HTTP status is always 200; the real outcome is error_code.
+- apis: [Uzum CrossBorder Transfer]
+  http_status_on_error: 4xx/5xx
+  fields:
+    errorCode: numeric, 1xxxx for transfers and 2xxxx for cross-border payments
+    errorMessage: short message
+    errorDetails: validation reason detail
+- apis: [Uzum Checkout]
+  fields:
+    errorCode: numeric class code (1xxx auth, 2xxx request data, 3xxx payment processing)
+- apis: [Uzum BaaS Payment Hub]
+  transport: JSON-RPC 2.0
+  fields:
+    error.code: negative integer (-31602..-31639, -32602)
+    error.message: description
+  file: errors/uzum-paymenthub-error-codes.yml
+status_codes:
+- code: 200
+  count: 65
+  note: Success. On Fast Pay and Dynamic QR, ALSO returned for every failure.
+- code: 202
+  count: 4
+  note: Fiscalization accepted for asynchronous submission to the tax authority.
+- code: 400
+  count: 31
+  title: Validation error
+  remediation: Fix the request payload; CrossBorder returns the reason in errorDetails.
+- code: 401
+  count: 40
+  title: Authentication failed
+  remediation: >-
+    Check the credential for the API in question — Basic (CrossBorder, Merchant, Payment
+    Hub), Bearer (Nasiya), X-Api-Key (Remit Core), X-Terminal-Id + X-API-Key (Checkout), or
+    the time-bound signed Authorization header (Fast Pay, Dynamic QR, which expires 50s
+    after signing).
+- code: 403
+  count: 33
+  title: Method not available to this partner
+  remediation: >-
+    Uzum enables individual operations per contract. CrossBorder error 10006 states this
+    explicitly — credit methods are unavailable if only transfers from Uzbekistan were
+    agreed, and vice versa. Ask the account manager to enable the operation class.
+- code: 404
+  count: 3
+  title: Object not found
+- code: 408
+  count: 1
+  title: Request timeout
+- code: 422
+  count: 15
+  title: Unprocessable entity
+  remediation: Schema-level validation failure (FastAPI-style HTTPValidationError on Fiscalization, RateKeeper and Remit Core).
+- code: 500
+  count: 22
+  title: Internal service error
+  remediation: Retry with the same partner-supplied transaction id; do not generate a new id, or the transfer may double-fire.
+- code: 504
+  count: 2
+  title: Gateway timeout
+  remediation: Status must be resolved with the status method rather than assumed failed.
+error_registries:
+- api: Uzum CrossBorder Transfer
+  scheme: 1xxxx (transfers) / 2xxxx (cross-border payments)
+  documented_in: openapi/uzum-crossborder-openapi.yaml (tags[].description "Error Codes", 12,596 chars)
+  url: https://developer.uzumbank.uz/en/crossborder
+  sample:
+  - code: 10001
+    message: Authorization Error. Access denied.
+    cause: Login/password missing or incorrect.
+  - code: 10002
+    message: Validation Error
+    cause: Data format error, missing required parameters.
+  - code: 10005
+    message: Service Error
+    cause: Unexpected internal error.
+  - code: 10006
+    message: Access denied. This method is not available.
+    cause: Operation class not enabled in the partner contract.
+  - code: 10201
+    message: Sender Check Failed
+    cause: Sender failed blacklist check.
+  - code: 10202
+    message: Receiver Check Failed
+    cause: Recipient failed blacklist check.
+  - code: 10203
+    message: Receiver cards not found
+  - code: 10211
+    message: Transfer already exists
+    cause: The partner-supplied transfer id is not unique.
+  - code: 20201
+    message: Payment already exists
+    cause: The partner-supplied payment id is not unique.
+- api: Uzum Checkout
+  scheme: 1xxx auth / 2xxx request data / 3xxx payment processing
+  documented_in: openapi/uzum-checkout-openapi.yaml (tags[].description "Error Codes")
+  url: https://developer.uzumbank.uz/en/checkout
+  see_also: errors/uzum-decline-codes.yml
+- api: Uzum Fast Pay
+  scheme: HTTP-shaped codes returned in the body (0/400/401/403/404/416/503)
+  documented_in: openapi/uzum-fastpay-openapi.yaml (tags[].description "Error Codes", 5,564 chars)
+  url: https://developer.uzumbank.uz/en/fastpay
+  sample:
+  - code: 0
+    message: Success
+  - code: 401
+    message: Authorization failure
+    cause: 'Header does not match ^\d*:(\d{40}):\d*$, inactive merchant_id/service_id/merchant_service_user_id, or hash mismatch.'
+  - code: 403
+    message: Signature expired
+    cause: More than 50 seconds elapsed between signing the Authorization header and processing.
+  - code: 416
+    message: Card in Safe Mode
+    cause: New users must complete 3 payments in the Uzum Bank app before Safe Mode is lifted.
+  - code: 503
+    message: Service not found or inactive
+- api: Uzum BaaS Payment Hub
+  scheme: JSON-RPC negative integers
+  file: errors/uzum-paymenthub-error-codes.yml
+  url: https://developer.uzumbank.uz/en/paymenthub/error-codes/

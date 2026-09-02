@@ -1,0 +1,27 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements — Uzum RateKeeper
+  version: 1.0.0
+extends: openapi/uzum-ratekeeper-openapi.yaml
+x-generated: '2026-09-02'
+x-method: generated
+x-source: openapi/uzum-ratekeeper-openapi.yaml + https://developer.uzumbank.uz/en/ratekeeper
+actions:
+- target: $.info
+  description: 'Record provenance: where this contract was harvested from and who profiled it.'
+  update:
+    x-apis-io:
+      provider: uzum
+      harvested-from: https://developer.uzumbank.uz/en/redocusaurus/en_ratekeeper.yaml
+      harvested-on: '2026-09-02'
+      docs: https://developer.uzumbank.uz/en/ratekeeper
+      profiled-by: API Evangelist
+- target: $.info
+  description: Add the contact and documentation links Uzum omits from every one of its nine contracts.
+  update:
+    contact:
+      name: Uzum Bank partner integrations
+      url: https://developer.uzumbank.uz/en/ratekeeper
+    x-documentation: https://developer.uzumbank.uz/en/ratekeeper
+x-servers-note: Uzum publishes no base URL and no authentication section for RateKeeper anywhere; nothing
+  added rather than guessed.

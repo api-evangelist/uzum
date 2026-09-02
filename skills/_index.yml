@@ -1,0 +1,49 @@
+generated: '2026-09-02'
+method: generated
+source: openapi/*.yaml (operationIds verified against the saved contracts) + https://developer.uzumbank.uz/en/
+note: >-
+  Uzum publishes no skills, AGENTS.md or agent instructions of its own. These six skills are
+  generated from the nine OpenAPI contracts in openapi/ and the operating rules captured in
+  conventions/, errors/ and sandbox/. Every operationId referenced was grepped out of the saved
+  spec; none is invented.
+skill_count: 6
+skills:
+- name: uzum-accept-card-payment
+  file: uzum-accept-card-payment.md
+  api: Uzum Checkout
+  summary: Register, confirm, capture, refund and reverse a card payment; read the 3xxx decline registry.
+  operations: 6
+- name: uzum-send-cross-border-transfer
+  file: uzum-send-cross-border-transfer.md
+  api: Uzum CrossBorder Transfer, Remit Core
+  summary: >-
+    Choose between Uzum's two cross-border products, quote, register, OTP-confirm, cancel while
+    the window is open, and recover from a timeout without double-sending.
+  operations: 17
+- name: uzum-fiscalize-a-receipt
+  file: uzum-fiscalize-a-receipt.md
+  api: Uzum Fiscalization
+  summary: Submit sale and refund receipts to the Uzbek tax authority, including the mandatory product labels.
+  operations: 5
+- name: uzum-offer-installments
+  file: uzum-offer-installments.md
+  api: Uzum Nasiya Partner API
+  summary: Check the buyer's limit, quote the plan, create and SMS-activate an installment contract.
+  operations: 8
+- name: uzum-receive-in-app-payments
+  file: uzum-receive-in-app-payments.md
+  api: Uzum Merchant API
+  summary: Implement the five webhooks Uzum Bank calls so customers can pay for a service from the app.
+  operations: 5
+- name: uzum-take-qr-payment-at-pos
+  file: uzum-take-qr-payment-at-pos.md
+  api: Uzum Fast Pay, Uzum Dynamic QR
+  summary: Take a QR payment at the till, read the error_code rather than the HTTP status, and reverse it.
+  operations: 7
+cross_cutting_rules:
+- No Uzum API has an Idempotency-Key header. Every retry must go through the product's status
+  method using the partner-supplied id, never a fresh registration.
+- Fast Pay and Dynamic QR return HTTP 200 for failures; branch on error_code.
+- Every credential is manager-issued; there is no self-service key on any surface.
+- Fast Pay and Dynamic QR Authorization headers expire 50 seconds after signing.
+- No rate limits are published, so no backoff signal exists; use conservative client-side pacing.

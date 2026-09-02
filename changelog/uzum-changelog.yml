@@ -1,0 +1,39 @@
+generated: '2026-09-02'
+method: searched
+source: https://developer.uzumbank.uz/en/fiscalization (Updates section) + openapi/*.yaml info.version
+changelog_url: null
+dated_changelog_published: false
+scheme: per-product semver in info.version; no dated, linkable changelog page
+current_versions:
+  uzum-checkout: 1.10.3
+  uzum-remit-core: 1.0.4
+  uzum-nasiya-partner: 1.0.2
+  uzum-merchant-api: 1.0.0
+  uzum-dynamic-qr: 1.0.0
+  uzum-fast-pay: v2
+  uzum-crossborder-transfer: 0.1.0
+  uzum-fiscalization: 0.0.2
+  uzum-ratekeeper: 0.0.1
+note: >-
+  Uzum publishes no changelog page. The only dated change record anywhere on the developer
+  portal is an Updates section inside the Fiscalization contract, and the portal instead
+  points partners at a Telegram channel for release and incident news. Recorded here so the
+  one dated breaking change Uzum has published is not lost; there is no recent-window feed to
+  structure beyond it.
+entries:
+- api: Uzum Fiscalization
+  date: '2024-03-01'
+  version: v2
+  breaking: true
+  title: Mandatory digital product labeling
+  highlights: >-
+    A decree of the Republic of Uzbekistan made product labels mandatory when fiscalizing
+    receipts for tobacco, alcoholic beverages, beer products, household appliances and
+    electronics, pharmaceuticals, and water and soft drinks. A new `labels` array was added to
+    the `items` collection on /v2/receipt and /v2/refund_receipt. Requests omitting labels for
+    a listed category are rejected and the receipt is not fiscalized.
+  source: https://developer.uzumbank.uz/en/fiscalization
+release_channel:
+  kind: telegram
+  url: https://t.me/+1PD-jWBuj20wNTcy
+  note: Real-time updates on service improvements, emergency situations and resolution timelines.

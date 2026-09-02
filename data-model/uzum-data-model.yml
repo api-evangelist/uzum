@@ -1,0 +1,189 @@
+generated: '2026-09-02'
+method: derived
+source: openapi/*.yaml components.schemas $ref graph and id-reference fields
+schema_count: 289
+note: >-
+  Nine independent object models, not one. Uzum has no shared platform entity: the same
+  business concept is named and cased differently per product (orderId vs order_id, transferId
+  vs transId, clientId vs buyer_id vs user_id), and no identifier crosses a product boundary.
+  A partner integrating two Uzum products maintains two disjoint data models. There is no
+  documented id-prefix convention on any surface.
+naming_conventions:
+  camelCase: [Uzum Checkout, Uzum CrossBorder Transfer, Uzum Merchant API, Remit Core, Uzum RateKeeper]
+  snake_case: [Uzum Fast Pay, Uzum Dynamic QR, Uzum Fiscalization, Uzum Nasiya Partner API]
+  note: The split runs down the middle of the portfolio and is not documented anywhere.
+domains:
+- domain: acquiring
+  api: Uzum Checkout
+  schema_count: 79
+  entities:
+  - name: Payment
+    key: orderId
+    also: operationId, merchantOrderId, merchantOperationId
+    states: [REGISTERED, COMPLETED, DECLINED, REFUNDED]
+    relationships:
+    - has_many: Receipt
+      via: orderId
+    - has_one: Cart
+      via: cartId
+    - belongs_to: Terminal
+      via: X-Terminal-Id (header, not a body field)
+  - name: Binding
+    key: bindingId
+    description: A saved card token for recurring and one-click payment.
+    relationships:
+    - belongs_to: Client
+      via: clientId
+    - has_many: Payment
+      via: bindingId
+  - name: Cart
+    key: cartId
+    relationships:
+    - has_many: CartItem
+      via: productId
+  - name: Receipt
+    key: techCardId / receipt identifiers on PurchaseReceiptResponse
+    relationships:
+    - belongs_to: Payment
+      via: orderId
+  - name: MerchantCertificate
+    key: fingerprint
+    description: Encryption certificate for back-to-back (raw PAN) payment; fetched via getMerchantCertificate.
+  - name: ThreeDSTransaction
+    key: dsTransId
+- domain: cross-border-transfer
+  api: Uzum CrossBorder Transfer
+  schema_count: 51
+  entities:
+  - name: Transfer
+    key: transferId
+    partner_key: externalTransferId
+    note: externalTransferId is the partner-supplied natural key; a duplicate is rejected with error 10211.
+    relationships:
+    - has_one: Sender
+      via: embedded object
+    - has_one: Receiver
+      via: embedded object
+    - has_many: OTPChallenge
+      via: transferId
+  - name: Payment
+    key: paymentId
+    partner_key: externalPaymentId
+    relationships:
+    - belongs_to: Service
+      via: serviceId
+  - name: Service
+    key: serviceId
+    relationships:
+    - has_many: ServiceField
+      via: embedded ServiceParameters
+  - name: PartnerAccount
+    key: implicit (per credential)
+    relationships:
+    - has_many: AccountOperation
+- domain: remittance
+  api: Remit Core
+  schema_count: 55
+  entities:
+  - name: Transfer
+    key: transferId
+    partner_key: externalTransferId
+    types: [CREDIT, DEBIT]
+    relationships:
+    - has_one: PaymentInstrument
+      via: polymorphic PI.Phone / PI.Card / PI.CardPan / PI.MaskedCard / PI.Account
+    - has_one: ConvertResult
+      via: quoted before register
+    note: >-
+      The PI.* family is the only polymorphic payment-instrument abstraction in the whole Uzum
+      portfolio and the closest thing it has to a reusable domain type.
+  - name: Bank
+    key: bankLabel (short bank code)
+    note: The code-to-name mapping is published as an XLSX download, not as an API resource.
+- domain: bnpl
+  api: Uzum Nasiya Partner API
+  schema_count: 35
+  entities:
+  - name: Buyer
+    key: buyer_id
+    also: user_id
+    relationships:
+    - has_many: Contract
+      via: buyer_id
+  - name: Contract
+    key: contract_id
+    partner_key: ext_order_id
+    relationships:
+    - has_many: CalculatedProduct
+      via: product_id
+    - has_one: CalculatedTariff
+    - has_many: SmsCodeChallenge
+      via: contract_id
+  - name: Product
+    key: product_id
+    also: unit_id
+- domain: fiscalization
+  api: Uzum Fiscalization
+  schema_count: 23
+  entities:
+  - name: Receipt
+    key: operation_id
+    also: receipt_id, ppt_id
+    relationships:
+    - has_many: ReceiptDataItem
+    - has_one: ReceiptDataCommissionInfo
+    - belongs_to: Payment
+      via: payment_id
+    note: >-
+      ReceiptDataItem carries the regulated `labels` array — the field added by the 2026-03-01
+      product-labeling decree.
+  - name: Terminal
+    key: terminal_id
+- domain: qr-pos
+  apis: [Uzum Fast Pay, Uzum Dynamic QR]
+  schema_count: 18
+  entities:
+  - name: Payment
+    key: payment_id
+    also: transaction_id
+    relationships:
+    - belongs_to: Service
+      via: service_id
+    - has_one: Order
+      via: order_id
+  note: >-
+    Fast Pay and Dynamic QR share an almost identical eight/ten-schema model
+    (PaymentRequest/Response, FiscalRequest/Response, ReversalRequest/Response) but are
+    published as two separate contracts with no shared components.
+- domain: in-app-billing
+  api: Uzum Merchant API
+  schema_count: 15
+  entities:
+  - name: Transaction
+    key: transId
+    relationships:
+    - belongs_to: Service
+      via: serviceId
+    states: [OK, CREATED, CONFIRMED, FAILED]
+    note: >-
+      The only Uzum model whose entity lives on the PARTNER's side; Uzum holds transId and the
+      partner holds the transaction.
+- domain: fx
+  api: Uzum RateKeeper
+  schema_count: 13
+  entities:
+  - name: Conversion
+    relationships:
+    - has_one: Currency
+    - has_one: RateType
+    - has_one: IPS
+      note: International payment system (card scheme).
+  - name: PartnerLimits
+    key: partnerId
+cross_product_links:
+  present: false
+  detail: >-
+    No identifier is shared across any two Uzum products. Fiscalization accepts a `payment_id`
+    but does not state which product's payment id that is, and neither Checkout nor Fast Pay
+    documents a field that carries the fiscalization operation_id back. Correlating a payment
+    with its fiscal receipt is left entirely to the partner.

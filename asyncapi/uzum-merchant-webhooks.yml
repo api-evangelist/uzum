@@ -1,0 +1,99 @@
+generated: '2026-09-02'
+method: searched
+source: https://developer.uzumbank.uz/en/merchant + openapi/uzum-merchant-openapi.yaml (OpenAPI 3.1.0 webhooks block)
+asyncapi_published: false
+direction: provider-to-partner (Uzum Bank calls the partner)
+transport: HTTPS POST, application/json
+auth: HTTP Basic (BasicAuth), credentials issued by Uzum Bank
+note: >-
+  Uzum publishes no AsyncAPI document, so no AsyncAPI pointer is emitted. It does publish a
+  real, machine-readable webhook contract: uzum-merchant-openapi.yaml is an OpenAPI 3.1.0
+  document with ZERO paths and five entries under the top-level `webhooks` object plus 15
+  component schemas. Any tool that counts operations from `paths` will read this contract as
+  empty; the surface is entirely in `webhooks`.
+  Uzum Fiscalization additionally supports an outbound callback, recorded below.
+webhook_count: 5
+webhooks:
+- name: check
+  path: /check
+  method: POST
+  operationId: check
+  summary: Verifying Payment Possibility
+  direction: inbound-to-partner
+  purpose: >-
+    Uzum Bank asks whether a payment can be accepted for the customer-entered data (account
+    number, phone number or order number) carried in the `params` object.
+  partner_response:
+    success: 'status: OK'
+    failure: 'status: FAILED with errorCode'
+  responses: [200, 400]
+- name: create
+  path: /create
+  method: POST
+  operationId: create
+  summary: Creating Payment Transaction
+  direction: inbound-to-partner
+  purpose: Carries the transaction identifier `transId`, `amount` and payment parameters so the partner can create the transaction on its side.
+  partner_response:
+    success: 'status: CREATED'
+    failure: 'status: FAILED with errorCode'
+  responses: [200, 400]
+- name: confirm
+  path: /confirm
+  method: POST
+  operationId: confirm
+  summary: Confirming Payment Transaction
+  direction: inbound-to-partner
+  purpose: Sent after Uzum Bank has debited the customer's payment instrument; the partner delivers the service and finalises the transaction.
+  partner_response:
+    success: 'status: CONFIRMED'
+    failure: 'status: FAILED with errorCode'
+  responses: [200, 400]
+- name: reverse
+  path: /reverse
+  method: POST
+  operationId: reverse
+  summary: Cancelling Payment Transaction
+  direction: inbound-to-partner
+  purpose: Reversal of a previously created or confirmed transaction.
+  responses: [200, 400]
+- name: status
+  path: /status
+  method: POST
+  operationId: status
+  summary: Checking Payment Transaction Status
+  direction: inbound-to-partner
+  purpose: Reconciliation — Uzum Bank asks the partner for the current state of a transaction.
+  responses: [200, 400]
+flow:
+  documented: true
+  diagram: https://developer.uzumbank.uz/img/merchant-api/en-merchant-payment-flow.svg
+  steps:
+  - Customer selects the partner's service in the Uzum Bank app and enters payment data.
+  - Uzum Bank calls /check; partner returns OK or FAILED.
+  - Uzum Bank calls /create with transId and amount; partner returns CREATED or FAILED.
+  - Uzum Bank debits the customer and calls /confirm; partner delivers the service and returns CONFIRMED.
+  - Uzum Bank may call /reverse to unwind, or /status to reconcile, at any point.
+other_event_surfaces:
+- api: Uzum Fiscalization
+  kind: callback
+  documented: true
+  detail: >-
+    "A function for sending the results of fiscalization of receipts and QR codes to the
+    partner if there is no response from the tax authority in real-time. To enable callbacks,
+    you need to contact the Uzum manager and provide a link that will be used to process the
+    results."
+  schema_published: false
+  source: https://developer.uzumbank.uz/en/fiscalization
+  note: The callback payload shape is not published; only the mechanism is documented.
+- api: Uzum Checkout
+  kind: browser postMessage
+  documented: true
+  detail: >-
+    The hosted payment iframe/webview posts a JSON object {status, action, errorCode,
+    payment_id?} to the parent component. status is SUCCESS, CANCEL or ERROR; action is
+    always `close`. This is a client-side event, not a server webhook.
+  source: https://developer.uzumbank.uz/en/checkout
+absent:
+- No streaming, SSE, WebSocket or message-queue surface on any Uzum product.
+- No event catalog, no event versioning, no replay or delivery-retry policy is published.

@@ -1,0 +1,42 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements — Uzum Fiscalization
+  version: 1.0.0
+extends: openapi/uzum-fiscalization-openapi.yaml
+x-generated: '2026-09-02'
+x-method: generated
+x-source: openapi/uzum-fiscalization-openapi.yaml + https://developer.uzumbank.uz/en/fiscalization
+actions:
+- target: $.info
+  description: 'Record provenance: where this contract was harvested from and who profiled it.'
+  update:
+    x-apis-io:
+      provider: uzum
+      harvested-from: https://developer.uzumbank.uz/en/redocusaurus/en_fiscalization.yaml
+      harvested-on: '2026-09-02'
+      docs: https://developer.uzumbank.uz/en/fiscalization
+      profiled-by: API Evangelist
+- target: $.info
+  description: Add the contact and documentation links Uzum omits from every one of its nine contracts.
+  update:
+    contact:
+      name: Uzum Bank partner integrations
+      url: https://developer.uzumbank.uz/en/fiscalization
+    x-documentation: https://developer.uzumbank.uz/en/fiscalization
+- target: $
+  description: Add the servers[] block the contract omits. The host is quoted from Uzum's own documentation,
+    never inferred from the domain.
+  update:
+    servers:
+    - url: https://ofd-key.inplat-tech.com
+      description: Production host, stated verbatim in the Testing section of the Uzum Fiscalization documentation.
+- target: $.components.securitySchemes
+  description: Declare the credential model that Uzum documents in prose but never expresses as a securityScheme,
+    so a machine reading only the contract can see how to authenticate.
+  update:
+    UzumFiscalApiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key generated and provided by the Uzum development team per partner. Separate keys
+        are issued for the test host (test-ofd.ipt-merch.com) and the production host.

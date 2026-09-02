@@ -1,0 +1,87 @@
+generated: '2026-09-02'
+method: searched
+source: https://developer.uzumbank.uz/en/ + openapi/*.yaml info.version and path prefixes
+versioning:
+  style: path-prefix, per product
+  platform_version: none
+  detail: >-
+    There is no platform version. Each contract carries its own info.version and its own path
+    prefix, and two contracts version themselves inconsistently inside a single document.
+  per_api:
+  - api: Uzum Checkout
+    info_version: 1.10.3
+    path_prefix: /api/v1
+  - api: Uzum CrossBorder Transfer
+    info_version: 0.1.0
+    path_prefix: /cbt/v1
+  - api: Remit Core
+    info_version: 1.0.4
+    path_prefix: /v1 and /info/v1
+  - api: Uzum Nasiya Partner API
+    info_version: 1.0.2
+    path_prefix: /api/v1 and /v3
+    note: The SMS activation methods sit on a bare /v3 prefix while the contract methods sit on /api/v1.
+  - api: Uzum Fiscalization
+    info_version: 0.0.2
+    path_prefix: /v2
+  - api: Uzum Fast Pay
+    info_version: v2
+    path_prefix: /api/apelsin-pay/merchant/v2 and unversioned /api/apelsin-pay/merchant
+    note: Payment and reversal are v2; fiscal and status are unversioned on the same contract.
+  - api: Uzum Dynamic QR
+    info_version: 1.0.0
+    path_prefix: /api/dynamic-qr
+    note: No version segment in the path at all.
+  - api: Uzum Merchant API
+    info_version: 1.0.0
+    path_prefix: partner-implemented webhook paths
+  - api: Uzum RateKeeper
+    info_version: 0.0.1
+    path_prefix: /api/v1
+deprecation:
+  policy_published: false
+  sunset_header: false
+  deprecation_header: false
+  rfc8594: false
+  deprecated_operations: []
+  note: >-
+    No deprecation policy, no Sunset or Deprecation response headers, and no operation in any
+    of the nine contracts carries `deprecated: true`. Breaking changes are announced as prose:
+    the Fiscalization contract records a mandatory March 1 2024 product-labeling change that
+    added a required `labels` array to items on /v2/receipt and /v2/refund_receipt and rejects
+    non-conforming receipts, with no versioned alternative and no transition window. Because
+    no policy exists, NO `Deprecation` pointer is emitted in apis.yml.
+status_page:
+  published: false
+  probes:
+  - url: https://status.uzum.uz
+    status: null
+    note: Host does not resolve.
+  - url: https://status.uzumbank.uz
+    status: null
+    note: Host does not resolve.
+  substitute:
+    channel: Telegram
+    url: https://t.me/+1PD-jWBuj20wNTcy
+    note: >-
+      The Fiscalization contract directs partners to a Telegram channel "for real-time updates
+      on service improvements, emergency situations, and resolution timelines". That is
+      Uzum's operational status channel; it is not a status page, publishes no uptime history
+      and has no machine-readable feed, so NO `StatusPage` pointer is emitted.
+  api_health:
+  - api: Uzum Fiscalization
+    operation: health_health_get
+    path: /health/
+    note: The only health endpoint published across the nine contracts.
+sla:
+  published: false
+  note: No SLA, uptime target or credit scheme is published for any Uzum API program.
+support:
+  channels:
+  - kind: account-manager
+    note: Primary channel for every product; credential issuance and feature enablement both run through it.
+  - kind: telegram
+    url: https://t.me/+1PD-jWBuj20wNTcy
+    note: Fiscalization operational updates and test-confirmation chat.
+  - kind: corporate-contact
+    url: https://uzum.com/en/contacts/

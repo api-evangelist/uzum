@@ -1,0 +1,23 @@
+generated: '2026-09-02'
+method: searched
+source: https://developer.uzumbank.uz/en/, https://merchants.uzumbank.uz/en/, https://uzum.com/en/
+plan_count: 0
+plans: []
+pricing_model: negotiated
+self_service: false
+note: >-
+  Uzum publishes no plans, tiers or public pricing for any of its API programs. Every product
+  is enabled by an Uzum account manager under a commercial agreement, and the contracts say so
+  in their own text — CrossBorder states that "availability of individual API features depends
+  on the cooperation terms and is enabled by agreement with Uzum Bank", Fiscalization and
+  Dynamic QR both open with "Contact your Uzum Bank account manager to enable the service",
+  and Nasiya, Fast Pay and Remit Core all issue credentials only after onboarding. The
+  merchant acquisition site (merchants.uzumbank.uz) is a partner-application form, not a
+  price list. This is an honest zero, not a missing measurement.
+evidence:
+- url: https://developer.uzumbank.uz/en/
+  status: 200
+  note: No pricing or plans section in the portal navigation.
+- url: https://merchants.uzumbank.uz/en/
+  status: 200
+  note: "\"Become a partner of Uzum Bank\" application funnel; no published tariff table."

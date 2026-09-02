@@ -1,0 +1,151 @@
+generated: '2026-09-02'
+method: derived
+source: openapi/*.yaml (spec content) + https://developer.uzumbank.uz/en/ documentation claims
+sector: payments
+regulatory_regime: payments
+note: >-
+  Assertions below are read from the CONTRACTS, not from marketing pages. Each `evidence`
+  names the exact spec file and location. Uzum operates under Uzbek financial regulation
+  (Central Bank of Uzbekistan licensing, State Tax Committee fiscalization); EU-specific
+  regimes such as PSD2/SCA are recorded as not-applicable rather than as failures.
+conformance:
+- id: pci-dss
+  conforms: true
+  evidence:
+    file: openapi/uzum-checkout-openapi.yaml
+    location: info.description "Key features" list, line 23 — "PCI DSS compliance"; and line 558 — "Encrypted card payment is available only after passing PCI DSS certification"
+    detail: >-
+      Uzum Checkout declares PCI DSS compliance in its own contract and gates the
+      back-to-back (raw PAN) payment flow behind the partner's own PCI DSS certification,
+      issuing a merchant encryption certificate via getMerchantCertificate for partners that
+      are not certified.
+    url: https://developer.uzumbank.uz/en/checkout
+- id: 3-d-secure
+  conforms: true
+  evidence:
+    file: openapi/uzum-checkout-openapi.yaml
+    location: components.schemas force3ds (line 1955) + Error Codes 3040 "3DS not supported", 3051 "3DS error", 3057 "3DS error on external MPI" + Testing section 3-DS OTP values
+    detail: >-
+      Checkout exposes a force3ds request flag, models 3DS failure states as distinct decline
+      codes, and supports an external MPI. Test cards ship with a published 3-DS OTP.
+    url: https://developer.uzumbank.uz/en/checkout
+- id: iso-20022
+  conforms: false
+  evidence:
+    detail: >-
+      No ISO 20022 message type, pain/pacs identifier or XML envelope appears in any of the
+      nine contracts. The cross-border products (CrossBorder Transfer, Remit Core) model
+      transfers with bespoke JSON, so a partner that already speaks ISO 20022 needs a
+      bilateral connector.
+- id: emv
+  conforms: false
+  evidence:
+    detail: >-
+      No EMV tag, chip-data or terminal-capability field is present. The POS surfaces (Fast
+      Pay, Dynamic QR) are QR-presented rather than EMV contact/contactless.
+- id: confirmation-of-payee
+  conforms: false
+  evidence:
+    detail: >-
+      Uzum ships a CoP-ADJACENT capability without conforming to the standard: CrossBorder
+      getReceiverCardsByPhone and getReceiverCardsByPAN return receiverName /
+      receiverCardholderName, and Remit Core getBanks resolves which banks hold an active card
+      for a recipient phone number. This is name-verification-before-transfer in a bespoke
+      shape, not the UK Confirmation of Payee protocol.
+    file: openapi/uzum-crossborder-openapi.yaml, openapi/uzum-remitcore-openapi.yaml
+- id: psd2-sca
+  conforms: false
+  applicable: false
+  evidence:
+    detail: >-
+      Uzbekistan is outside the PSD2 regime. Uzum nonetheless implements SCA-equivalent
+      step-up on transfers — OTP issue, resend and verify are first-class operations on
+      CrossBorder (resendOTP, confirmDebit), Remit Core (resendOtp, confirm) and Nasiya
+      (sendContractSmsCode, verifyContractSmsCode) — but no PSD2 or RTS conformance is claimed.
+- id: open-payments
+  conforms: false
+  evidence:
+    detail: Not implemented; no Interledger/Open Payments surface.
+- id: iso-4217
+  conforms: true
+  evidence:
+    file: openapi/uzum-checkout-openapi.yaml, openapi/uzum-crossborder-openapi.yaml, openapi/uzum-remitcore-openapi.yaml
+    location: 43 schema descriptions requiring ISO 4217 alphabetic currency codes (e.g. checkout line 2128, crossborder lines 2604/2617)
+    detail: Currency is typed as an ISO 4217 alphabetic code across the acquiring and transfer contracts.
+- id: iso-3166
+  conforms: true
+  evidence:
+    file: openapi/uzum-crossborder-openapi.yaml, openapi/uzum-remitcore-openapi.yaml
+    location: crossborder line 3398 (citizenship, ISO 3166-1), 3749 (two-letter country); remitcore lines 1269/1279 (ISO 3166-1 alpha-3)
+    detail: >-
+      Country and citizenship fields are typed to ISO 3166-1, though the two cross-border
+      contracts disagree on the variant — CrossBorder uses alpha-2, Remit Core alpha-3.
+- id: json-rpc-2.0
+  conforms: true
+  evidence:
+    location: https://developer.uzumbank.uz/en/paymenthub/json-rpc
+    detail: >-
+      The BaaS Payment Hub is a JSON-RPC 2.0 API with a documented negative-integer error
+      code registry (-31602..-31639, -32602), captured in errors/uzum-paymenthub-error-codes.yml.
+- id: rfc9457
+  conforms: false
+  evidence:
+    detail: >-
+      No contract uses application/problem+json; all 114 documented 4xx/5xx responses are
+      application/json carrying one of four different vendor envelopes. See
+      errors/uzum-problem-types.yml.
+- id: oauth2
+  conforms: false
+  evidence:
+    detail: >-
+      No partner-facing OAuth 2.0 or OIDC surface. The only OIDC deployment observed is an
+      internal Keycloak realm fronting the Uzum Market seller cabinet.
+- id: pagination
+  conforms: false
+  evidence:
+    detail: >-
+      Registry endpoints (payment_list, transfer_list, account/operations, getReceipts) filter
+      by date range only; no cursor, page or limit parameter exists on any operation.
+- id: idempotency
+  conforms: partial
+  evidence:
+    detail: >-
+      Duplicate suppression by partner-supplied natural key (CrossBorder 10211/20201, Payment
+      Hub -31613) but no Idempotency-Key header and no replay-safe retry semantics. See
+      conventions/uzum-conventions.yml.
+domain_standard:
+  market: payments
+  regime_standards_checked: [pci-dss, 3-d-secure, iso-20022, confirmation-of-payee, emv, psd2-sca, open-payments]
+  declared_in_contract: [pci-dss, 3-d-secure]
+  note: >-
+    Two of the seven payments-regime standards are declared inside Uzum's own contract with a
+    locatable citation. The message-level standard that would matter most for its cross-border
+    business — ISO 20022 — is absent, which is the single largest interoperability gap in the
+    portfolio: a remittance partner already on ISO 20022 must build a bespoke connector for
+    both CrossBorder Transfer and Remit Core.
+compliance:
+  published_certifications:
+  - name: PCI DSS
+    scope: Uzum Checkout card acquiring
+    evidence_url: https://developer.uzumbank.uz/en/checkout
+    third_party_report_published: false
+  regulatory_obligations:
+  - name: Uzbekistan State Tax Committee receipt fiscalization
+    detail: >-
+      Uzum operates as/through a Fiscal Data Operator (OFD) submitting receipts to the GNC and
+      NIC. Mandatory digital product labeling since 2026-03-01 for tobacco, alcohol, beer,
+      household appliances and electronics, pharmaceuticals, and water and soft drinks.
+    evidence_url: https://developer.uzumbank.uz/en/fiscalization
+  - name: Sanctions and AML screening
+    detail: >-
+      Blacklist screening of both sender and recipient is a documented, code-bearing step on
+      cross-border transfers (errors 10201 Sender Check Failed, 10202 Receiver Check Failed)
+      and Checkout declines sanctioned cards with code 3010.
+    evidence_url: https://developer.uzumbank.uz/en/crossborder
+  trust_center: false
+  soc2: not-published
+  iso27001: not-published
+  note: >-
+    Uzum publishes no trust center, no SOC 2 or ISO 27001 attestation, and no security.txt.
+    PCI DSS is the only certification named anywhere in its public developer surface, so the
+    Compliance pointer rests on that single first-party claim.

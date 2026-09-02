@@ -1,0 +1,31 @@
+generated: '2026-09-02'
+method: searched
+source: https://developer.uzumbank.uz/en/ (all nine product contracts + the Payment Hub reference) and openapi/*.yaml
+limit_count: 0
+rate_limits: []
+headers: []
+exhaustion_status: null
+note: >-
+  Uzum publishes no rate limits on any of its ten API programs. No contract declares a 429
+  response — the full documented status set across all 65 operations is 200, 202, 400, 401,
+  403, 404, 408, 422, 500 and 504 — and no X-RateLimit-*, RateLimit-* or Retry-After header
+  is named anywhere in the docs. A partner has no published runtime signal for throttling.
+adjacent_limits:
+  note: >-
+    Uzum does publish transactional CEILINGS, which are not rate limits but are the only
+    quantitative limits it discloses. They surface as errors rather than as a documented
+    table, and several are set per partner contract.
+  observed:
+  - api: Uzum Checkout
+    limit: Transaction limit exceeded (error 3012); payment amount exceeds the set limit (error 3013)
+  - api: Uzum BaaS Payment Hub
+    limit: Transfer limit exhausted (error -31619); amount below minimum (-31606) / above maximum (-31607)
+  - api: Uzum RateKeeper
+    limit: >-
+      A dedicated `limits` operation (POST /api/v1/partner/limits) returns the calling
+      partner's conversion limits at runtime — the closest thing Uzum ships to a
+      machine-readable quota surface.
+  - api: Uzum Fast Pay
+    limit: >-
+      Signature freshness, not throughput — the Authorization header is rejected (error 403)
+      if more than 50 seconds elapse between signing and processing.

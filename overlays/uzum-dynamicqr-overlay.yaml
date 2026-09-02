@@ -1,0 +1,43 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements — Uzum Dynamic QR
+  version: 1.0.0
+extends: openapi/uzum-dynamicqr-openapi.yaml
+x-generated: '2026-09-02'
+x-method: generated
+x-source: openapi/uzum-dynamicqr-openapi.yaml + https://developer.uzumbank.uz/en/dynamicqr
+actions:
+- target: $.info
+  description: 'Record provenance: where this contract was harvested from and who profiled it.'
+  update:
+    x-apis-io:
+      provider: uzum
+      harvested-from: https://developer.uzumbank.uz/en/redocusaurus/en_dynamicqr.yaml
+      harvested-on: '2026-09-02'
+      docs: https://developer.uzumbank.uz/en/dynamicqr
+      profiled-by: API Evangelist
+- target: $.info
+  description: Add the contact and documentation links Uzum omits from every one of its nine contracts.
+  update:
+    contact:
+      name: Uzum Bank partner integrations
+      url: https://developer.uzumbank.uz/en/dynamicqr
+    x-documentation: https://developer.uzumbank.uz/en/dynamicqr
+- target: $
+  description: Add the servers[] block the contract omits. The host is quoted from Uzum's own documentation,
+    never inferred from the domain.
+  update:
+    servers:
+    - url: https://mobile.apelsin.uz
+      description: Production host, quoted from the curl example published in the Getting started section
+        of the Uzum Dynamic QR documentation.
+- target: $.components.securitySchemes
+  description: Declare the credential model that Uzum documents in prose but never expresses as a securityScheme,
+    so a machine reading only the contract can see how to authenticate.
+  update:
+    UzumSignedAuthorization:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Composite signed value merchant_id:sha1_hash:timestamp matching ^\d*:(\d{40}):\d*$.
+        Rejected if more than 50 seconds elapse between signing and processing.

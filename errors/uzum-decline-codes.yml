@@ -1,0 +1,113 @@
+generated: '2026-09-02'
+method: searched
+source: https://developer.uzumbank.uz/en/checkout (Error Codes section of openapi/uzum-checkout-openapi.yaml)
+api: Uzum Checkout
+envelope_field: errorCode
+success_value: 0
+note: >-
+  Uzum Checkout is a card acquirer for Visa, Mastercard, Uzcard and Humo. Its 3xxx class is a
+  payment-processing decline registry: the codes below are the reasons an authorization is
+  refused. Uzum does not publish which codes are masked from the cardholder, so that column is
+  recorded as unknown rather than guessed.
+decline_codes:
+- code: 3000
+  meaning: Invalid payment status — the operation cannot be performed in the current status.
+  action: Re-read the payment with getOrderStatus before retrying.
+  masked_to_buyer: unknown
+- code: 3002
+  meaning: Invalid amount, currency, or fee.
+  action: Correct the request; do not retry unchanged.
+  masked_to_buyer: unknown
+- code: 3004
+  meaning: Terminal does not support this payment type (ONE_STEP / TWO_STEP).
+  action: Ask the Uzum account manager to enable the payment type on the terminal.
+  masked_to_buyer: unknown
+- code: 3007
+  meaning: Invalid card details. Incorrect MCC code.
+  action: Do not retry; collect card details again.
+  masked_to_buyer: unknown
+- code: 3008
+  meaning: Insufficient funds on the account.
+  action: Soft decline — the cardholder can retry after funding the card.
+  masked_to_buyer: unknown
+- code: 3009
+  meaning: Declined by antifraud system.
+  action: Hard decline. Do not retry programmatically.
+  masked_to_buyer: unknown
+- code: 3010
+  meaning: Payment with this card is not possible due to sanctions or other restrictions.
+  action: Hard decline. Offer another instrument.
+  masked_to_buyer: unknown
+- code: 3011
+  meaning: Operation declined by the issuing bank.
+  action: Hard decline from the issuer; the reason is not disclosed to the merchant.
+  masked_to_buyer: unknown
+- code: 3012
+  meaning: Transaction limit exceeded.
+  action: Soft decline. Split the amount or wait for the limit window to reset.
+  masked_to_buyer: unknown
+- code: 3013
+  meaning: Payment amount exceeds the set limit.
+  action: Soft decline.
+  masked_to_buyer: unknown
+- code: 3014
+  meaning: MCC not found in the allowed list.
+  action: Configuration issue on the terminal; contact the account manager.
+  masked_to_buyer: unknown
+- code: 3015
+  meaning: Transactions with cards of the specified payment system are prohibited.
+  action: Hard decline. Offer a card from a supported scheme.
+  masked_to_buyer: unknown
+- code: 3016
+  meaning: 'Decryption error: certificate not found or AES token not found.'
+  action: Re-fetch the merchant certificate with getMerchantCertificate and re-encrypt.
+  masked_to_buyer: unknown
+- code: 3019
+  meaning: Incorrect amount for payment cancellation.
+  action: Reverse only the authorized amount.
+  masked_to_buyer: unknown
+- code: 3020
+  meaning: Timeout for payment cancellation.
+  action: The reversal window has closed; use refund instead.
+  masked_to_buyer: unknown
+- code: 3021
+  meaning: Incorrect amount for refund.
+  action: Refund at most the captured amount.
+  masked_to_buyer: unknown
+- code: 3022
+  meaning: Timeout for refund.
+  action: The refund window has closed. Escalate to the Uzum account manager.
+  masked_to_buyer: unknown
+- code: 3024
+  meaning: BIN not found.
+  masked_to_buyer: unknown
+- code: 3025
+  meaning: Encryption is prohibited.
+  masked_to_buyer: unknown
+non_decline_codes:
+- code: 1001
+  meaning: Invalid UzumId token.
+  class: authentication
+- code: 1006
+  meaning: 'Access error: insufficient rights to perform the operation.'
+  class: authentication
+- code: 2000
+  meaning: 'Invalid data format: ValidationError.'
+  class: request-data
+- code: 3001
+  meaning: Terminal with the specified terminalId not found.
+  class: configuration
+- code: 3003
+  meaning: Invalid cart parameters.
+  class: request-data
+- code: 3005
+  meaning: Payment with the specified paymentId not found.
+  class: not-found
+- code: 3006
+  meaning: Binding with the specified bindingId not found.
+  class: not-found
+- code: 3023
+  meaning: Partner not found.
+  class: configuration
+related:
+  fastpay_declines: See errors/uzum-problem-types.yml — Fast Pay code 416 (card in Safe Mode) is a decline expressed in that API's own scheme.

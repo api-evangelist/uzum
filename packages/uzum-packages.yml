@@ -1,0 +1,125 @@
+generated: '2026-09-02'
+method: searched
+source: >-
+  registry.npmjs.org search + package metadata, pypi.org/pypi/<pkg>/json, api.github.com
+  org lookup, and the Uzum Bank developer portal (developer.uzumbank.uz)
+package_count: 0
+official_count: 0
+packages: []
+note: >-
+  Uzum publishes NO first-party client library for any of its ten documented API programs.
+  The developer portal ships OpenAPI contracts, Postman collections and PDF test-case
+  documents, but no SDK in any language, and no GitHub organisation exists to host one.
+  Integration is hand-rolled from the spec.
+searched:
+- registry: npm
+  query: uzum
+  url: https://registry.npmjs.org/-/v1/search?text=uzum
+  status: 200
+  result: >-
+    No first-party Uzum client library. See the misattribution warning below for the
+    @uzum-tech scope.
+- registry: pypi
+  queries:
+  - name: uzum
+    url: https://pypi.org/pypi/uzum/json
+    status: 404
+  - name: uzumbank
+    url: https://pypi.org/pypi/uzumbank/json
+    status: 404
+  - name: uzum-bank
+    url: https://pypi.org/pypi/uzum-bank/json
+    status: 404
+  - name: uzum-checkout
+    url: https://pypi.org/pypi/uzum-checkout/json
+    status: 404
+- registry: github
+  queries:
+  - org: uzum
+    url: https://api.github.com/orgs/uzum
+    status: 404
+  - org: uzum-tech
+    url: https://api.github.com/orgs/uzum-tech
+    status: 404
+  - org: uzumbank
+    url: https://api.github.com/orgs/uzumbank
+    status: 404
+  - org: uzum-market
+    url: https://api.github.com/orgs/uzum-market
+    status: 404
+  result: No GitHub organisation is registered under any Uzum name. No GitHubOrganization pointer is emitted.
+misattribution_warning:
+  scope: '@uzum-tech'
+  registry: npm
+  verdict: NOT Uzum — do not credit these packages to this provider
+  evidence:
+  - package: '@uzum-tech/ui'
+    version: 2.3.5
+    published: '2026-08-27'
+    homepage: https://uzum-ui.kapitalbank.uz
+    author: KapitalLab
+    url: https://www.npmjs.com/package/@uzum-tech/ui
+  - package: '@uzum-tech/icons'
+    version: 1.2.6
+    published: '2026-09-02'
+    homepage: https://uzum-ui.kapitalbank.uz/en-US/os-theme/icons
+    url: https://www.npmjs.com/package/@uzum-tech/icons
+  - package: '@uzum-tech/node-keycloak'
+    version: 1.0.0
+    published: '2026-08-18'
+    repository: git+https://git.kapitalbank.uz/b.mardonov/node-keycloak.git
+    url: https://www.npmjs.com/package/@uzum-tech/node-keycloak
+  - package: '@uzum-tech/cspell'
+    version: 1.0.1
+    published: '2026-04-14'
+    description: Cspell library for Kapital Bank and UZUM Tech projects
+    url: https://www.npmjs.com/package/@uzum-tech/cspell
+  reason: >-
+    The npm scope @uzum-tech resolves to "Uzum UI", a Vue 3 design system published by
+    KapitalLab at uzum-ui.kapitalbank.uz, with source on git.kapitalbank.uz — it belongs to
+    Kapital Bank, a different Uzbek institution, and the packages are internal UI/tooling
+    libraries (icons, i18n, eslint, cspell, a Keycloak helper), not API clients for any
+    Uzum Bank payment contract. Name collision only. No SDKs pointer is emitted.
+third_party:
+- language: javascript
+  registry: npm
+  name: '@exode-team/uzum.api'
+  version: 1.0.187
+  published: '2025-12-09'
+  url: https://www.npmjs.com/package/@exode-team/uzum.api
+  official: false
+  note: Community wrapper described as "Uzum API"; not published or endorsed by Uzum.
+- language: javascript
+  registry: npm
+  name: oneiuz
+  version: 0.1.0
+  published: '2026-05-04'
+  url: https://www.npmjs.com/package/oneiuz
+  official: false
+  note: >-
+    Community "Unified SDK for Uzbekistan payment providers (Payme, Click, ...)"; covers the
+    Uzbek payments market broadly rather than Uzum specifically.
+- language: javascript
+  registry: npm
+  name: plaza-sdk
+  version: 2.18.0
+  published: '2026-06-30'
+  url: https://www.npmjs.com/package/plaza-sdk
+  official: false
+  note: Community multi-marketplace seller library for Uzbek marketplaces.
+distribution_alternatives:
+- kind: postman
+  name: Remit Core CREDIT transfers collection
+  url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
+  status: 200
+  version: null
+  published: null
+  note: >-
+    Served as a static unpinned asset on the docs host, so the collection carries no version
+    or publication date a consumer could pin to. Recorded as null rather than guessed.
+- kind: postman
+  name: CrossBorder Transfer test-case collection
+  url: https://developer.uzumbank.uz/crossborder/ru_cbt_test_cases_partners_postman_collection.json
+  version: null
+  published: null
+  note: Linked from the CrossBorder Testing section; Russian-language test scenarios, unpinned.

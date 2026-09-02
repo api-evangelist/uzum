@@ -1,0 +1,97 @@
+generated: '2026-09-02'
+method: searched
+source: https://developer.uzumbank.uz/en/ (Testing sections of the Checkout, CrossBorder, Fiscalization and Payment Hub docs)
+available: true
+self_service: false
+onboarding: >-
+  There is no self-service sandbox. Every test credential on every Uzum product is requested
+  from an Uzum account manager, and several products require test results to be confirmed in
+  a Telegram chat before production keys are issued.
+environments:
+- api: Uzum Fiscalization
+  environment: test
+  host: https://test-ofd.ipt-merch.com
+  credentials: API Key requested from the Uzum manager
+  available_methods:
+  - /v2/receipt
+  - /v2/refund_receipt
+  - /v2/receipt_url/{operation_id}
+  - /v2/qr_payment
+  promotion: >-
+    Provide the generated receipt links in the Uzum Telegram chat for confirmation, then
+    request a production API Key in the same chat.
+  production_host: https://ofd-key.inplat-tech.com
+  source: https://developer.uzumbank.uz/en/fiscalization
+- api: Remit Core
+  environment: test
+  host: https://remit-core.ipt-merch.com
+  credentials: X-Api-Key for the test environment, requested from the account manager
+  note: >-
+    The test environment is reachable directly from the internet; production requires an
+    IPSec tunnel and an IP allow-list, configured via a Sunnybox IPSec form supplied by Uzum.
+  artifacts:
+  - name: Postman collection (CREDIT transfers)
+    url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
+  - name: Bank label list for transfers
+    url: https://developer.uzumbank.uz/remitcore/en_bank_label_list_for_transfers.xlsx
+  source: https://developer.uzumbank.uz/en/remitcore
+- api: Uzum CrossBorder Transfer
+  environment: test
+  host: crossborder-transfer.ub.ufintech.uz
+  credentials: Login and password for the test environment from the Uzum Bank manager
+  artifacts:
+  - name: Transfer test scenarios (English, PDF)
+    url: https://developer.uzumbank.uz/crossborder/en_cbt_test_cases_partners.pdf
+  - name: Postman collection (test cases)
+    url: https://developer.uzumbank.uz/crossborder/ru_cbt_test_cases_partners_postman_collection.json
+  - name: Cross-border payment test cases — mock testing (PDF)
+    url: https://developer.uzumbank.uz/crossborder/en_cbt_payment_test_cases_mocks.pdf
+  - name: Cross-border payment test cases — real supplier integration (PDF)
+    url: https://developer.uzumbank.uz/crossborder/en_cbt_payment_test_cases_integration.pdf
+  note: Contact the Uzum Bank manager before running the mock test cases.
+  source: https://developer.uzumbank.uz/en/crossborder
+- api: Uzum BaaS Payment Hub
+  environment: test
+  credentials: Login and password provided by the Uzum team
+  documented_scenarios:
+  - https://developer.uzumbank.uz/en/paymenthub/testing/getting-started/
+  - https://developer.uzumbank.uz/en/paymenthub/testing/account-to-card/
+  source: https://developer.uzumbank.uz/en/paymenthub/
+- api: Uzum Checkout
+  environment: test
+  host: not published
+  credentials: Test terminal and API key issued by Uzum before go-live
+  note: >-
+    The Checkout contract publishes test CARDS but no test host and no servers[] block, so a
+    partner cannot construct a request from the spec alone.
+  source: https://developer.uzumbank.uz/en/checkout
+test_data:
+- api: Uzum Checkout
+  kind: test cards
+  values:
+  - scheme: HUMO
+    pan: '9860 0901 0121 9724'
+    expiry: 10/26
+    otp_3ds: '777777'
+  - scheme: UzCard
+    pan: '8600 3129 2957 7175'
+    expiry: 09/26
+    otp_3ds: '777777'
+  source: https://developer.uzumbank.uz/en/checkout
+  note: Published verbatim by Uzum in the Checkout contract's Testing section.
+- api: Uzum Fast Pay
+  kind: behavioural test note
+  values:
+  - condition: Card in Safe Mode (error 416)
+    detail: >-
+      New users must complete 3 payments in the Uzum Bank app before Safe Mode is lifted; for
+      existing users Safe Mode must be disabled. This is a real state a test account will hit.
+  source: https://developer.uzumbank.uz/en/fastpay
+time_simulation:
+  supported: false
+  note: No test clocks or time-travel fixtures are published on any Uzum product.
+fixture_tooling:
+  supported: partial
+  note: >-
+    Postman collections and PDF test-case scripts stand in for fixture tooling; there is no
+    trigger API for forcing a decline, a timeout or a settlement event.

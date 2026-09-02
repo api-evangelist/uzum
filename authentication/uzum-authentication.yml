@@ -1,0 +1,120 @@
+generated: '2026-09-02'
+method: searched
+source: https://developer.uzumbank.uz/en/ (per-product Authentication sections) + openapi/ securitySchemes
+docs: https://developer.uzumbank.uz/en/
+note: >-
+  Derived from the four specs that declare a securitySchemes block, then upgraded from the
+  Authentication section published in each product's own OpenAPI info.description on
+  developer.uzumbank.uz. Five of the nine contracts (Checkout, Fast Pay, Dynamic QR,
+  Fiscalization, RateKeeper) document their credential model in prose but never declare a
+  securityScheme in the spec, so an agent reading only the machine-readable contract cannot
+  see how to authenticate. That gap is recorded below per API.
+summary:
+  types:
+  - apiKey
+  - http
+  api_key_in:
+  - header
+  oauth2: false
+  openid_connect: false
+  mutual_tls: false
+  self_service: false
+  credential_issuance: >-
+    Every Uzum Bank API credential is issued by an Uzum account manager after a commercial
+    agreement. There is no self-service key generation on any surface.
+schemes:
+- name: basicAuth
+  type: http
+  scheme: basic
+  sources:
+  - openapi/uzum-crossborder-openapi.yaml
+  - openapi/uzum-merchant-openapi.yaml
+  apis:
+  - Uzum CrossBorder Transfer
+  - Uzum Merchant API
+  - Uzum BaaS Payment Hub
+  note: >-
+    Login and password issued per partner, base64-encoded into `Authorization: Basic`.
+    Payment Hub additionally requires Content-Type: application/json and Accept-Language
+    (EN/RU/UZ) and states TLS 1.2 for transport.
+  docs: https://developer.uzumbank.uz/en/paymenthub/auth/
+- name: BearerAuth
+  type: http
+  scheme: bearer
+  bearerFormat: JWT
+  sources:
+  - openapi/uzum-nasiya-openapi.yaml
+  apis:
+  - Uzum Nasiya Partner API
+  note: '`Authorization: Bearer <token>` on every request.'
+- name: XApiKeyAuth
+  type: apiKey
+  in: header
+  parameter: X-Api-Key
+  description: Partner API key in UUID format. Issued upon onboarding. Required for all methods
+  sources:
+  - openapi/uzum-remitcore-openapi.yaml
+  apis:
+  - Remit Core
+  note: >-
+    Production access additionally requires an IPSec tunnel and IP allow-listing; the
+    internet-reachable host is the test environment only.
+undeclared_in_spec:
+- api: Uzum Checkout
+  spec: openapi/uzum-checkout-openapi.yaml
+  documented_scheme: apiKey (two headers)
+  headers:
+  - name: X-Terminal-Id
+    description: Transaction-processing terminal identifier assigned to each partner.
+  - name: X-API-Key
+    description: Unique API key assigned to each partner.
+  - name: Content-Language
+    description: 'Payment-form locale. Enum: ru-RU, uz-UZ, en-EN.'
+  source: https://developer.uzumbank.uz/en/checkout
+  gap: securitySchemes absent from the OpenAPI; documented only in info.description.
+- api: Uzum Fast Pay
+  spec: openapi/uzum-fastpay-openapi.yaml
+  documented_scheme: signed header
+  headers:
+  - name: Authorization
+    description: >-
+      Composite signed value matching regex ^\d*:(\d{40}):\d*$ — merchant_id, a 40-character
+      hash, and a millisecond timestamp. Requests are rejected (error 403) when more than 50
+      seconds elapse between signing and processing, so the signature is time-bound.
+  source: https://developer.uzumbank.uz/en/fastpay
+  gap: securitySchemes absent from the OpenAPI.
+- api: Uzum Dynamic QR
+  spec: openapi/uzum-dynamicqr-openapi.yaml
+  documented_scheme: signed header (same construction as Fast Pay)
+  source: https://developer.uzumbank.uz/en/dynamicqr
+  gap: securitySchemes absent from the OpenAPI.
+- api: Uzum Fiscalization
+  spec: openapi/uzum-fiscalization-openapi.yaml
+  documented_scheme: apiKey
+  headers:
+  - name: API Key
+    description: >-
+      Unique identifier generated and provided by the Uzum development team per partner.
+      Separate keys are issued for the test and production hosts.
+  source: https://developer.uzumbank.uz/en/fiscalization
+  gap: securitySchemes absent from the OpenAPI.
+- api: Uzum RateKeeper
+  spec: openapi/uzum-ratekeeper-openapi.yaml
+  documented_scheme: unknown
+  gap: >-
+    The spec declares no securitySchemes and carries no info.description; the portal page
+    publishes no authentication section for this product.
+- api: Uzum Market Seller API
+  documented_scheme: bearer token issued in the seller cabinet
+  source: https://api-seller.uzum.uz/swagger-ui/index.html
+  gap: >-
+    Anonymous requests return 403 "RBAC: access denied" and the Swagger UI 302s to a
+    Keycloak realm (auth.infra.cluster.daymarket.uz, realm `umarket`, client
+    `platform-client-prod`). No public contract or auth reference is served.
+oauth:
+  present: false
+  note: >-
+    No OAuth 2.0 or OpenID Connect surface is exposed to partners on any documented Uzum
+    Bank API. The only OIDC deployment observed is the internal Keycloak realm fronting the
+    Uzum Market seller cabinet, which is not a partner authorization surface. scopes/ is
+    therefore not applicable and no OAuthScopes artifact is emitted.

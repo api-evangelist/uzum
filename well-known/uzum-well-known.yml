@@ -1,0 +1,279 @@
+generated: '2026-09-02'
+method: probed
+source: live GET of the named /.well-known/ path list on every apis.yml and OpenAPI servers[] host
+hit_count: 0
+path_echo_control: failed
+soft_404_control: >-
+  A negative-control path that cannot exist,
+  /.well-known/uzum-negative-control-7f3ab91c.json, was requested on every host. Four hosts
+  answered it with HTTP 200 (developer.uzumbank.uz 15979 bytes of Docusaurus HTML,
+  uzumbank.uz 6303 bytes of Nuxt HTML, merchants.uzumbank.uz 489 bytes of HTML,
+  and every other /.well-known/ path on those hosts returned the byte-identical body).
+  Those 200s are SPA catch-alls, not documents, so every 200 on those hosts is recorded as a
+  miss. No file was saved from any host.
+note: >-
+  Uzum serves no /.well-known/ discovery surface anywhere: no security.txt, no OIDC or OAuth
+  metadata, no api-catalog, no ai-plugin, no AAuth resource. Because every 200 observed was an
+  SPA shell rather than a document, NO WellKnown or SecurityTxt pointer is emitted in
+  apis.yml — this file records a measured absence, not a presence.
+hosts:
+- host: https://developer.uzumbank.uz
+  server: Docusaurus 3.1.1 static site
+  documents:
+  - path: /.well-known/security.txt
+    status: 200
+    file: null
+    note: SPA catch-all HTML, identical to the negative control. Not a document.
+  - path: /.well-known/openid-configuration
+    status: 200
+    file: null
+    note: SPA catch-all HTML. Not a document.
+  - path: /.well-known/oauth-authorization-server
+    status: 200
+    file: null
+    note: SPA catch-all HTML. Not a document.
+  - path: /.well-known/oauth-protected-resource
+    status: 200
+    file: null
+    note: SPA catch-all HTML. Not a document.
+  - path: /.well-known/api-catalog
+    status: 200
+    file: null
+    note: SPA catch-all HTML. Not a document.
+  - path: /.well-known/ai-plugin.json
+    status: 200
+    file: null
+    note: SPA catch-all HTML. Not a document.
+  - path: /.well-known/agent-card.json
+    status: 200
+    file: null
+    note: SPA catch-all HTML. Not an AgentCard.
+  - path: /.well-known/agent.json
+    status: 200
+    file: null
+    note: SPA catch-all HTML. Not an AgentCard.
+  - path: /.well-known/aauth-resource.json
+    status: 200
+    file: null
+    note: SPA catch-all HTML. No issuer/jwks_uri.
+- host: https://uzumbank.uz
+  server: Nuxt SPA
+  documents:
+  - path: /.well-known/security.txt
+    status: 200
+    file: null
+    note: SPA catch-all HTML, identical to the negative control.
+  - path: /.well-known/openid-configuration
+    status: 200
+    file: null
+  - path: /.well-known/oauth-authorization-server
+    status: 200
+    file: null
+  - path: /.well-known/oauth-protected-resource
+    status: 200
+    file: null
+  - path: /.well-known/api-catalog
+    status: 200
+    file: null
+  - path: /.well-known/ai-plugin.json
+    status: 200
+    file: null
+  - path: /.well-known/agent-card.json
+    status: 200
+    file: null
+  - path: /.well-known/agent.json
+    status: 200
+    file: null
+  - path: /.well-known/aauth-resource.json
+    status: 200
+    file: null
+- host: https://uzum.com
+  documents:
+  - path: /.well-known/security.txt
+    status: 502
+    file: null
+    note: Origin returns 502 Bad Gateway for the whole /.well-known/ prefix while the site root serves 200.
+  - path: /.well-known/openid-configuration
+    status: 502
+    file: null
+  - path: /.well-known/oauth-authorization-server
+    status: 502
+    file: null
+  - path: /.well-known/oauth-protected-resource
+    status: 502
+    file: null
+  - path: /.well-known/api-catalog
+    status: 502
+    file: null
+  - path: /.well-known/ai-plugin.json
+    status: 502
+    file: null
+  - path: /.well-known/agent-card.json
+    status: 502
+    file: null
+  - path: /.well-known/agent.json
+    status: 502
+    file: null
+  - path: /.well-known/aauth-resource.json
+    status: 502
+    file: null
+- host: https://merchants-api.uzumnasiya.uz
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+    file: null
+  - path: /.well-known/openid-configuration
+    status: 404
+    file: null
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+    file: null
+  - path: /.well-known/oauth-protected-resource
+    status: 404
+    file: null
+  - path: /.well-known/api-catalog
+    status: 404
+    file: null
+  - path: /.well-known/ai-plugin.json
+    status: 404
+    file: null
+  - path: /.well-known/agent-card.json
+    status: 404
+    file: null
+  - path: /.well-known/agent.json
+    status: 404
+    file: null
+  - path: /.well-known/aauth-resource.json
+    status: 404
+    file: null
+- host: https://remit-core.ipt-merch.com
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+    file: null
+    note: 'Clean JSON 404: {"message":"Not Found"} — no catch-all.'
+  - path: /.well-known/openid-configuration
+    status: 404
+    file: null
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+    file: null
+  - path: /.well-known/oauth-protected-resource
+    status: 404
+    file: null
+  - path: /.well-known/api-catalog
+    status: 404
+    file: null
+  - path: /.well-known/ai-plugin.json
+    status: 404
+    file: null
+  - path: /.well-known/agent-card.json
+    status: 404
+    file: null
+  - path: /.well-known/agent.json
+    status: 404
+    file: null
+  - path: /.well-known/aauth-resource.json
+    status: 404
+    file: null
+- host: https://mobile.apelsin.uz
+  documents:
+  - path: /.well-known/security.txt
+    status: 423
+    file: null
+    note: >-
+      Every path returns 423 Locked with {"errorMessage":"Устройство не зарегистрировано"}
+      (device not registered) — the host requires a registered Uzum Bank app device.
+  - path: /.well-known/openid-configuration
+    status: 423
+    file: null
+  - path: /.well-known/oauth-authorization-server
+    status: 423
+    file: null
+  - path: /.well-known/oauth-protected-resource
+    status: 423
+    file: null
+  - path: /.well-known/api-catalog
+    status: 423
+    file: null
+  - path: /.well-known/ai-plugin.json
+    status: 423
+    file: null
+  - path: /.well-known/agent-card.json
+    status: 423
+    file: null
+  - path: /.well-known/agent.json
+    status: 423
+    file: null
+  - path: /.well-known/aauth-resource.json
+    status: 423
+    file: null
+- host: https://api-seller.uzum.uz
+  documents:
+  - path: /.well-known/security.txt
+    status: 403
+    file: null
+    note: 'Istio/Envoy RBAC denial: "RBAC: access denied" on every path.'
+  - path: /.well-known/openid-configuration
+    status: 403
+    file: null
+  - path: /.well-known/oauth-authorization-server
+    status: 403
+    file: null
+  - path: /.well-known/oauth-protected-resource
+    status: 403
+    file: null
+  - path: /.well-known/api-catalog
+    status: 403
+    file: null
+  - path: /.well-known/ai-plugin.json
+    status: 403
+    file: null
+  - path: /.well-known/agent-card.json
+    status: 403
+    file: null
+  - path: /.well-known/agent.json
+    status: 403
+    file: null
+  - path: /.well-known/aauth-resource.json
+    status: 403
+    file: null
+- host: https://merchants.uzumbank.uz
+  documents:
+  - path: /.well-known/security.txt
+    status: 200
+    file: null
+    note: 489-byte HTML catch-all, identical to the negative control. Not a document.
+  - path: /.well-known/openid-configuration
+    status: 200
+    file: null
+  - path: /.well-known/oauth-authorization-server
+    status: 200
+    file: null
+  - path: /.well-known/oauth-protected-resource
+    status: 200
+    file: null
+  - path: /.well-known/api-catalog
+    status: 200
+    file: null
+  - path: /.well-known/ai-plugin.json
+    status: 200
+    file: null
+  - path: /.well-known/agent-card.json
+    status: 200
+    file: null
+  - path: /.well-known/agent.json
+    status: 200
+    file: null
+  - path: /.well-known/aauth-resource.json
+    status: 200
+    file: null
+- host: https://crossborder.transfer.uz
+  documents:
+  - path: /.well-known/security.txt
+    status: null
+    file: null
+    note: >-
+      No TLS response — the host does not complete an HTTPS handshake from the probe
+      location even though it is the published production base URL for CrossBorder Transfer.
+      Recorded as unreachable, not as a 404.

@@ -1,0 +1,174 @@
+generated: '2026-09-02'
+method: derived
+source: openapi/*.yaml (candidate tool surface derived from the nine published OpenAPI contracts)
+status: candidate
+deployment:
+  mode: none
+  endpoint: ''
+  install: ''
+  package: ''
+  auth: api-key
+  verified: probed
+search:
+  result: none
+  probes:
+  - url: https://mcp.uzumbank.uz/mcp
+    status: null
+    note: Host does not resolve (NXDOMAIN).
+  - url: https://developer.uzumbank.uz/mcp
+    status: 200
+    note: Docusaurus SPA catch-all HTML, not an MCP endpoint.
+  - url: https://developer.uzumbank.uz/en/llms.txt
+    status: 200
+    note: SPA catch-all HTML; no llms.txt and therefore no published tool list.
+note: >-
+  Uzum ships no MCP server, hosted or stdio. The tools below are a CANDIDATE surface derived
+  from operations that already exist in the published OpenAPI contracts; nothing here is
+  reachable by an agent today. Write operations that move money are marked so a future
+  server can gate them behind confirmation.
+tools:
+- name: uzum_checkout_register_payment
+  api: Uzum Checkout
+  rest: register_payment_api_v1_payment_register_post
+  consequence: write-money
+- name: uzum_checkout_get_order_status
+  api: Uzum Checkout
+  rest: get_order_status_api_v1_payment_getOrderStatus_post
+  consequence: read
+- name: uzum_checkout_refund
+  api: Uzum Checkout
+  rest: refund_api_v1_acquiring_refund_post
+  consequence: write-money
+- name: uzum_checkout_reverse
+  api: Uzum Checkout
+  rest: reverse_api_v1_acquiring_reverse_post
+  consequence: write-money
+- name: uzum_checkout_get_bindings
+  api: Uzum Checkout
+  rest: get_bindings_api_v1_acquiring_getBindings_post
+  consequence: read
+- name: uzum_checkout_unbind_card
+  api: Uzum Checkout
+  rest: unbind_card_api_v1_acquiring_unBindCard_post
+  consequence: write
+- name: uzum_crossborder_convert
+  api: Uzum CrossBorder Transfer
+  rest: convert
+  consequence: read
+- name: uzum_crossborder_check_credit
+  api: Uzum CrossBorder Transfer
+  rest: checkCredit
+  consequence: read
+- name: uzum_crossborder_confirm_credit
+  api: Uzum CrossBorder Transfer
+  rest: confirmCredit
+  consequence: write-money
+- name: uzum_crossborder_check_debit
+  api: Uzum CrossBorder Transfer
+  rest: checkDebit
+  consequence: write-money
+- name: uzum_crossborder_confirm_debit
+  api: Uzum CrossBorder Transfer
+  rest: confirmDebit
+  consequence: write-money
+- name: uzum_crossborder_cancel_debit
+  api: Uzum CrossBorder Transfer
+  rest: cancelDebit
+  consequence: write-money
+- name: uzum_crossborder_transfer_status
+  api: Uzum CrossBorder Transfer
+  rest: transferStatus
+  consequence: read
+- name: uzum_crossborder_closing_balance
+  api: Uzum CrossBorder Transfer
+  rest: getClosingBalance
+  consequence: read
+- name: uzum_remitcore_register_transfer
+  api: Remit Core
+  rest: registerTransfer
+  consequence: write-money
+- name: uzum_remitcore_process_transfer
+  api: Remit Core
+  rest: processTransfer
+  consequence: write-money
+- name: uzum_remitcore_get_status
+  api: Remit Core
+  rest: getStatus
+  consequence: read
+- name: uzum_remitcore_cancel
+  api: Remit Core
+  rest: cancel
+  consequence: write-money
+- name: uzum_remitcore_get_balance
+  api: Remit Core
+  rest: getBalance
+  consequence: read
+- name: uzum_remitcore_get_banks
+  api: Remit Core
+  rest: getBanks
+  consequence: read
+- name: uzum_nasiya_check_buyer_status
+  api: Uzum Nasiya Partner API
+  rest: checkBuyerStatus
+  consequence: read
+- name: uzum_nasiya_calculate_order
+  api: Uzum Nasiya Partner API
+  rest: calculateOrder
+  consequence: read
+- name: uzum_nasiya_create_order
+  api: Uzum Nasiya Partner API
+  rest: createOrder
+  consequence: write-money
+- name: uzum_nasiya_confirm_contract
+  api: Uzum Nasiya Partner API
+  rest: confirmContract
+  consequence: write-money
+- name: uzum_nasiya_cancel_contract
+  api: Uzum Nasiya Partner API
+  rest: cancelContract
+  consequence: write-money
+- name: uzum_fiscal_receipt
+  api: Uzum Fiscalization
+  rest: fiscal_receipt_generation_fiscal_receipt_generation_post
+  consequence: write-regulatory
+- name: uzum_fiscal_refund_receipt
+  api: Uzum Fiscalization
+  rest: fiscal_receipt_refund_fiscal_receipt_refund_post
+  consequence: write-regulatory
+- name: uzum_fiscal_get_receipt_url
+  api: Uzum Fiscalization
+  rest: get_receipt_url
+  consequence: read
+- name: uzum_fastpay_payment
+  api: Uzum Fast Pay
+  rest: payment
+  consequence: write-money
+- name: uzum_fastpay_status
+  api: Uzum Fast Pay
+  rest: status
+  consequence: read
+- name: uzum_fastpay_reversal
+  api: Uzum Fast Pay
+  rest: reversal
+  consequence: write-money
+- name: uzum_dynamicqr_create_order
+  api: Uzum Dynamic QR
+  rest: create_order
+  consequence: write-money
+- name: uzum_dynamicqr_check_order
+  api: Uzum Dynamic QR
+  rest: check_order
+  consequence: read
+- name: uzum_dynamicqr_cancel_order
+  api: Uzum Dynamic QR
+  rest: cancel_order
+  consequence: write-money
+- name: uzum_ratekeeper_convert
+  api: Uzum RateKeeper
+  rest: convert_api_v1_partner_convert_post
+  consequence: read
+- name: uzum_ratekeeper_limits
+  api: Uzum RateKeeper
+  rest: limits_api_v1_partner_limits_post
+  consequence: read
+tool_count: 36

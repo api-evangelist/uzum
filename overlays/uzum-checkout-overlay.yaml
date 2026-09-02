@@ -1,0 +1,36 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements — Uzum Checkout
+  version: 1.0.0
+extends: openapi/uzum-checkout-openapi.yaml
+x-generated: '2026-09-02'
+x-method: generated
+x-source: openapi/uzum-checkout-openapi.yaml + https://developer.uzumbank.uz/en/checkout
+actions:
+- target: $.info
+  description: 'Record provenance: where this contract was harvested from and who profiled it.'
+  update:
+    x-apis-io:
+      provider: uzum
+      harvested-from: https://developer.uzumbank.uz/en/redocusaurus/en_checkout.yaml
+      harvested-on: '2026-09-02'
+      docs: https://developer.uzumbank.uz/en/checkout
+      profiled-by: API Evangelist
+- target: $.info
+  description: Add the contact and documentation links Uzum omits from every one of its nine contracts.
+  update:
+    contact:
+      name: Uzum Bank partner integrations
+      url: https://developer.uzumbank.uz/en/checkout
+    x-documentation: https://developer.uzumbank.uz/en/checkout
+- target: $.components.securitySchemes
+  description: Declare the credential model that Uzum documents in prose but never expresses as a securityScheme,
+    so a machine reading only the contract can see how to authenticate.
+  update:
+    UzumCheckoutApiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Unique API key assigned to each partner by Uzum Bank. Must be sent alongside X-Terminal-Id.
+x-servers-note: Uzum publishes no base URL for Checkout in the spec or the docs; not added rather than
+  guessed.

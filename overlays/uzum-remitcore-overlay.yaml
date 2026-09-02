@@ -1,0 +1,27 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements — Remit Core
+  version: 1.0.0
+extends: openapi/uzum-remitcore-openapi.yaml
+x-generated: '2026-09-02'
+x-method: generated
+x-source: openapi/uzum-remitcore-openapi.yaml + https://developer.uzumbank.uz/en/remitcore
+actions:
+- target: $.info
+  description: 'Record provenance: where this contract was harvested from and who profiled it.'
+  update:
+    x-apis-io:
+      provider: uzum
+      harvested-from: https://developer.uzumbank.uz/en/redocusaurus/en_remitcore.yaml
+      harvested-on: '2026-09-02'
+      docs: https://developer.uzumbank.uz/en/remitcore
+      profiled-by: API Evangelist
+- target: $.info
+  description: Add the contact and documentation links Uzum omits from every one of its nine contracts.
+  update:
+    contact:
+      name: Uzum Bank partner integrations
+      url: https://developer.uzumbank.uz/en/remitcore
+    x-documentation: https://developer.uzumbank.uz/en/remitcore
+x-servers-note: servers[] declares the TEST host https://remit-core.ipt-merch.com; production is IPSec-only
+  and Uzum publishes no production host. Left untouched.

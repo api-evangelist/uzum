@@ -1,0 +1,208 @@
+generated: '2026-09-02'
+method: derived
+source: openapi/*.yaml + https://developer.uzumbank.uz/en/ product Authentication/Testing/Error sections
+docs: https://developer.uzumbank.uz/en/
+summary: >-
+  Nine RPC-over-HTTP contracts plus one JSON-RPC 2.0 hub. Every contract is verb-in-the-path
+  POST rather than resource REST; only two GET operations exist across all 65 operations
+  (CrossBorder account balance and operations) plus a health check and a receipt-URL lookup
+  on Fiscalization. There is no shared platform envelope, no shared error scheme, no shared
+  authentication scheme, and no shared versioning discipline across the nine products.
+auth_style:
+  summary: Six different credential models across nine contracts; no single sign-on for partners.
+  see: authentication/uzum-authentication.yml
+idempotency:
+  supported: partial
+  mechanism: partner-supplied natural key
+  header: null
+  scope: per-transaction
+  retention: unstated
+  evidence:
+  - api: Uzum CrossBorder Transfer
+    detail: >-
+      Error 10211 "Transfer already exists — Attempt to check an existing transfer. Provided
+      transfer id is not unique" and 20201 "Payment already exists — The provided payment ID
+      is not unique". A duplicate partner id is REJECTED with an error rather than replayed
+      to the original result, so this is duplicate suppression, not replay-safe idempotency.
+  - api: Uzum BaaS Payment Hub
+    detail: >-
+      Error -31613 "An object with the given ID already exists"; receipts can be looked up by
+      partner external id (receipt-check-by-extId), which gives a partner a way to resolve
+      the outcome of a request whose response was lost.
+  gap: >-
+    No Uzum contract documents an Idempotency-Key header or any retry-safe semantics. On a
+    500 or 504 the correct recovery is to call the product's status method with the original
+    partner id — never to re-register with a fresh id. Because no idempotency mechanism is
+    named anywhere in the docs, NO `Idempotency` pointer is emitted in apis.yml.
+pagination:
+  supported: false
+  note: >-
+    The registry-style operations (CrossBorder payment_list / transfer_list /
+    account/operations, Checkout getReceipts) filter by date range and never expose a cursor,
+    page or limit parameter. A partner with a large window has no documented way to page
+    through it.
+field_expansion:
+  supported: false
+metadata:
+  supported: false
+  note: >-
+    Partners carry their own correlation value in the product's own id field (transferId,
+    paymentId, extId, orderId); there is no free-form metadata bag on any contract.
+request_id_tracing:
+  supported: false
+  note: No X-Request-Id, correlation-id or trace header is documented on any contract.
+versioning:
+  style: path
+  note: >-
+    Version lives in the path and is inconsistent between products: /api/v1 (Checkout,
+    Nasiya, RateKeeper, Dynamic QR), /cbt/v1 (CrossBorder), /v1 and /info/v1 (Remit Core),
+    /v2 (Fiscalization), and /api/apelsin-pay/merchant/v2 alongside an unversioned
+    /api/apelsin-pay/merchant on the SAME contract (Fast Pay). Nasiya mixes /api/v1 and a
+    bare /v3 in one spec. There is no platform-wide version, and info.version values are
+    per-product (Checkout 1.10.3, Remit Core 1.0.4, Nasiya 1.0.2, CrossBorder 0.1.0,
+    Fiscalization 0.0.2, RateKeeper 0.0.1).
+error_envelope:
+  shape: vendor-json, four different shapes
+  rfc9457: false
+  see: errors/uzum-problem-types.yml
+  warning: >-
+    Fast Pay and Dynamic QR return HTTP 200 for every outcome including failures. Any client
+    branching on HTTP status alone will treat a decline as a success.
+rate_limit_signaling:
+  documented: false
+  headers: []
+  see: rate-limits/uzum-rate-limits.yml
+content_negotiation:
+  request: application/json on every contract
+  language:
+    header: Content-Language (Checkout) / Accept-Language (Payment Hub)
+    values: [ru-RU, uz-UZ, en-EN]
+    note: The payment form and error messages are localised per request.
+transport:
+  tls: TLS 1.2 stated for Payment Hub; TLS 1.3 observed on developer.uzumbank.uz and uzum.com.
+  network: >-
+    Remit Core production requires an IPSec tunnel and IP allow-listing; only its test host is
+    reachable from the internet. CrossBorder production (crossborder.transfer.uz) did not
+    complete a TLS handshake from a public probe on 2026-09-02.
+reversibility:
+  grade: verified
+  note: >-
+    Every money-moving surface Uzum publishes has a documented reversal path, and two of them
+    state a bound on when the reversal works. The bounds recorded below are quoted from the
+    provider; no window has been inferred.
+  surfaces:
+  - api: Uzum Checkout
+    write_operation: register_payment_api_v1_payment_register_post
+    reversal:
+    - operation: reverse_api_v1_acquiring_reverse_post
+      kind: reverse
+      applies_to: Two-step payment before capture, and full cancellation of a one-step payment.
+      window: >-
+        Bounded but undated: error 3020 "Timeout for payment cancellation" is returned once
+        the cancellation window has closed. The docs name the failure mode but not the
+        duration.
+      window_stated: partial
+    - operation: refund_api_v1_acquiring_refund_post
+      kind: refund
+      applies_to: Full and partial refund of a completed one-step or captured two-step payment.
+      window: >-
+        Bounded but undated: error 3022 "Timeout for refund". Refund amount is bounded by
+        error 3021 "Incorrect amount for refund".
+      window_stated: partial
+    docs: https://developer.uzumbank.uz/en/checkout
+  - api: Uzum Fast Pay
+    write_operation: payment
+    reversal:
+    - operation: reversal
+      kind: cancel
+      applies_to: Cancels a QR/POS payment by orderId.
+      window: >-
+        The Authorization signature itself expires 50 seconds after signing (error 403), so a
+        reversal must be signed fresh; the docs state no separate reversal deadline.
+      window_stated: partial
+    docs: https://developer.uzumbank.uz/en/fastpay
+  - api: Uzum Dynamic QR
+    write_operation: create_order
+    reversal:
+    - operation: cancel_order
+      kind: cancel
+      applies_to: Cancels an order before payment.
+      window_stated: false
+    - operation: reversal
+      kind: reverse
+      applies_to: Reverses a completed payment.
+      window_stated: false
+    docs: https://developer.uzumbank.uz/en/dynamicqr
+  - api: Uzum CrossBorder Transfer
+    write_operation: checkDebit / confirmDebit
+    reversal:
+    - operation: cancelDebit
+      kind: cancel
+      applies_to: Cancels a transfer from Uzbekistan.
+      window: >-
+        Stated as a state constraint rather than a duration — cancellation is available on a
+        registered transfer that has not been confirmed; once confirmDebit succeeds the
+        transfer is settled.
+      window_stated: true
+    docs: https://developer.uzumbank.uz/en/crossborder
+  - api: Remit Core
+    write_operation: registerTransfer / processTransfer
+    reversal:
+    - operation: cancel
+      kind: cancel
+      applies_to: Cancels a registered transfer.
+      window: >-
+        Stated as a state constraint — a transfer can be cancelled while it is registered and
+        not yet processed; getStatus is the authority on whether the window is still open.
+      window_stated: true
+    docs: https://developer.uzumbank.uz/en/remitcore
+  - api: Uzum Nasiya Partner API
+    write_operation: createOrder
+    reversal:
+    - operation: cancelContract
+      kind: cancel
+      applies_to: Full cancellation of an installment contract.
+      window: >-
+        The endpoint is documented as "Полная отмена договора" (full cancellation of the
+        contract); the docs state no time bound, and partial cancellation is not offered.
+      window_stated: false
+    docs: https://developer.uzumbank.uz/en/nasiya
+  - api: Uzum Fiscalization
+    write_operation: fiscal_receipt_generation_fiscal_receipt_generation_post
+    reversal:
+    - operation: fiscal_receipt_refund_fiscal_receipt_refund_post
+      kind: refund-receipt
+      applies_to: >-
+        Fiscalizes a refund against a prior sale receipt. This reverses the TAX record, not a
+        payment; the underlying money movement is reversed on Checkout or Fast Pay.
+      window_stated: false
+    docs: https://developer.uzumbank.uz/en/fiscalization
+  - api: Uzum BaaS Payment Hub
+    write_operation: receipt creation (card-to-card, card-to-account, account-to-card, account-to-account, online card payment)
+    reversal:
+    - operation: receipt-compare-payment / receipt-registry
+      kind: reconciliation
+      applies_to: >-
+        Reconciliation rather than reversal — the hub documents no cancel or reverse method.
+        A partner that needs to unwind a Payment Hub receipt has no documented API path.
+      window_stated: false
+    docs: https://developer.uzumbank.uz/en/paymenthub/
+  read_only_surfaces:
+  - Uzum RateKeeper (convert, limits) — reversibility na, no write surface.
+dry_run_mode:
+  supported: partial
+  note: >-
+    Not a dry-run flag, but every transactional product splits into a check phase and a
+    confirm phase, which serves the same purpose: Checkout register then complete,
+    CrossBorder check_credit/check_debit then confirm_credit/confirm_debit, Remit Core
+    register then process then confirm, Nasiya calculateOrder then createOrder then
+    confirmContract, Merchant API check then create then confirm. The check call validates
+    and quotes without moving money. CrossBorder additionally publishes mock test cases for
+    cross-border payments.
+cross_links:
+  errors: errors/uzum-problem-types.yml
+  decline_codes: errors/uzum-decline-codes.yml
+  lifecycle: lifecycle/uzum-lifecycle.yml
+  authentication: authentication/uzum-authentication.yml
+  rate_limits: rate-limits/uzum-rate-limits.yml
+  sandbox: sandbox/uzum-sandbox.yml

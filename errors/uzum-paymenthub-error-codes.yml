@@ -1,0 +1,59 @@
+generated: '2026-09-02'
+method: searched
+source: https://developer.uzumbank.uz/en/paymenthub/error-codes/
+api: Uzum BaaS Payment Hub
+transport: JSON-RPC 2.0
+envelope:
+  field: error
+  members:
+    code: negative integer
+    message: human-readable description
+  note: >-
+    The portal documents the code list but does not publish a formal response-envelope
+    schema, and no OpenAPI is published for this surface. Codes are recorded as documented.
+error_count: 22
+errors:
+- code: -31602
+  meaning: The specified identifier was not found in the database.
+- code: -31603
+  meaning: Category not found or is disabled.
+- code: -31604
+  meaning: Automated Banking System (ABS) is unavailable.
+- code: -31605
+  meaning: Merchant not found in the system or their services are temporarily unavailable.
+- code: -31606
+  meaning: Payment amount is below the allowed minimum.
+- code: -31607
+  meaning: Payment amount exceeds the allowed maximum.
+- code: -31608
+  meaning: Card-related error. Details can be found in the message parameter.
+- code: -31609
+  meaning: Operation is forbidden.
+- code: -31610
+  meaning: There was an issue when interacting with the service provider.
+- code: -31611
+  meaning: Sender's account not found.
+- code: -31612
+  meaning: 'Context-dependent: receipt module indicates unpayable checks; cards module indicates confirmed OTP.'
+- code: -31613
+  meaning: An object with the given ID already exists.
+- code: -31614
+  meaning: Issuer bank-related error.
+- code: -31615
+  meaning: 'Context-dependent across three modules: reconciliation incomplete, registry unavailable, or account unavailable.'
+- code: -31616
+  meaning: Failed to complete the operation.
+- code: -31617
+  meaning: OTP confirmation time has expired.
+- code: -31618
+  meaning: Invalid OTP code.
+- code: -31619
+  meaning: Transfer limit exhausted.
+- code: -31620
+  meaning: Card not found.
+- code: -31621
+  meaning: Insufficient funds on the card.
+- code: -31639
+  meaning: PINFL not found.
+- code: -32602
+  meaning: Request parameters do not meet system requirements.

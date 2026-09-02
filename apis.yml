@@ -1,23 +1,326 @@
 aid: uzum
 name: Uzum
-description: 'Uzum is a company surfaced via the API Evangelist harvest backlog (source: secondary-market)
-  and added to the network as a stub for full-pipeline profiling.'
+description: >-
+  Uzum is an Uzbekistan-based digital ecosystem headquartered in Tashkent that bundles
+  e-commerce, fintech and digital banking into a single group: Uzum Market (the country's
+  largest online marketplace), Uzum Tezkor (rapid food and grocery delivery), Uzum Bank
+  (a licensed digital bank), and Uzum Nasiya (consumer BNPL / installment lending). Its
+  developer-facing API surface is published by Uzum Bank at developer.uzumbank.uz, where
+  nine OpenAPI contracts and a JSON-RPC 2.0 Banking-as-a-Service hub cover card acquiring
+  (Uzum Checkout), QR and cash-register payments (Uzum Fast Pay, Dynamic QR), tax receipt
+  fiscalization to the Uzbek State Tax Committee (Uzum Fiscalization), inbound and
+  outbound cross-border money transfer (Uzum CrossBorder Transfer, Remit Core),
+  installment contract origination (Uzum Nasiya Partner API), in-app merchant billing
+  (Merchant API webhooks) and FX rate quoting (RateKeeper). Uzum Market additionally
+  operates a seller-cabinet API at api-seller.uzum.uz for FBO/FBS order, inventory and
+  price synchronization, which is credential-gated. All Uzum Bank API programs are
+  onboarded through an account manager rather than self-service signup.
 url: https://raw.githubusercontent.com/api-evangelist/uzum/refs/heads/main/apis.yml
 x-type: company
 x-source: harvest:secondary-market
-x-tier: stub
-x-tier-reason: harvest
+image: https://developer.uzumbank.uz/en/img/logo.svg
 specificationVersion: '0.20'
 created: '2026-09-02'
 modified: '2026-09-02'
 tags:
 - Company
-apis: []
+- Payments
+- Banking
+- Financial Services
+- E-Commerce
+- Marketplace
+- Money Transfer
+- Remittances
+- BNPL
+- Acquiring
+- QR Payments
+- Fiscalization
+- Banking as a Service
+- Uzbekistan
+- Central Asia
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 - FN: APIs.json
   email: info@apis.io
+apis:
+- aid: uzum-checkout
+  name: Uzum Checkout
+  description: >-
+    Payment gateway for websites and mobile applications. Card payments (Visa, Mastercard,
+    Uzcard, Humo), one-step and two-step authorization, back-to-back payment without the
+    hosted form, card binding and recurring payments, full and partial refunds, reversal,
+    and automatic receipt fiscalization. PCI DSS compliant. Authenticated with X-Terminal-Id
+    and X-API-Key headers issued by Uzum Bank.
+  humanURL: https://developer.uzumbank.uz/en/checkout
+  baseURL: ''
+  tags:
+  - Payments
+  - Acquiring
+  - Cards
+  - Refunds
+  - Fiscalization
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-checkout-openapi.yaml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/checkout
+- aid: uzum-crossborder-transfer
+  name: Uzum CrossBorder Transfer
+  description: >-
+    International money transfer between Uzbekistan and other countries. Transfers to
+    Uzbekistan by phone number or card number, transfers from Uzbekistan by card number,
+    cross-border payments for services inside Uzbekistan, live FX conversion rates,
+    transfer status checks, partner account balance and operation registry. HTTP Basic
+    authentication issued per partner.
+  humanURL: https://developer.uzumbank.uz/en/crossborder
+  baseURL: https://crossborder.transfer.uz
+  tags:
+  - Money Transfer
+  - Remittances
+  - Cross Border
+  - Foreign Exchange
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-crossborder-openapi.yaml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/crossborder
+- aid: uzum-remit-core
+  name: Remit Core
+  description: >-
+    Single integration point for cross-border remittances. Partners register, process,
+    confirm, cancel and status-check CREDIT and DEBIT transfers; Remit Core handles
+    routing, validation and interaction with national payment infrastructure. Also exposes
+    FX conversion, recipient bank lookup by phone number, and partner balance. X-Api-Key
+    header authentication; production connectivity is over IPSec.
+  humanURL: https://developer.uzumbank.uz/en/remitcore
+  baseURL: https://remit-core.ipt-merch.com
+  tags:
+  - Money Transfer
+  - Remittances
+  - Cross Border
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-remitcore-openapi.yaml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/remitcore
+  - type: Postman
+    url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
+- aid: uzum-nasiya-partner
+  name: Uzum Nasiya Partner API
+  description: >-
+    REST API for partner integration with the Uzum Nasiya installment (BNPL) service.
+    Buyer registration through an Uzum Nasiya WebView, buyer status and credit limit
+    checks, basket pre-calculation of installment terms, contract creation, SMS-code
+    activation, and contract confirmation or cancellation. Bearer token authentication.
+  humanURL: https://developer.uzumbank.uz/en/nasiya
+  baseURL: https://merchants-api.uzumnasiya.uz
+  tags:
+  - BNPL
+  - Installments
+  - Lending
+  - Consumer Credit
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-nasiya-openapi.yaml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/nasiya
+- aid: uzum-fiscalization
+  name: Uzum Fiscalization
+  description: >-
+    Fiscalizes sales and refund receipts and submits them to the Uzbekistan State Tax
+    Committee through a Fiscal Data Operator. Generates receipt links, supports non-fiscal
+    receipts for advance and credit payments, and accepts QR-code payment receipt data.
+    Mandatory product-labeling arrays for regulated goods categories. API-key
+    authentication issued per partner.
+  humanURL: https://developer.uzumbank.uz/en/fiscalization
+  baseURL: https://ofd-key.inplat-tech.com
+  tags:
+  - Fiscalization
+  - Tax
+  - Receipts
+  - Compliance
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-fiscalization-openapi.yaml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fiscalization
+- aid: uzum-fast-pay
+  name: Uzum Fast Pay
+  description: >-
+    Instant QR-code payments and payments through cash-register and POS / fiscal register
+    systems, where the seller scans the customer's QR code from the Uzum Bank app. Payment
+    processing, fiscalization, reversal and status check. Signed Authorization header of
+    the form merchant_id:sha1_hash:timestamp.
+  humanURL: https://developer.uzumbank.uz/en/fastpay
+  baseURL: https://mobile.apelsin.uz
+  tags:
+  - Payments
+  - QR Payments
+  - Point of Sale
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-fastpay-openapi.yaml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fastpay
+- aid: uzum-dynamic-qr
+  name: Uzum Dynamic QR
+  description: >-
+    Dynamic QR payment for a QR code printed on a POS receipt or shown on a cash-register
+    screen, scanned by the customer in the Uzum Bank mobile application. Order creation
+    and payment-link generation, order and payment status checks, fiscalization, reversal
+    and cancellation.
+  humanURL: https://developer.uzumbank.uz/en/dynamicqr
+  baseURL: https://mobile.apelsin.uz
+  tags:
+  - Payments
+  - QR Payments
+  - Point of Sale
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-dynamicqr-openapi.yaml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/dynamicqr
+- aid: uzum-merchant-api
+  name: Uzum Merchant API
+  description: >-
+    Webhook protocol that lets partners accept payments from inside the Uzum Bank mobile
+    application. Uzum Bank calls five partner-implemented webhooks — check, create,
+    confirm, reverse and status — carrying payment data; the partner implements the
+    handlers and returns responses per the specification. HTTP Basic authorization.
+  humanURL: https://developer.uzumbank.uz/en/merchant
+  baseURL: ''
+  tags:
+  - Payments
+  - Webhooks
+  - Billing
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-merchant-openapi.yaml
+  - type: Webhooks
+    url: asyncapi/uzum-merchant-webhooks.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/merchant
+- aid: uzum-ratekeeper
+  name: Uzum RateKeeper
+  description: >-
+    Partner-facing foreign-exchange rate service. Converts an amount between currencies at
+    the current Uzum rate and returns the partner's conversion limits. Documented on the
+    Uzum Bank developer portal as rate-keeper-back.
+  humanURL: https://developer.uzumbank.uz/en/ratekeeper
+  baseURL: ''
+  tags:
+  - Foreign Exchange
+  - Rates
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-ratekeeper-openapi.yaml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/ratekeeper
+- aid: uzum-payment-hub-baas
+  name: Uzum BaaS Payment Hub
+  description: >-
+    Banking-as-a-Service JSON-RPC 2.0 API that lets partners embed payments, transfers and
+    account and card operations inside Uzbekistan's national payment system. Covers
+    account balance, history and attached-account listing, card binding and card lookup,
+    merchant and merchant-category directories, and receipt creation for card-to-card,
+    card-to-account, account-to-card, account-to-account and online card payments. HTTP
+    Basic authentication over TLS 1.2. Documented as reference pages; no OpenAPI is
+    published for this surface.
+  humanURL: https://developer.uzumbank.uz/en/paymenthub/
+  baseURL: ''
+  tags:
+  - Banking as a Service
+  - JSON-RPC
+  - Payments
+  - Transfers
+  properties:
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/paymenthub/
+  - type: ErrorCatalog
+    url: errors/uzum-paymenthub-error-codes.yml
+- aid: uzum-market-seller
+  name: Uzum Market Seller API
+  description: >-
+    Seller-cabinet API for Uzum Market used to synchronise marketplace orders, inventory
+    and prices for both Fulfilment by Operator (FBO) and Fulfilment by Seller (FBS)
+    models. Access requires an API token issued inside a seller's own Uzum Market Seller
+    cabinet; the host answers 403 "RBAC: access denied" anonymously and the Swagger UI
+    redirects to a Keycloak login, so no public contract is available.
+  humanURL: https://seller.uzum.uz/
+  baseURL: https://api-seller.uzum.uz
+  tags:
+  - E-Commerce
+  - Marketplace
+  - Orders
+  - Inventory
+  properties:
+  - type: Documentation
+    url: https://seller.uzum.uz/
 common:
 - type: Website
-  url: https://www.hiive.com/securities/uzum-stock
+  url: https://uzum.com/en/
+- type: DeveloperPortal
+  url: https://developer.uzumbank.uz/en/
+- type: Documentation
+  url: https://developer.uzumbank.uz/en/
+- type: APIReference
+  url: https://developer.uzumbank.uz/en/checkout
+- type: GettingStarted
+  url: https://developer.uzumbank.uz/en/paymenthub/testing/getting-started/
+- type: SignUp
+  url: https://merchants.uzumbank.uz/en/
+- type: Blog
+  url: https://uzum.com/en/press-center/news-and-press-releases/
+- type: TermsOfService
+  url: https://uzum.com/en/privacy-and-terms/
+- type: PrivacyPolicy
+  url: https://uzum.com/en/privacy-and-terms/
+- type: Support
+  url: https://uzum.com/en/contacts/
+- type: Postman
+  url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
+- type: Packages
+  url: packages/uzum-packages.yml
+- type: MCPServer
+  url: mcp/uzum-mcp.yml
+- type: LLMsTxt
+  url: llms/uzum-llms.txt
+- type: Overlay
+  url: overlays/uzum-checkout-overlay.yaml
+- type: Conformance
+  url: conformance/uzum-conformance.yml
+- type: Compliance
+  url: conformance/uzum-conformance.yml
+- type: ErrorCatalog
+  url: errors/uzum-problem-types.yml
+- type: DeclineCodes
+  url: errors/uzum-decline-codes.yml
+- type: Lifecycle
+  url: lifecycle/uzum-lifecycle.yml
+- type: Authentication
+  url: authentication/uzum-authentication.yml
+- type: DomainSecurity
+  url: security/uzum-domain-security.yml
+- type: Sandbox
+  url: sandbox/uzum-sandbox.yml
+- type: Conventions
+  url: conventions/uzum-conventions.yml
+- type: ChangeLog
+  url: changelog/uzum-changelog.yml
+- type: DataModel
+  url: data-model/uzum-data-model.yml
+- type: Webhooks
+  url: asyncapi/uzum-merchant-webhooks.yml
+- type: AgentSkill
+  url: skills/_index.yml
+- type: Plans
+  url: plans/uzum-plans-pricing.yml
+- type: RateLimits
+  url: rate-limits/uzum-rate-limits.yml
+
+x-enrichment:
+  date: '2026-09-02'
+  status: enriched
+  artifacts_added: 43
+  pass: local-v1

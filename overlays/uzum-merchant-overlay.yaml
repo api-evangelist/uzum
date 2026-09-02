@@ -1,0 +1,27 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements — Uzum Merchant API
+  version: 1.0.0
+extends: openapi/uzum-merchant-openapi.yaml
+x-generated: '2026-09-02'
+x-method: generated
+x-source: openapi/uzum-merchant-openapi.yaml + https://developer.uzumbank.uz/en/merchant
+actions:
+- target: $.info
+  description: 'Record provenance: where this contract was harvested from and who profiled it.'
+  update:
+    x-apis-io:
+      provider: uzum
+      harvested-from: https://developer.uzumbank.uz/en/redocusaurus/en_merchant.yaml
+      harvested-on: '2026-09-02'
+      docs: https://developer.uzumbank.uz/en/merchant
+      profiled-by: API Evangelist
+- target: $.info
+  description: Add the contact and documentation links Uzum omits from every one of its nine contracts.
+  update:
+    contact:
+      name: Uzum Bank partner integrations
+      url: https://developer.uzumbank.uz/en/merchant
+    x-documentation: https://developer.uzumbank.uz/en/merchant
+x-servers-note: Merchant API is a webhook contract; the base URL is the PARTNER's own host, so no servers[]
+  entry is correct.
