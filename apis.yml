@@ -26,6 +26,22 @@ tags:
 - Company
 - Payments
 - Banking
+- Financial-Services
+- E-Commerce
+- Marketplace
+- Money Transfer
+- Remittances
+- Buy Now Pay Later
+- Acquiring
+- QR Payments
+- Fiscalization
+- Banking as a Service
+- Uzbekistan
+- Central Asia
+tags_raw:
+- Company
+- Payments
+- Banking
 - Financial Services
 - E-Commerce
 - Marketplace
@@ -78,6 +94,11 @@ apis:
   tags:
   - Money Transfer
   - Remittances
+  - Cross-Border
+  - Foreign Exchange
+  tags_raw:
+  - Money Transfer
+  - Remittances
   - Cross Border
   - Foreign Exchange
   properties:
@@ -98,6 +119,10 @@ apis:
   tags:
   - Money Transfer
   - Remittances
+  - Cross-Border
+  tags_raw:
+  - Money Transfer
+  - Remittances
   - Cross Border
   properties:
   - type: OpenAPI
@@ -116,6 +141,11 @@ apis:
   humanURL: https://developer.uzumbank.uz/en/nasiya
   baseURL: https://merchants-api.uzumnasiya.uz
   tags:
+  - Buy Now Pay Later
+  - Installments
+  - Lending
+  - Consumer Credit
+  tags_raw:
   - BNPL
   - Installments
   - Lending
@@ -157,6 +187,10 @@ apis:
   tags:
   - Payments
   - QR Payments
+  - Point-of-Sale
+  tags_raw:
+  - Payments
+  - QR Payments
   - Point of Sale
   properties:
   - type: OpenAPI
@@ -175,6 +209,10 @@ apis:
   tags:
   - Payments
   - QR Payments
+  - Point-of-Sale
+  tags_raw:
+  - Payments
+  - QR Payments
   - Point of Sale
   properties:
   - type: OpenAPI
@@ -191,6 +229,10 @@ apis:
   humanURL: https://developer.uzumbank.uz/en/merchant
   baseURL: ''
   tags:
+  - Payments
+  - Webhook
+  - Billing
+  tags_raw:
   - Payments
   - Webhooks
   - Billing
@@ -250,6 +292,11 @@ apis:
   humanURL: https://seller.uzum.uz/
   baseURL: https://api-seller.uzum.uz
   tags:
+  - E-Commerce
+  - Marketplace
+  - Order
+  - Inventory
+  tags_raw:
   - E-Commerce
   - Marketplace
   - Orders
