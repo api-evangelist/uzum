@@ -57,198 +57,15 @@ maintainers:
 - FN: APIs.json
   email: info@apis.io
 apis:
-- aid: uzum:uzum-checkout
-  name: Uzum Checkout
-  description: Payment gateway for websites and mobile applications. Card payments (Visa, Mastercard,
-    Uzcard, Humo), one-step and two-step authorization, back-to-back payment without the hosted form,
-    card binding and recurring payments, full and partial refunds, reversal, and automatic receipt fiscalization.
-    PCI DSS compliant. Authenticated with X-Terminal-Id and X-API-Key headers issued by Uzum Bank.
-  humanURL: https://developer.uzumbank.uz/en/checkout
-  baseURL: ''
-  tags:
-  - Payments
-  - Acquiring
-  - Cards
-  - Refunds
-  - Fiscalization
-  properties:
-  - type: OpenAPI
-    url: openapi/uzum-checkout-openapi.yaml
-  - type: Documentation
-    url: https://developer.uzumbank.uz/en/checkout
-- aid: uzum:uzum-crossborder-transfer
-  name: Uzum CrossBorder Transfer
-  description: International money transfer between Uzbekistan and other countries. Transfers to Uzbekistan
-    by phone number or card number, transfers from Uzbekistan by card number, cross-border payments for
-    services inside Uzbekistan, live FX conversion rates, transfer status checks, partner account balance
-    and operation registry. HTTP Basic authentication issued per partner.
-  humanURL: https://developer.uzumbank.uz/en/crossborder
-  baseURL: https://crossborder.transfer.uz
-  tags:
-  - Money Transfer
-  - Remittances
-  - Cross-Border
-  - Foreign Exchange
-  tags_raw:
-  - Money Transfer
-  - Remittances
-  - Cross Border
-  - Foreign Exchange
-  properties:
-  - type: OpenAPI
-    url: openapi/uzum-crossborder-openapi.yaml
-  - type: Documentation
-    url: https://developer.uzumbank.uz/en/crossborder
-- aid: uzum:uzum-remit-core
-  name: Remit Core
-  description: Single integration point for cross-border remittances. Partners register, process, confirm,
-    cancel and status-check CREDIT and DEBIT transfers; Remit Core handles routing, validation and interaction
-    with national payment infrastructure. Also exposes FX conversion, recipient bank lookup by phone number,
-    and partner balance. X-Api-Key header authentication; production connectivity is over IPSec.
-  humanURL: https://developer.uzumbank.uz/en/remitcore
-  baseURL: https://remit-core.ipt-merch.com
-  tags:
-  - Money Transfer
-  - Remittances
-  - Cross-Border
-  tags_raw:
-  - Money Transfer
-  - Remittances
-  - Cross Border
-  properties:
-  - type: OpenAPI
-    url: openapi/uzum-remitcore-openapi.yaml
-  - type: Documentation
-    url: https://developer.uzumbank.uz/en/remitcore
-  - type: Postman
-    url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
-- aid: uzum:uzum-nasiya-partner
-  name: Uzum Nasiya Partner API
-  description: REST API for partner integration with the Uzum Nasiya installment (BNPL) service. Buyer
-    registration through an Uzum Nasiya WebView, buyer status and credit limit checks, basket pre-calculation
-    of installment terms, contract creation, SMS-code activation, and contract confirmation or cancellation.
-    Bearer token authentication.
-  humanURL: https://developer.uzumbank.uz/en/nasiya
-  baseURL: https://merchants-api.uzumnasiya.uz
-  tags:
-  - Buy Now Pay Later
-  - Installments
-  - Lending
-  - Consumer Credit
-  tags_raw:
-  - BNPL
-  - Installments
-  - Lending
-  - Consumer Credit
-  properties:
-  - type: OpenAPI
-    url: openapi/uzum-nasiya-openapi.yaml
-  - type: Documentation
-    url: https://developer.uzumbank.uz/en/nasiya
-- aid: uzum:uzum-fiscalization
-  name: Uzum Fiscalization
-  description: Fiscalizes sales and refund receipts and submits them to the Uzbekistan State Tax Committee
-    through a Fiscal Data Operator. Generates receipt links, supports non-fiscal receipts for advance
-    and credit payments, and accepts QR-code payment receipt data. Mandatory product-labeling arrays for
-    regulated goods categories. API-key authentication issued per partner.
-  humanURL: https://developer.uzumbank.uz/en/fiscalization
-  baseURL: https://ofd-key.inplat-tech.com
-  tags:
-  - Fiscalization
-  - Tax
-  - Receipts
-  - Compliance
-  properties:
-  - type: OpenAPI
-    url: openapi/uzum-fiscalization-openapi.yaml
-  - type: Documentation
-    url: https://developer.uzumbank.uz/en/fiscalization
-- aid: uzum:uzum-fast-pay
-  name: Uzum Fast Pay
-  description: Instant QR-code payments and payments through cash-register and POS / fiscal register systems,
-    where the seller scans the customer's QR code from the Uzum Bank app. Payment processing, fiscalization,
-    reversal and status check. Signed Authorization header of the form merchant_id:sha1_hash:timestamp.
-  humanURL: https://developer.uzumbank.uz/en/fastpay
-  baseURL: https://mobile.apelsin.uz
-  tags:
-  - Payments
-  - QR Payments
-  - Point-of-Sale
-  tags_raw:
-  - Payments
-  - QR Payments
-  - Point of Sale
-  properties:
-  - type: OpenAPI
-    url: openapi/uzum-fastpay-openapi.yaml
-  - type: Documentation
-    url: https://developer.uzumbank.uz/en/fastpay
-- aid: uzum:uzum-dynamic-qr
-  name: Uzum Dynamic QR
-  description: Dynamic QR payment for a QR code printed on a POS receipt or shown on a cash-register screen,
-    scanned by the customer in the Uzum Bank mobile application. Order creation and payment-link generation,
-    order and payment status checks, fiscalization, reversal and cancellation.
-  humanURL: https://developer.uzumbank.uz/en/dynamicqr
-  baseURL: https://mobile.apelsin.uz
-  tags:
-  - Payments
-  - QR Payments
-  - Point-of-Sale
-  tags_raw:
-  - Payments
-  - QR Payments
-  - Point of Sale
-  properties:
-  - type: OpenAPI
-    url: openapi/uzum-dynamicqr-openapi.yaml
-  - type: Documentation
-    url: https://developer.uzumbank.uz/en/dynamicqr
-- aid: uzum:uzum-merchant-api
-  name: Uzum Merchant API
-  description: Webhook protocol that lets partners accept payments from inside the Uzum Bank mobile application.
-    Uzum Bank calls five partner-implemented webhooks — check, create, confirm, reverse and status — carrying
-    payment data; the partner implements the handlers and returns responses per the specification. HTTP
-    Basic authorization.
-  humanURL: https://developer.uzumbank.uz/en/merchant
-  baseURL: ''
-  tags:
-  - Payments
-  - Webhook
-  - Billing
-  tags_raw:
-  - Payments
-  - Webhooks
-  - Billing
-  properties:
-  - type: OpenAPI
-    url: openapi/uzum-merchant-openapi.yaml
-  - type: Webhooks
-    url: asyncapi/uzum-merchant-webhooks.yml
-  - type: Documentation
-    url: https://developer.uzumbank.uz/en/merchant
-- aid: uzum:uzum-ratekeeper
-  name: Uzum RateKeeper
-  description: Partner-facing foreign-exchange rate service. Converts an amount between currencies at
-    the current Uzum rate and returns the partner's conversion limits. Documented on the Uzum Bank developer
-    portal as rate-keeper-back.
-  humanURL: https://developer.uzumbank.uz/en/ratekeeper
-  baseURL: ''
-  tags:
-  - Foreign Exchange
-  - Rates
-  properties:
-  - type: OpenAPI
-    url: openapi/uzum-ratekeeper-openapi.yaml
-  - type: Documentation
-    url: https://developer.uzumbank.uz/en/ratekeeper
 - aid: uzum:uzum-payment-hub-baas
   name: Uzum BaaS Payment Hub
-  description: Banking-as-a-Service JSON-RPC 2.0 API that lets partners embed payments, transfers and
-    account and card operations inside Uzbekistan's national payment system. Covers account balance, history
-    and attached-account listing, card binding and card lookup, merchant and merchant-category directories,
-    and receipt creation for card-to-card, card-to-account, account-to-card, account-to-account and online
-    card payments. HTTP Basic authentication over TLS 1.2. Documented as reference pages; no OpenAPI is
-    published for this surface.
+  description: >-
+    Banking-as-a-Service JSON-RPC 2.0 API that lets partners embed payments, transfers and account and
+    card operations inside Uzbekistan's national payment system. Covers account balance, history and attached-account
+    listing, card binding and card lookup, merchant and merchant-category directories, and receipt creation
+    for card-to-card, card-to-account, account-to-card, account-to-account and online card payments. HTTP
+    Basic authentication over TLS 1.2. Documented as reference pages; no OpenAPI is published for this
+    surface.
   humanURL: https://developer.uzumbank.uz/en/paymenthub/
   baseURL: ''
   tags:
@@ -263,11 +80,11 @@ apis:
     url: errors/uzum-paymenthub-error-codes.yml
 - aid: uzum:uzum-market-seller
   name: Uzum Market Seller API
-  description: 'Seller-cabinet API for Uzum Market used to synchronise marketplace orders, inventory and
-    prices for both Fulfilment by Operator (FBO) and Fulfilment by Seller (FBS) models. Access requires
-    an API token issued inside a seller''s own Uzum Market Seller cabinet; the host answers 403 "RBAC:
-    access denied" anonymously and the Swagger UI redirects to a Keycloak login, so no public contract
-    is available.'
+  description: >-
+    Seller-cabinet API for Uzum Market used to synchronise marketplace orders, inventory and prices for
+    both Fulfilment by Operator (FBO) and Fulfilment by Seller (FBS) models. Access requires an API token
+    issued inside a seller's own Uzum Market Seller cabinet; the host answers 403 "RBAC: access denied"
+    anonymously and the Swagger UI redirects to a Keycloak login, so no public contract is available.
   humanURL: https://seller.uzum.uz/
   baseURL: https://api-seller.uzum.uz
   tags:
@@ -283,6 +100,577 @@ apis:
   properties:
   - type: Documentation
     url: https://seller.uzum.uz/
+- aid: uzum:uzum-api-mfo-api
+  name: Uzum API MFO API
+  description: The API MFO API from Uzum — 8 operation(s) for api mfo.
+  humanURL: https://developer.uzumbank.uz/en/checkout
+  baseURL: https://crossborder.transfer.uz
+  tags:
+  - API MFO
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-api-mfo-api-openapi.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/checkout
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/crossborder
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/remitcore
+  - type: Postman
+    url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/nasiya
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fiscalization
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fastpay
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/dynamicqr
+  - type: Webhooks
+    url: asyncapi/uzum-merchant-webhooks.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/merchant
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/ratekeeper
+- aid: uzum:uzum-auxiliary-methods-api
+  name: Uzum Auxiliary Methods API
+  description: The Auxiliary Methods API from Uzum — 4 operation(s) for auxiliary methods.
+  humanURL: https://developer.uzumbank.uz/en/checkout
+  baseURL: https://crossborder.transfer.uz
+  tags:
+  - Auxiliary Methods
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-auxiliary-methods-api-openapi.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/checkout
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/crossborder
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/remitcore
+  - type: Postman
+    url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/nasiya
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fiscalization
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fastpay
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/dynamicqr
+  - type: Webhooks
+    url: asyncapi/uzum-merchant-webhooks.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/merchant
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/ratekeeper
+- aid: uzum:uzum-back-to-back-payment-api
+  name: Uzum Back-to-back Payment API
+  description: The Back-to-back Payment API from Uzum — 1 operation(s) for back-to-back payment.
+  humanURL: https://developer.uzumbank.uz/en/checkout
+  baseURL: https://crossborder.transfer.uz
+  tags:
+  - Back-to-back Payment
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-back-to-back-payment-api-openapi.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/checkout
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/crossborder
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/remitcore
+  - type: Postman
+    url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/nasiya
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fiscalization
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fastpay
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/dynamicqr
+  - type: Webhooks
+    url: asyncapi/uzum-merchant-webhooks.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/merchant
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/ratekeeper
+- aid: uzum:uzum-check-service-status-api
+  name: Uzum Check Service Status API
+  description: >-
+    This method allows you to check the basic functionality and availability of the fiscalization service.
+  humanURL: https://developer.uzumbank.uz/en/checkout
+  baseURL: https://crossborder.transfer.uz
+  tags:
+  - Check Service Status
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-check-service-status-api-openapi.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/checkout
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/crossborder
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/remitcore
+  - type: Postman
+    url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/nasiya
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fiscalization
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fastpay
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/dynamicqr
+  - type: Webhooks
+    url: asyncapi/uzum-merchant-webhooks.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/merchant
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/ratekeeper
+- aid: uzum:uzum-common-methods-api
+  name: Uzum Common methods API
+  description: The Common methods API from Uzum — 5 operation(s) for common methods.
+  humanURL: https://developer.uzumbank.uz/en/checkout
+  baseURL: https://crossborder.transfer.uz
+  tags:
+  - Common methods
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-common-methods-api-openapi.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/checkout
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/crossborder
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/remitcore
+  - type: Postman
+    url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/nasiya
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fiscalization
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fastpay
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/dynamicqr
+  - type: Webhooks
+    url: asyncapi/uzum-merchant-webhooks.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/merchant
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/ratekeeper
+- aid: uzum:uzum-cross-border-payments-api
+  name: Uzum Cross-border payments API
+  description: Methods for cross-border payments for services in Uzbekistan
+  humanURL: https://developer.uzumbank.uz/en/checkout
+  baseURL: https://crossborder.transfer.uz
+  tags:
+  - Cross-border payments
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-cross-border-payments-api-openapi.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/checkout
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/crossborder
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/remitcore
+  - type: Postman
+    url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/nasiya
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fiscalization
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fastpay
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/dynamicqr
+  - type: Webhooks
+    url: asyncapi/uzum-merchant-webhooks.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/merchant
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/ratekeeper
+- aid: uzum:uzum-fiscalization-api
+  name: Uzum Fiscalization API
+  description: >-
+    In this section, the API provides methods for working with fiscal receipts.
+
+
+    `/v2/receipt` method allows you to register a sale operation and generate a fiscal receipt that complies
+    with all legal requirements.
+
+
+    `/v2/refund_receipt` method is designed for registering return transactions for goods or services.
+    Similar to the direct receipt fiscalization method, it ensures the generation of a fiscal receipt
+    for the return that also meets all regulatory requirements and can be provided to the customer.
+
+
+    `/v2/receipt/{operation_id}/receipt_url` method provides the ability to obtain an electronic copy
+    of the fiscal receipt using the unique operation identifier.
+  humanURL: https://developer.uzumbank.uz/en/checkout
+  baseURL: https://crossborder.transfer.uz
+  tags:
+  - Fiscalization
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-fiscalization-api-openapi.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/checkout
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/crossborder
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/remitcore
+  - type: Postman
+    url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/nasiya
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fiscalization
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fastpay
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/dynamicqr
+  - type: Webhooks
+    url: asyncapi/uzum-merchant-webhooks.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/merchant
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/ratekeeper
+- aid: uzum:uzum-from-uzbekistan-api
+  name: Uzum From Uzbekistan API
+  description: Methods for transfers from Uzbekistan
+  humanURL: https://developer.uzumbank.uz/en/checkout
+  baseURL: https://crossborder.transfer.uz
+  tags:
+  - From Uzbekistan
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-from-uzbekistan-api-openapi.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/checkout
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/crossborder
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/remitcore
+  - type: Postman
+    url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/nasiya
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fiscalization
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fastpay
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/dynamicqr
+  - type: Webhooks
+    url: asyncapi/uzum-merchant-webhooks.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/merchant
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/ratekeeper
+- aid: uzum:uzum-information-retrieval-api
+  name: Uzum Information retrieval API
+  description: Auxiliary Information Methods
+  humanURL: https://developer.uzumbank.uz/en/checkout
+  baseURL: https://crossborder.transfer.uz
+  tags:
+  - Information retrieval
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-information-retrieval-api-openapi.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/checkout
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/crossborder
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/remitcore
+  - type: Postman
+    url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/nasiya
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fiscalization
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fastpay
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/dynamicqr
+  - type: Webhooks
+    url: asyncapi/uzum-merchant-webhooks.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/merchant
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/ratekeeper
+- aid: uzum:uzum-managing-credit-cards-bindings-api
+  name: Uzum Managing Credit Cards Bindings API
+  description: >-
+    The Managing Credit Cards Bindings API from Uzum — 3 operation(s) for managing credit cards bindings.
+  humanURL: https://developer.uzumbank.uz/en/checkout
+  baseURL: https://crossborder.transfer.uz
+  tags:
+  - Managing Credit Cards Bindings
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-managing-credit-cards-bindings-api-openapi.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/checkout
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/crossborder
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/remitcore
+  - type: Postman
+    url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/nasiya
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fiscalization
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fastpay
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/dynamicqr
+  - type: Webhooks
+    url: asyncapi/uzum-merchant-webhooks.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/merchant
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/ratekeeper
+- aid: uzum:uzum-methods-api
+  name: Uzum Methods API
+  description: >-
+    QR CRM methods that are used to create an order, check the status of the order and transfer links
+    to the fiscal receipt and cancel payment transactions.
+  humanURL: https://developer.uzumbank.uz/en/checkout
+  baseURL: https://crossborder.transfer.uz
+  tags:
+  - Methods
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-methods-api-openapi.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/checkout
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/crossborder
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/remitcore
+  - type: Postman
+    url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/nasiya
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fiscalization
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fastpay
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/dynamicqr
+  - type: Webhooks
+    url: asyncapi/uzum-merchant-webhooks.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/merchant
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/ratekeeper
+- aid: uzum:uzum-one-step-payment-api
+  name: Uzum One-Step Payment API
+  description: The One-Step Payment API from Uzum — 2 operation(s) for one-step payment.
+  humanURL: https://developer.uzumbank.uz/en/checkout
+  baseURL: https://crossborder.transfer.uz
+  tags:
+  - One-Step Payment
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-one-step-payment-api-openapi.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/checkout
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/crossborder
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/remitcore
+  - type: Postman
+    url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/nasiya
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fiscalization
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fastpay
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/dynamicqr
+  - type: Webhooks
+    url: asyncapi/uzum-merchant-webhooks.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/merchant
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/ratekeeper
+- aid: uzum:uzum-partner-api
+  name: Uzum Partner API
+  description: The partner API from Uzum — 2 operation(s) for partner.
+  humanURL: https://developer.uzumbank.uz/en/checkout
+  baseURL: https://crossborder.transfer.uz
+  tags:
+  - partner
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-partner-api-openapi.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/checkout
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/crossborder
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/remitcore
+  - type: Postman
+    url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/nasiya
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fiscalization
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fastpay
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/dynamicqr
+  - type: Webhooks
+    url: asyncapi/uzum-merchant-webhooks.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/merchant
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/ratekeeper
+- aid: uzum:uzum-submit-qr-code-payment-receipt-to-tax-authorities-api
+  name: Uzum Submit QR Code Payment Receipt to Tax Authorities API
+  description: >-
+    The method is designed to send information about payments made using QR codes directly to the tax
+    authority.
+
+
+    Using this method allows automating the fiscalization process for payments made at offline points
+    of sale, ensuring immediate registration of financial transactions in accordance with the law.
+
+
+    The use of this method must be pre-coordinated with the Uzum development team.
+  humanURL: https://developer.uzumbank.uz/en/checkout
+  baseURL: https://crossborder.transfer.uz
+  tags:
+  - Submit QR Code Payment Receipt to Tax Authorities
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-submit-qr-code-payment-receipt-to-tax-authorities-api-openapi.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/checkout
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/crossborder
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/remitcore
+  - type: Postman
+    url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/nasiya
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fiscalization
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fastpay
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/dynamicqr
+  - type: Webhooks
+    url: asyncapi/uzum-merchant-webhooks.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/merchant
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/ratekeeper
+- aid: uzum:uzum-to-uzbekistan-api
+  name: Uzum To Uzbekistan API
+  description: Methods for transfers to Uzbekistan
+  humanURL: https://developer.uzumbank.uz/en/checkout
+  baseURL: https://crossborder.transfer.uz
+  tags:
+  - To Uzbekistan
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-to-uzbekistan-api-openapi.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/checkout
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/crossborder
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/remitcore
+  - type: Postman
+    url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/nasiya
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fiscalization
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fastpay
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/dynamicqr
+  - type: Webhooks
+    url: asyncapi/uzum-merchant-webhooks.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/merchant
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/ratekeeper
+- aid: uzum:uzum-transfer-process-api
+  name: Uzum Transfer process API
+  description: Methods used in the transfer process
+  humanURL: https://developer.uzumbank.uz/en/checkout
+  baseURL: https://crossborder.transfer.uz
+  tags:
+  - Transfer process
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-transfer-process-api-openapi.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/checkout
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/crossborder
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/remitcore
+  - type: Postman
+    url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/nasiya
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fiscalization
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fastpay
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/dynamicqr
+  - type: Webhooks
+    url: asyncapi/uzum-merchant-webhooks.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/merchant
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/ratekeeper
+- aid: uzum:uzum-two-step-payment-api
+  name: Uzum Two-Step Payment API
+  description: The Two-Step Payment API from Uzum — 2 operation(s) for two-step payment.
+  humanURL: https://developer.uzumbank.uz/en/checkout
+  baseURL: https://crossborder.transfer.uz
+  tags:
+  - Two-Step Payment
+  properties:
+  - type: OpenAPI
+    url: openapi/uzum-two-step-payment-api-openapi.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/checkout
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/crossborder
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/remitcore
+  - type: Postman
+    url: https://developer.uzumbank.uz/remitcore/remitcore_postman_collection_credit.json
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/nasiya
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fiscalization
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/fastpay
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/dynamicqr
+  - type: Webhooks
+    url: asyncapi/uzum-merchant-webhooks.yml
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/merchant
+  - type: Documentation
+    url: https://developer.uzumbank.uz/en/ratekeeper
 common:
 - type: Website
   url: https://uzum.com/en/
