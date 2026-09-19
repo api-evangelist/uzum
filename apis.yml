@@ -267,6 +267,8 @@ apis:
   humanURL: https://developer.uzumbank.uz/en/checkout
   baseURL: https://crossborder.transfer.uz
   tags:
+  - Cross-Border Payments
+  tags_raw:
   - Cross-border payments
   properties:
   - type: OpenAPI
@@ -377,6 +379,8 @@ apis:
   humanURL: https://developer.uzumbank.uz/en/checkout
   baseURL: https://crossborder.transfer.uz
   tags:
+  - Information Retrieval
+  tags_raw:
   - Information retrieval
   properties:
   - type: OpenAPI
@@ -443,7 +447,8 @@ apis:
     to the fiscal receipt and cancel payment transactions.
   humanURL: https://developer.uzumbank.uz/en/checkout
   baseURL: https://crossborder.transfer.uz
-  tags:
+  tags: []
+  tags_raw:
   - Methods
   properties:
   - type: OpenAPI
@@ -476,6 +481,8 @@ apis:
   humanURL: https://developer.uzumbank.uz/en/checkout
   baseURL: https://crossborder.transfer.uz
   tags:
+  - One Step Payment
+  tags_raw:
   - One-Step Payment
   properties:
   - type: OpenAPI
@@ -508,6 +515,8 @@ apis:
   humanURL: https://developer.uzumbank.uz/en/checkout
   baseURL: https://crossborder.transfer.uz
   tags:
+  - Partners
+  tags_raw:
   - partner
   properties:
   - type: OpenAPI
@@ -548,7 +557,8 @@ apis:
     The use of this method must be pre-coordinated with the Uzum development team.
   humanURL: https://developer.uzumbank.uz/en/checkout
   baseURL: https://crossborder.transfer.uz
-  tags:
+  tags: []
+  tags_raw:
   - Submit QR Code Payment Receipt to Tax Authorities
   properties:
   - type: OpenAPI
@@ -645,6 +655,8 @@ apis:
   humanURL: https://developer.uzumbank.uz/en/checkout
   baseURL: https://crossborder.transfer.uz
   tags:
+  - Two Step Payment
+  tags_raw:
   - Two-Step Payment
   properties:
   - type: OpenAPI
