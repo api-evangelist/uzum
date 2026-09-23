@@ -1,0 +1,781 @@
+openapi: 3.2.0
+info:
+  title: Uzum CrossBorder Transfer To Uzbekistan API
+  version: 0.1.0
+  description: '**Uzum CrossBorder Transfer** is an international money transfer service between Uzbekistan and other countries.'
+servers:
+- url: https://crossborder.transfer.uz
+security:
+- basicAuth: []
+tags:
+- name: To Uzbekistan
+  description: Methods for transfers to Uzbekistan
+paths:
+  /cbt/v1/transfer/card_list:
+    post:
+      tags:
+      - To Uzbekistan
+      summary: Retrieve the list of cards by phone number
+      description: This method is available by agreement only. To activate it, please contact your Uzum Bank manager.
+      operationId: getReceiverCardsByPhone
+      requestBody:
+        description: JSON object with request parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReceiverCardsByPhoneRequest'
+      responses:
+        '200':
+          description: description
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceiverCardsByPhoneResponse'
+        '400':
+          description: Error object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /cbt/v1/transfer/card:
+    post:
+      tags:
+      - To Uzbekistan
+      summary: Retrieve card information by PAN
+      description: This method is available by agreement only. To activate it, please contact your Uzum Bank manager.
+      operationId: getReceiverCardsByPAN
+      requestBody:
+        description: JSON object containing request parameters.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReceiverCardsByPANRequest'
+      responses:
+        '200':
+          description: description
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardResponse'
+        '400':
+          description: Error object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /cbt/v1/transfer/receiver_banks:
+    post:
+      tags:
+      - To Uzbekistan
+      operationId: getReceiverBanksList
+      summary: Get the recipient's list of banks
+      description: Returns a list of banks where the Recipient has active cards linked to the specified phone number.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReceiverBanksRequest'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceiverBanksResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No banks found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Service Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /cbt/v1/transfer/check_credit:
+    post:
+      tags:
+      - To Uzbekistan
+      summary: Check Possibility of Transfer to Uzbekistan
+      description: 'Check whether a transfer to Uzbekistan can be performed.
+
+
+        ⚠️ If the transfer is made by the recipient''s phone number (`identificationType = PHONE`), the `bankLabel` parameter is required. A phone-number transfer cannot be performed without `bankLabel`; no default card is selected for crediting.'
+      operationId: checkCredit
+      requestBody:
+        description: JSON object with request parameters.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckCreditRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/CheckCreditResponse'
+                - type: object
+                  properties:
+                    error:
+                      $ref: '#/components/schemas/Error'
+        '400':
+          description: Error object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /cbt/v1/transfer/confirm_credit:
+    post:
+      tags:
+      - To Uzbekistan
+      summary: Confirm Transfer to Uzbekistan
+      description: To confirm the transfer, the operation must have the status `APPROVED`. ⚠️ We do not send callbacks for transfers with the `PENDING` status. If you receive this status, request the transfer state using the /transfer/status method every hour until a final status (`SUCCESS` or `FAILED`) is returned.
+      operationId: confirmCredit
+      requestBody:
+        description: JSON object with request parameters.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmCreditRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/TransferResponse'
+                - type: object
+                  properties:
+                    error:
+                      $ref: '#/components/schemas/Error'
+        '400':
+          description: Error object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    ReceiverCardsByPhoneRequest:
+      type: object
+      properties:
+        phone:
+          description: Phone number linked to the card
+          type: string
+          pattern: ^\d{12}$
+          example: '998910142976'
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: integer
+          example: 0
+        errorMessage:
+          type: string
+          example: string
+        errorDetails:
+          type: object
+          additionalProperties: true
+    ConfirmCreditRequest:
+      required:
+      - externalTransferId
+      type: object
+      properties:
+        externalTransferId:
+          type: string
+          description: Payment identificator on the partner's side.
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        transferId:
+          type: string
+          description: Payment identificator on the Uzum Crossborder Transfer side
+          format: uuid
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+    TransferResponse:
+      required:
+      - completedDateTime
+      - createdDateTime
+      - exchangeRate
+      - externalTransferId
+      - receiverPaymentSystem
+      - receiverAmount
+      - senderAmount
+      - senderCurrencyCode
+      - status
+      - transferId
+      - transferType
+      type: object
+      properties:
+        externalTransferId:
+          type: string
+          description: Transfer ID in the partner's system.
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        transferId:
+          type: string
+          description: Payment identifier on the Crossborder Transfer side.
+          format: uuid
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        senderAmount:
+          type: integer
+          description: Sender's payment amount in minimal currency units.
+          example: 40000
+        senderCurrencyCode:
+          type: string
+          description: Sender's payment currency (ISO 4217 alphabetic code).
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        receiverAmount:
+          type: integer
+          description: Recipient's payment amount in minimal currency units.
+          example: 13640000
+        receiverCurrencyCode:
+          type: string
+          description: Recipient's payment currency (ISO 4217 alphabetic code).
+          example: UZS
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        receiverPaymentSystem:
+          type: string
+          description: Payment system of the recipient's card (Uzbekistan)
+          enum:
+          - HUMO
+          - UZCARD
+          - MASTERCARD
+          - VISA
+        exchangeRate:
+          type: string
+          description: Exchange rate from senderCurrencyCode to receiverCurrencyCode
+          example: '113.5105'
+        transferType:
+          type: string
+          description: Transfer direction
+          example: TO_UZ
+          enum:
+          - FROM_UZ
+          - TO_UZ
+        createdDateTime:
+          type: string
+          description: Date and time the transfer was registered in the bank's system.
+          format: date-time
+          example: '2024-10-19T09:55:30.250'
+        completedDateTime:
+          type: string
+          description: Date and time the transfer was executed.
+          format: date-time
+          example: '2024-10-19T10:55:30.250'
+        status:
+          type: string
+          description: Transfer status.
+          example: SUCCESS
+          enum:
+          - REGISTERED
+          - PENDING
+          - APPROVED
+          - SUCCESS
+          - FAILED
+          - REVERSED
+    CardResponse:
+      type: object
+      required:
+      - token
+      - cardholderName
+      - paymentSystem
+      - bankLabel
+      - currency
+      - maskedPan
+      properties:
+        token:
+          description: Card token
+          type: string
+          example: vlKeomyUYGh8ktD+1hvI68kuApMKq1s8uyfgvHA=
+        cardholderName:
+          description: First name and the initial of the last name followed by a period.
+          type: string
+          example: IVAN I.
+        paymentSystem:
+          description: Card payment system.
+          type: string
+          enum:
+          - VISA
+          - MASTERCARD
+          - HUMO
+          - UZCARD
+        bankLabel:
+          description: A three-character string representing the bank, according to the reference table.
+          type: string
+          example: UZB
+          enum:
+          - NBU
+          - SQB
+          - AGB
+          - XLQ
+          - SDG
+          - QQB
+          - TRN
+          - ASK
+          - IPY
+          - ZRT
+          - TTB
+          - ALQ
+          - IPT
+          - KDB
+          - TRK
+          - SDT
+          - UNB
+          - KPT
+          - RNQ
+          - INF
+          - AAC
+          - HTK
+          - OFB
+          - MDI
+          - AEB
+          - PTT
+          - TNG
+          - TBC
+          - ANR
+          - DVR
+          - YGB
+          - HYB
+          - SMB
+          - AXB
+          - HMK
+          - MKR
+          - UZB
+        currency:
+          description: Card currency code.
+          type: string
+          example: USD
+        maskedPan:
+          description: Masked card number.
+          type: string
+          example: '**9010'
+    CheckCreditResponse:
+      required:
+      - externalTransferId
+      - status
+      - transferId
+      type: object
+      properties:
+        externalTransferId:
+          type: string
+          description: Payment identificator on the partner's side
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        transferId:
+          type: string
+          description: Payment identificator on the Uzum Crossborder Transfer side
+          format: uuid
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        senderAmount:
+          type: integer
+          description: Amount sent by the payment sender in minimum currency units
+          example: 40000
+        senderCurrencyCode:
+          type: string
+          description: Currency of the payment sender (ISO 4217 alphabetic code)
+          example: RUB
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        receiverPaymentSystem:
+          type: string
+          description: Payment system of the recipient's card
+          enum:
+          - HUMO
+          - UZCARD
+          - MASTERCARD
+          - VISA
+        receiverAmount:
+          type: integer
+          description: Amount received by the recipient in minimum currency units
+          example: 13640000
+        receiverCurrencyCode:
+          type: string
+          description: Currency of the payment recipient (ISO 4217 alphabetic code)
+          example: UZS
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        receiverCardholderName:
+          type: string
+          description: Cardholder's name
+          example: Ivanov Ivan
+        receiverCardNumber:
+          type: string
+          description: Masked card number of the recipient
+          example: 986010******5488
+        exchangeRate:
+          type: string
+          description: Conversion rate from senderCurrencyCode to receiverCurrencyCode
+          example: '140.0000'
+        status:
+          type: string
+          description: Transfer status in Crossborder Transfer
+          example: REGISTERED
+          enum:
+          - REGISTERED
+          - PENDING
+          - APPROVED
+          - SUCCESS
+          - FAILED
+          - REVERSED
+    ErrorDetails:
+      required:
+      - message
+      - field
+      type: object
+      properties:
+        field:
+          type: string
+          description: Field name from the request body
+          example: externalTransferId
+        message:
+          type: string
+          description: Error description in the specified field
+          example: Must not be null
+    ReceiverBanksRequest:
+      type: object
+      required:
+      - phoneNumber
+      properties:
+        phone:
+          description: Recipient's phone number
+          type: string
+          pattern: ^\d{12}$
+          example: '998910142976'
+    PersonalData:
+      required:
+      - personFullName
+      type: object
+      properties:
+        personFullName:
+          type: string
+          description: User's name (full name).
+          example: ABRAMOV NIKITA YUREVICH
+        birthday:
+          type: string
+          description: Date of birth in the format YYYY-MM-DD
+          example: '2000-04-18'
+        birthPlace:
+          type: string
+          description: Place of birth
+          example: Moscow
+        nationality:
+          type: string
+          description: Citizenship code according to ISO 3166-1
+          example: '860'
+        address:
+          type: string
+          description: Address of residence
+          example: Moscow, Tayninskaya 15
+        passport:
+          type: string
+          description: Passport details. Series and number
+          example: '4109355455'
+    CheckCreditRequest:
+      required:
+      - externalTransferId
+      - identificationType
+      - identificationValue
+      - receiverCurrencyCode
+      - sender
+      - senderAmount
+      - senderCountry
+      - senderCurrencyCode
+      type: object
+      properties:
+        clientId:
+          type: string
+          description: Client ID in the partner system
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        externalTransferId:
+          type: string
+          description: Transfer ID in the partner system
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        senderAccount:
+          type: string
+          description: Masked card number of the sender or account number
+          example: 400078******9010
+        identificationType:
+          type: string
+          description: 'Type of recipient identifier. Specifies which identifier is used to determine the recipient:
+
+            - `PHONE`: recipient''s phone number. For this identification type, the `bankLabel` parameter is required.
+
+            - `CARD`: recipient''s bank card number.
+
+            - `TOKEN`: a string containing the tokenized card number.
+
+            '
+          example: PHONE
+          enum:
+          - PHONE
+          - CARD
+          - TOKEN
+        identificationValue:
+          type: string
+          description: 'The value of the recipient identifier. Depends on the selected `identificationType`:
+
+            - For `PHONE`: 12-digit numeric value.
+
+            - For `CARD`: 16–19-digit bank card number.
+
+            - For `TOKEN`: a string containing the tokenized card number. The value can be obtained from the `token` field in the response of the [/card_list](#tag/To-Uzbekistan/operation/getReceiverCardsByPhone) or [/card](#tag/To-Uzbekistan/operation/getReceiverCardsByPAN) methods.
+
+            '
+          example: '998910102030'
+        bankLabel:
+          type: string
+          description: Recipient bank label. Required if `identificationType = PHONE`. A phone-number transfer cannot be performed without `bankLabel`; no default card is selected for crediting. If `identificationType = CARD` or `TOKEN`, `bankLabel` is not required because the recipient is identified by a specific card or token.
+          example: PTT
+          enum:
+          - SQB
+          - DVR
+          - ZRT
+          - PTT
+          - AGB
+          - XLQ
+          - SDG
+          - QQB
+          - TRN
+          - ASK
+          - IPY
+          - TTB
+          - ALQ
+          - IPT
+          - KDB
+          - TRK
+          - SDT
+          - UNB
+          - KPT
+          - RNQ
+          - INF
+          - AAC
+          - HTK
+          - OFB
+          - MDI
+          - AEB
+          - TNG
+          - TBC
+          - ANR
+          - YGB
+          - HYB
+          - SMB
+          - AXB
+          - HMK
+          - MKR
+        senderAmount:
+          type: integer
+          description: Amount sent by the sender in minimum currency units
+          example: 40000
+        senderCurrencyCode:
+          type: string
+          description: Sender's currency (ISO 4217 alphabetic code)
+          example: RUB
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        receiverAmount:
+          type: integer
+          description: Amount received by the recipient in minimum currency units
+          example: 13640000
+        receiverCurrencyCode:
+          type: string
+          description: Recipient's currency (ISO 4217 alphabetic code)
+          example: UZS
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        exchangeRate:
+          type: string
+          description: Conversion rate from senderCurrencyCode to receiverCurrencyCode.
+          example: '140.0000'
+        senderCountry:
+          maxLength: 2
+          minLength: 2
+          type: string
+          description: Country of the sender (two-letter country code according to ISO 3166-1 Alpha-2)
+          example: RU
+        sender:
+          description: Sender information. Required when making a transfer to Uzbekistan.
+          allOf:
+          - $ref: '#/components/schemas/PersonalData'
+        receiver:
+          description: Recepient's ersonal data
+          allOf:
+          - $ref: '#/components/schemas/PersonalData'
+    ReceiverCardsByPANRequest:
+      type: object
+      properties:
+        cardPan:
+          description: Recipient’s card number
+          type: string
+          example: '9860101111115488'
+    ReceiverBanksResponse:
+      type: object
+      properties:
+        banks:
+          type: array
+          items:
+            enum:
+            - NBU
+            - SQB
+            - AGB
+            - XLQ
+            - SDG
+            - QQB
+            - TRN
+            - ASK
+            - IPY
+            - ZRT
+            - TTB
+            - ALQ
+            - IPT
+            - KDB
+            - TRK
+            - SDT
+            - UNB
+            - KPT
+            - RNQ
+            - INF
+            - AAC
+            - HTK
+            - OFB
+            - MDI
+            - AEB
+            - PTT
+            - TNG
+            - TBC
+            - ANR
+            - DVR
+            - YGB
+            - HYB
+            - SMB
+            - AXB
+            - HMK
+            - MKR
+            - UZB
+    ErrorResponse:
+      required:
+      - errorCode
+      - errorMessage
+      type: object
+      properties:
+        errorCode:
+          type: integer
+          description: Integer error code
+          example: 81
+        errorMessage:
+          type: string
+          description: Error text
+          example: Internal error
+        errorDetails:
+          type: array
+          description: Error description
+          items:
+            $ref: '#/components/schemas/ErrorDetails'
+    ReceiverCardsByPhoneResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/CardResponse'
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+x-tagGroups:
+- name: API
+  tags:
+  - Common methods
+  - From Uzbekistan
+  - To Uzbekistan
+  - Cross-border payments
+  - Testing
+  - Error Codes

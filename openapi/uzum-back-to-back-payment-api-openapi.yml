@@ -1,0 +1,85 @@
+openapi: 3.2.0
+info:
+  title: Uzum Checkout Back-to-back Payment API
+  version: 1.10.3
+  description: '**Uzum Checkout** is a payment gateway for websites and mobile applications.'
+tags:
+- name: Back-to-back Payment
+paths:
+  /api/v1/acquiring/getMerchantCertificate:
+    post:
+      tags:
+      - Back-to-back Payment
+      summary: Get encryption certificate and fingerprint
+      description: Retrieves an encryption certificate and its fingerprint
+      operationId: get_merchant_certificate_api_v1_acquiring_getMerchantCertificate_post
+      parameters:
+      - description: Terminal ID
+        required: true
+        schema:
+          title: X-Terminal-Id
+          type: string
+          description: Terminal ID
+          format: uuid
+        name: X-Terminal-Id
+        in: header
+      - description: A unique key is used to authenticate requests.
+        required: false
+        schema:
+          title: X-API-Key
+          type: string
+          description: A unique key is used to authenticate requests.
+        name: X-API-Key
+        in: header
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_GetCertificateResponse_'
+components:
+  schemas:
+    GetCertificateResponse:
+      title: GetCertificateResponse
+      required:
+      - certificate
+      - fingerprint
+      type: object
+      properties:
+        certificate:
+          title: Certificate
+          type: string
+          description: Certificate body (base64)
+        fingerprint:
+          title: Fingerprint
+          type: string
+          description: Certificate fingerprint (base64)
+    ApiResponse_GetCertificateResponse_:
+      title: ApiResponse[GetCertificateResponse]
+      required:
+      - errorCode
+      type: object
+      properties:
+        errorCode:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          title: Message
+          type: string
+        result:
+          $ref: '#/components/schemas/GetCertificateResponse'
+    ErrorCode:
+      title: ErrorCode
+      type: integer
+x-tagGroups:
+- name: API
+  tags:
+  - One-Step Payment
+  - Managing Credit Cards Bindings
+  - Back-to-back Payment
+  - Auxiliary Methods
+- name: Additional Info
+  tags:
+  - Testing
+  - Error Codes
+  - Post Messages

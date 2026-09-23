@@ -1,0 +1,904 @@
+openapi: 3.2.0
+info:
+  title: Uzum CrossBorder Transfer Cross-border payments API
+  version: 0.1.0
+  description: '**Uzum CrossBorder Transfer** is an international money transfer service between Uzbekistan and other countries.'
+servers:
+- url: https://crossborder.transfer.uz
+security:
+- basicAuth: []
+tags:
+- name: Cross-border payments
+  description: Methods for cross-border payments for services in Uzbekistan
+paths:
+  /cbt/v1/payment/check_service:
+    post:
+      tags:
+      - Cross-border payments
+      summary: Get Information About the Future Payment Amount
+      description: 'This method is optional. Use `/check_service` when the selected service requires checking the details and receiving a specific payment amount.
+
+
+        First, get the `serviceId` and the set of fields required to pay for the service.
+
+
+        If the service allows an arbitrary amount, `/check_service` can be skipped and the payment can be created immediately using `/check_payment`.'
+      operationId: checkService
+      requestBody:
+        description: Data for checking the service
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckServiceRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckServiceResponse'
+        '400':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /cbt/v1/payment/check_payment:
+    post:
+      tags:
+      - Cross-border payments
+      summary: Run Pre-payment Checks and Create a Cross-border Payment
+      description: 'Check the user, the availability of the selected service, and create a payment operation. First, get the `serviceId` and the set of fields required to pay for the service.
+
+
+        The `paymentAmount` is always expected in UZS.'
+      operationId: checkPayment
+      requestBody:
+        description: Data for creating the payment
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckPaymentRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckPaymentResponse'
+        '400':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /cbt/v1/payment/confirm_payment:
+    post:
+      tags:
+      - Cross-border payments
+      summary: Confirm a Cross-border Payment
+      description: Confirm execution of a cross-border payment.
+      operationId: confirmPayment
+      requestBody:
+        description: Data for confirming the payment
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '400':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /cbt/v1/payment/status:
+    post:
+      tags:
+      - Cross-border payments
+      summary: Get Payment Status
+      description: Get the current status of a cross-border payment.
+      operationId: getPaymentStatus
+      requestBody:
+        description: Data for getting the payment status
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '400':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /cbt/v1/payment/service_list:
+    post:
+      tags:
+      - Cross-border payments
+      summary: Get the List of Services Available for Payment
+      description: 'The method returns the services available to the partner for payment, including the set of fields required for each service.
+
+
+        The response can be stored on the partner side. There is no need to request all service fields for every payment attempt.'
+      operationId: getServiceList
+      requestBody:
+        required: true
+        description: Data for getting the list of available services
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceListRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceListResponse'
+        '400':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /cbt/v1/payment/payment_list:
+    post:
+      tags:
+      - Cross-border payments
+      summary: Get Payment Registry
+      description: Get the payment registry by filter for the last 2 months.
+      operationId: getPaymentList
+      requestBody:
+        required: true
+        description: Filter for getting payments
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentListRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentListResponse'
+        '400':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    ServiceListResponse:
+      type: object
+      required:
+      - serviceList
+      - paginationResponse
+      properties:
+        serviceList:
+          type: array
+          example:
+          - serviceId: 812812812
+            name: Kashkadarya Region Tax Service
+            minAmount: 100
+            maxAmount: 500000000
+            isFixedAmount: true
+            fields:
+            - key: soato
+              title: District
+              type: N
+              regex: ^[a-zA-Z0-9\-]{4,18}$
+              values:
+              - code: '22201'
+                name: Altynsay district
+          items:
+            $ref: '#/components/schemas/Service'
+        paginationResponse:
+          $ref: '#/components/schemas/PaginationResponse'
+    PaymentListRequest:
+      required:
+      - createTime
+      - limit
+      - page
+      type: object
+      properties:
+        createTime:
+          $ref: '#/components/schemas/FilterTime'
+        status:
+          type: string
+          enum:
+          - SUCCESS
+          - REGISTERED
+          - APPROVED
+          - PENDING
+          - FAILED
+        page:
+          minimum: 1
+          type: integer
+          format: int32
+        limit:
+          maximum: 100
+          minimum: 1
+          type: integer
+          format: int32
+    CheckServiceRequest:
+      type: object
+      required:
+      - serviceId
+      - serviceParameters
+      - payerCurrency
+      properties:
+        payerCurrency:
+          type: string
+          description: Partner payment currency
+          enum:
+          - RUB
+          - UZS
+        serviceId:
+          type: integer
+          description: Service identifier for the cross-border payment
+          format: int64
+          examples:
+          - 812812812
+          - 4924665
+        serviceParameters:
+          description: Array of user data for the service
+          type: array
+          example:
+          - type: NUMBER
+            key: customer
+            value: '0662601'
+          items:
+            $ref: '#/components/schemas/ServiceParameters'
+    ServiceField:
+      required:
+      - key
+      - type
+      - title
+      type: object
+      properties:
+        key:
+          type: string
+          description: Field key
+          examples:
+          - soato
+        title:
+          type: string
+          description: Field name
+          examples:
+          - District
+        type:
+          type: string
+          description: 'Field type: `S` — string, `N` — number, `E` — selection from the `values` dictionary.'
+          enum:
+          - S
+          - N
+          - E
+        regex:
+          type:
+          - string
+          - 'null'
+          examples:
+          - ^[a-zA-Z0-9\-]{4,18}$
+        values:
+          description: Field value dictionary
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceFieldValue'
+    CheckPaymentResponse:
+      type: object
+      description: Returns all payment fields available when the response is generated.
+      required:
+      - externalPaymentId
+      - serviceId
+      - paymentAmount
+      - paymentCurrency
+      - payerAmount
+      - payerCurrency
+      - serviceParameters
+      - status
+      properties:
+        paymentId:
+          description: Payment identifier in Crossborder Transfer
+          type: string
+          format: uuid
+        externalPaymentId:
+          type: string
+          description: Payment identifier in the partner system
+          examples:
+          - trx_2026_04191234
+          - 9250a95e-99bf-4975-9adc-9fbd1a78c27f
+        serviceId:
+          type: integer
+          description: Service identifier for the cross-border payment
+          format: int64
+          examples:
+          - 812812812
+          - 4924665
+        payerAmount:
+          type: integer
+          format: int64
+          description: Partner payment amount in minor currency units
+          examples:
+          - 60000
+        payerCurrency:
+          type: string
+          description: Partner payment currency
+          enum:
+          - RUB
+          - UZS
+        paymentAmount:
+          type: integer
+          format: int64
+          description: Service payment amount in minor currency units
+          examples:
+          - 1000000
+        paymentCurrency:
+          type: string
+          description: Service payment currency
+          enum:
+          - UZS
+        exchangeRate:
+          description: Conversion rate. Required if conversion is performed on the partner side.
+          type: string
+          examples:
+          - '155.12'
+        serviceParameters:
+          description: Array of user data for the service
+          type: array
+          example:
+          - type: NUMBER
+            key: customer
+            value: '0662601'
+          items:
+            $ref: '#/components/schemas/ServiceParameters'
+        status:
+          type: string
+          description: Payment status in Crossborder Transfer.
+          examples:
+          - REGISTERED
+          enum:
+          - REGISTERED
+          - APPROVED
+          - FAILED
+    ErrorDetails:
+      required:
+      - message
+      - field
+      type: object
+      properties:
+        field:
+          type: string
+          description: Field name from the request body
+          example: externalTransferId
+        message:
+          type: string
+          description: Error description in the specified field
+          example: Must not be null
+    PaymentResponse:
+      type: object
+      description: Returns all payment fields available when the response is generated.
+      required:
+      - externalPaymentId
+      - serviceId
+      - paymentAmount
+      - paymentCurrency
+      - payerAmount
+      - payerCurrency
+      - serviceParameters
+      - status
+      - createdDateTime
+      properties:
+        paymentId:
+          description: Payment identifier in Crossborder Transfer
+          type: string
+          format: uuid
+        externalPaymentId:
+          type: string
+          description: Payment identifier in the partner system
+          examples:
+          - trx_2026_04191234
+          - 9250a95e-99bf-4975-9adc-9fbd1a78c27f
+        serviceId:
+          type: integer
+          description: Service identifier for the cross-border payment
+          format: int64
+          examples:
+          - 812812812
+          - 4924665
+        payerAmount:
+          type: integer
+          format: int64
+          description: Partner payment amount in minor currency units
+          examples:
+          - 60000
+        payerCurrency:
+          type: string
+          description: Partner payment currency
+          enum:
+          - RUB
+          - UZS
+        paymentAmount:
+          type: integer
+          format: int64
+          description: Service payment amount in minor currency units
+          examples:
+          - 1000000
+        paymentCurrency:
+          type: string
+          description: Service payment currency
+          enum:
+          - UZS
+        exchangeRate:
+          description: Conversion rate. Required if conversion is performed on the partner side.
+          type: string
+          examples:
+          - '155.12'
+        serviceParameters:
+          description: Array of user data for the service
+          type: array
+          example:
+          - type: NUMBER
+            key: customer
+            value: '0662601'
+          items:
+            $ref: '#/components/schemas/ServiceParameters'
+        status:
+          type: string
+          description: Payment status in Crossborder Transfer.
+          examples:
+          - REGISTERED
+          enum:
+          - REGISTERED
+          - PENDING
+          - APPROVED
+          - SUCCESS
+          - FAILED
+        createdDateTime:
+          type: string
+          description: Payment creation date and time without timezone suffix
+          examples:
+          - '2026-04-19T09:55:30.250'
+        completedDateTime:
+          type: string
+          description: Payment completion date and time without timezone suffix
+          examples:
+          - '2026-04-19T10:55:30.250'
+        error:
+          $ref: '#/components/schemas/ErrorResponse'
+        ofdUrl:
+          type: string
+          description: Fiscal receipt link
+          format: uri
+          examples:
+          - https://ofd.uz/epi?t=EZ000000000296&r=51&c=20230807182725&s=176112857133
+    Service:
+      required:
+      - serviceId
+      - name
+      - fields
+      type: object
+      properties:
+        serviceId:
+          description: Service identifier
+          type: integer
+          format: int64
+          examples:
+          - 812812812
+          - 4924665
+        name:
+          description: Service name
+          type: string
+          examples:
+          - Kashkadarya Region Tax Service
+          - Coffeego.uz
+        minAmount:
+          description: Minimum payment amount for the service in tiyin
+          type: integer
+          format: int64
+          examples:
+          - 100
+        maxAmount:
+          description: Maximum payment amount for the service in tiyin
+          type: integer
+          format: int64
+          examples:
+          - 500000000
+        isFixedAmount:
+          description: Flag showing that /check_service must be called to receive the payment amount
+          type:
+          - boolean
+          - 'null'
+          default: true
+        fields:
+          type: array
+          example:
+          - key: soato
+            title: District
+            type: N
+            regex: ^[a-zA-Z0-9\-]{4,18}$
+            values:
+            - code: '22201'
+              name: Altynsay district
+          items:
+            $ref: '#/components/schemas/ServiceField'
+    CheckPaymentRequest:
+      required:
+      - externalPaymentId
+      - serviceId
+      - serviceParameters
+      - paymentAmount
+      - paymentCurrency
+      - payerCurrency
+      - payerInfo
+      description: The amount is always expected in UZS. If conversion is performed on the partner side, also send the amount in the partner currency and the exchange rate.
+      type: object
+      properties:
+        clientId:
+          type: string
+          description: Client identifier in the partner system
+        externalPaymentId:
+          type: string
+          description: Payment identifier in the partner system
+          examples:
+          - trx_2026_04191234
+          - 9250a95e-99bf-4975-9adc-9fbd1a78c27f
+        serviceId:
+          type: integer
+          description: Service identifier for the cross-border payment
+          format: int64
+          examples:
+          - 812812812
+          - 4924665
+        payerAmount:
+          type: integer
+          format: int64
+          description: Partner payment amount in minor currency units
+          examples:
+          - 60000
+        payerCurrency:
+          type: string
+          description: Partner payment currency
+          enum:
+          - RUB
+          - UZS
+        paymentAmount:
+          type: integer
+          format: int64
+          description: Service payment amount in minor currency units
+          examples:
+          - 1000000
+        paymentCurrency:
+          type: string
+          description: Service payment currency
+          enum:
+          - UZS
+        exchangeRate:
+          description: Conversion rate. Required if conversion is performed on the partner side.
+          type: string
+          examples:
+          - '164.36'
+        serviceParameters:
+          description: Array of user data for the service
+          type: array
+          example:
+          - type: NUMBER
+            key: customer
+            value: '0662601'
+          items:
+            $ref: '#/components/schemas/ServiceParameters'
+        phone:
+          description: Payer's Uzbekistan phone number without "+"
+          type: string
+          pattern: '[0-9]{12}'
+        payerInfo:
+          type: object
+          $ref: '#/components/schemas/PersonalData'
+    FilterTime:
+      required:
+      - from
+      - to
+      type: object
+      properties:
+        from:
+          type: string
+          description: Start date and time for filtering in UTC
+          example: '2024-10-19T09:55:30.250'
+        to:
+          type: string
+          description: End date and time for filtering in UTC
+          example: '2024-10-22T09:55:30.250'
+    ServiceParameters:
+      required:
+      - key
+      - value
+      type: object
+      example:
+        type: NUMBER
+        key: customer
+        value: '0662601'
+      properties:
+        type:
+          description: Service user data item type
+          type: string
+          examples:
+          - NUMBER
+          - STRING
+        key:
+          description: Service user data item key
+          type: string
+          examples:
+          - customer
+          - customer_type
+        value:
+          description: Service user data item value
+          type: string
+          examples:
+          - '0662601'
+          - '02'
+    PaymentListResponse:
+      type: object
+      required:
+      - paginationResponse
+      - paymentList
+      properties:
+        paymentList:
+          type: array
+          example:
+          - paymentId: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+            externalPaymentId: trx_2026_04191234
+            serviceId: 812812812
+            payerAmount: 60000
+            payerCurrency: RUB
+            paymentAmount: 1000000
+            paymentCurrency: UZS
+            exchangeRate: '155.12'
+            serviceParameters:
+            - type: NUMBER
+              key: customer
+              value: '0662601'
+            status: REGISTERED
+            createdDateTime: '2026-04-19T09:55:30.250'
+          items:
+            $ref: '#/components/schemas/PaymentResponse'
+        paginationResponse:
+          $ref: '#/components/schemas/PaginationResponse'
+    ErrorResponse:
+      required:
+      - errorCode
+      - errorMessage
+      type: object
+      properties:
+        errorCode:
+          type: integer
+          description: Integer error code
+          example: 81
+        errorMessage:
+          type: string
+          description: Error text
+          example: Internal error
+        errorDetails:
+          type: array
+          description: Error description
+          items:
+            $ref: '#/components/schemas/ErrorDetails'
+    PersonalData:
+      required:
+      - personFullName
+      type: object
+      properties:
+        personFullName:
+          type: string
+          description: User's name (full name).
+          example: ABRAMOV NIKITA YUREVICH
+        birthday:
+          type: string
+          description: Date of birth in the format YYYY-MM-DD
+          example: '2000-04-18'
+        birthPlace:
+          type: string
+          description: Place of birth
+          example: Moscow
+        nationality:
+          type: string
+          description: Citizenship code according to ISO 3166-1
+          example: '860'
+        address:
+          type: string
+          description: Address of residence
+          example: Moscow, Tayninskaya 15
+        passport:
+          type: string
+          description: Passport details. Series and number
+          example: '4109355455'
+    PaginationResponse:
+      type: object
+      properties:
+        totalRecords:
+          type: integer
+          description: Total number of records
+          example: 995
+        totalPages:
+          type: integer
+          description: Total number of pages with the given limit
+          example: 40
+        currentPage:
+          type: integer
+          description: Current page
+          example: 1
+        nextPage:
+          type: integer
+          description: Number of the next page of the response. 0 - page does not exist
+          example: 2
+        previousPage:
+          type: integer
+          description: Number of the previous page of the response. 0 - page does not exist
+          example: 0
+    ServiceFieldValue:
+      type: object
+      description: Field value dictionary item
+      required:
+      - code
+      properties:
+        code:
+          type: string
+          description: Dictionary item value
+          examples:
+          - '22201'
+          - '22202'
+          - '22204'
+          - '22206'
+        name:
+          type: string
+          description: Dictionary item name
+          examples:
+          - Altynsay district
+          - Angor district
+          - Baysun district
+          - Bandikhan district
+    PaymentRequest:
+      type: object
+      required:
+      - externalPaymentId
+      properties:
+        externalPaymentId:
+          type: string
+          description: Payment identifier in the partner system
+          examples:
+          - trx_2026_04191234
+          - 9250a95e-99bf-4975-9adc-9fbd1a78c27f
+    CheckServiceResponse:
+      type: object
+      required:
+      - serviceId
+      - payerCurrency
+      - paymentAmount
+      - paymentCurrency
+      - serviceParameters
+      properties:
+        serviceId:
+          type: integer
+          description: Service identifier for the cross-border payment
+          format: int64
+          examples:
+          - 812812812
+          - 4924665
+        payerAmount:
+          type: integer
+          format: int64
+          description: Partner payment amount in minor currency units
+          examples:
+          - 60000
+        payerCurrency:
+          type: string
+          description: Partner payment currency
+          enum:
+          - RUB
+          - UZS
+        paymentAmount:
+          type: integer
+          format: int64
+          description: Service payment amount in minor currency units
+          examples:
+          - 1000000
+        paymentCurrency:
+          type: string
+          description: Service payment currency
+          enum:
+          - UZS
+        exchangeRate:
+          description: Conversion rate. Required if conversion is performed on the partner side.
+          type: string
+          examples:
+          - '155.12'
+        serviceParameters:
+          description: Array of user data for the service
+          type: array
+          example:
+          - type: NUMBER
+            key: customer
+            value: '0662601'
+          items:
+            $ref: '#/components/schemas/ServiceParameters'
+    ServiceListRequest:
+      type: object
+      required:
+      - page
+      - limit
+      properties:
+        page:
+          minimum: 1
+          type: integer
+          format: int32
+        limit:
+          maximum: 100
+          minimum: 1
+          type: integer
+          format: int32
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+x-tagGroups:
+- name: API
+  tags:
+  - Common methods
+  - From Uzbekistan
+  - To Uzbekistan
+  - Cross-border payments
+  - Testing
+  - Error Codes

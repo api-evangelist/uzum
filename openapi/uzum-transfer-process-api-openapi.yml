@@ -1,0 +1,1474 @@
+openapi: 3.2.0
+info:
+  title: Remit Core Transfer process API
+  version: 1.0.4
+  description: '> **Remit Core** Partners should be aware that **new fields and/or values** may appear
+
+    > in requests and responses over time.'
+servers:
+- url: https://remit-core.ipt-merch.com
+  description: Test environment
+tags:
+- name: Transfer process
+  description: Methods used in the transfer process
+paths:
+  /v1/register:
+    post:
+      tags:
+      - Transfer process
+      summary: Transfer registration
+      description: 'Validates the request and registers a new transfer (creates a transfer entity).
+
+
+        This is the **first required step** in the transfer flow. Upon successful registration,
+
+        a `transferId` is returned - it must be used in all subsequent requests for this transfer.
+
+
+        Applicable to both **CREDIT** and **DEBIT** transfer types.'
+      operationId: registerTransfer
+      security:
+      - XApiKeyAuth: []
+      requestBody:
+        description: Transfer registration parameters. Use `CreditTransferRequest` for CREDIT transfers and `DebitTransferRequest` for DEBIT transfers
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/CreditTransferRequest'
+              - $ref: '#/components/schemas/DebitTransferRequest'
+      responses:
+        '200':
+          description: 'Successful response or business logic error.
+
+            Check the `code` field to determine the outcome - code `0` indicates success
+
+            '
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterTransferResponse'
+        '401':
+          description: Authentication error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authorization error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Request validation error - invalid JSON, missing required fields, or constraint violations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/422ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/process:
+    post:
+      tags:
+      - Transfer process
+      summary: Initiate transfer processing
+      description: 'Initiates processing of a previously registered transfer.
+
+
+        This is the **second required step** in the transfer flow, called after `POST /register`.
+
+        The transfer must be in the status `REGISTERED` - only in that state it can be processed.
+
+
+        Applicable to both **CREDIT** and **DEBIT** transfer types.
+
+
+        Key response scenarios (excluding errors):
+
+        - **code 0** - transfer processed successfully (**CREDIT** transfers)
+
+        - **code 2000** - request accepted asynchronously; wait for a callback or poll `POST /get_status` (both **CREDIT** and **DEBIT** transfers)
+
+        - **code 2001** - confirmation required (**DEBIT** transfers):
+
+        - for `confirmationType = OTP` submit the code via `POST /confirm`,
+
+        - for `confirmationType = 3DS` confirmation is completed outside of Remit Core.'
+      operationId: processTransfer
+      security:
+      - XApiKeyAuth: []
+      requestBody:
+        description: Identifier of the transfer to process
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferIdRequest'
+      responses:
+        '200':
+          description: 'Successful response, business logic error, or notification about required additional actions.
+
+            Check the `code` field to determine the outcome
+
+            '
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ProcessTransferResponse'
+                - $ref: '#/components/schemas/NeedConfirmationProcessTransferResponse'
+                - $ref: '#/components/schemas/ProcessPendingTransferResponse'
+        '401':
+          description: Authentication error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authorization error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Request validation error - invalid JSON, missing required fields, or constraint violations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/422ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      callbacks:
+        TransferResultInfo:
+          $ref: '#/components/callbacks/TransferResultInfo'
+  /v1/get_status:
+    post:
+      tags:
+      - Transfer process
+      summary: Get transfer status
+      description: 'Returns the current status of a transfer.
+
+
+        Can be called at any point in the transfer lifecycle. Particularly useful when
+
+        `POST /process`, `POST /confirm` or `POST /cancel` returned **code 2000** (asynchronous processing)
+
+        and no callback has been received yet.
+
+
+        The transfer can be identified by either `transferId` (Remit Core identifier)
+
+        or `externalTransferId` (Partner''s own identifier). At least one must be provided.
+
+
+        Applicable to both **CREDIT** and **DEBIT** transfer types.'
+      operationId: getStatus
+      security:
+      - XApiKeyAuth: []
+      requestBody:
+        description: Transfer identifier - either `transferId` or `externalTransferId` must be provided
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusTransferRequest'
+      responses:
+        '200':
+          description: 'Successful response or business logic error.
+
+            Check the `code` field to determine the outcome - code `0` indicates success
+
+            '
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusTransferResponse'
+        '401':
+          description: Authentication error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authorization error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Request validation error - invalid JSON, missing required fields, or constraint violations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/422ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/confirm:
+    post:
+      tags:
+      - Transfer process
+      summary: Confirm transfer
+      description: 'Confirms a transfer using a one-time password (OTP).
+
+
+        The transfer must be in the status `CONFIRMATION` - only in that state it can be confirmed.
+
+
+        Must be called when `POST /process` returns **code 2001** with `confirmationType = OTP`.
+
+        The client receives the OTP via the channel configured for their card (e.g. SMS),
+
+        and the Partner submits it using this method.
+
+
+        Applicable to **DEBIT** transfers only.
+
+
+        Key response scenarios (excluding errors):
+
+        - **code 0** - transfer confirmed successfully
+
+        - **code 2000** - request accepted asynchronously; wait for a callback or poll `POST /get_status`
+
+        - **code 3008** - OTP incorrect; need to resend code - use `POST /resend_otp` for the new one'
+      operationId: confirm
+      security:
+      - XApiKeyAuth: []
+      requestBody:
+        description: Transfer identifier and one-time password provided by the client
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmTransferRequest'
+      responses:
+        '200':
+          description: 'Successful response, business logic error, or notification about required additional actions.
+
+            Check the `code` field to determine the outcome
+
+            '
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ConfirmTransferResponse'
+                - $ref: '#/components/schemas/ConfirmPendingTransferResponse'
+        '401':
+          description: Authentication error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authorization error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Request validation error - invalid JSON, missing required fields, or constraint violations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/422ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      callbacks:
+        TransferResultInfo:
+          $ref: '#/components/callbacks/TransferResultInfo'
+  /v1/resend_otp:
+    post:
+      tags:
+      - Transfer process
+      summary: Resend OTP for transfer confirmation
+      description: 'Requests a new one-time password (OTP) to be sent to the client.
+
+
+        Use this method when `POST /process` returned **code 2001** with `confirmationType = OTP`
+
+        and the client did not receive the OTP or the previous OTP has expired.
+
+        Or after an unsuccessful attempt of confirmation via `POST /confirm` (if received **code 3008**).
+
+
+        The transfer must be in the status `CONFIRMATION`.
+
+
+        Applicable to **DEBIT** transfers only.'
+      operationId: resendOtp
+      security:
+      - XApiKeyAuth: []
+      requestBody:
+        description: Identifier of the transfer for which to resend the OTP
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferIdRequest'
+      responses:
+        '200':
+          description: 'Successful response or business logic error.
+
+            Check the `code` field to determine the outcome - code `0` indicates success
+
+            '
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResendOtpResponse'
+        '401':
+          description: Authentication error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authorization error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Request validation error - invalid JSON, missing required fields, or constraint violations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/422ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/cancel:
+    post:
+      tags:
+      - Transfer process
+      summary: Cancel transfer
+      description: 'Requests cancellation of a transfer that has been successfully processed (transfer must be in the status `SUCCESS`).
+
+
+        The result may be synchronous or asynchronous (code `2000` - wait for a callback or poll `POST /get_status`).
+
+
+        Applicable to **DEBIT** transfers only. Cancellation of CREDIT transfers is prohibited (code `8003`).'
+      operationId: cancel
+      security:
+      - XApiKeyAuth: []
+      requestBody:
+        description: Identifier of the transfer to cancel
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferIdRequest'
+      responses:
+        '200':
+          description: 'Successful response or business logic error.
+
+            Check the `code` field to determine the outcome
+
+            '
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/CancelTransferResponse'
+                - $ref: '#/components/schemas/CancelPendingTransferResponse'
+        '401':
+          description: Authentication error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authorization error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Request validation error - invalid JSON, missing required fields, or constraint violations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/422ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      callbacks:
+        TransferResultInfo:
+          $ref: '#/components/callbacks/TransferResultInfo'
+components:
+  schemas:
+    IdentityDocument:
+      type: object
+      description: Identity document details
+      properties:
+        documentType:
+          description: "Identity document type. Possible values:\n  * `ID` - National identity card\n  * `PASSPORT` - Domestic (internal) passport\n  * `FOREIGN_PASSPORT` - International passport used for cross-border identification\n  * `RESIDENT_CARD` - Residence permit or permanent residency card issued by the country of stay\n  * `MILITARY_ID` - Military identity document\n  * `DRIVER_LICENSE` - Driver's license\n  * `OTHER` - Other identity document not covered by the types above\n"
+          enum:
+          - ID
+          - PASSPORT
+          - FOREIGN_PASSPORT
+          - RESIDENT_CARD
+          - MILITARY_ID
+          - DRIVER_LICENSE
+          - OTHER
+          type: string
+          example: PASSPORT
+        documentCountry:
+          description: Country code that issued the document, according to ISO 3166-1 alpha-3
+          type: string
+          pattern: ^[A-Z]{3}$
+          example: UZB
+        series:
+          description: Document series, if applicable
+          type: string
+          example: AB
+        number:
+          description: Document number
+          type: string
+          example: '754755'
+        issuedDate:
+          description: Document issue date in `DD-MM-YYYY` format
+          type: string
+          example: 12-06-2025
+        issuedBy:
+          description: Name of the authority that issued the document
+          type: string
+          example: UFMS FOR SPB №66
+        extraFields:
+          type: object
+          description: Additional document fields if required
+          additionalProperties:
+            type: string
+    TransferResultInfoCallback:
+      description: Final transfer result delivered asynchronously
+      allOf:
+      - $ref: '#/components/schemas/TransferResultStatusForInfoCallback'
+      - $ref: '#/components/schemas/TransferResult'
+      - type: object
+        required:
+        - status
+        - transferId
+        - externalTransferId
+        - senderAmount
+        - senderCurrencyCode
+        - receiverAmount
+        - receiverCurrencyCode
+        - exchangeRate
+        properties:
+          confirmationData:
+            description: 'Confirmation type and value. Returned when transfer confirmation is required.
+
+
+              For **DEBIT** transfers in the `CONFIRMATION` status only.
+
+              '
+            allOf:
+            - $ref: '#/components/schemas/ConfirmationData'
+    ConfirmPendingTransferResponse:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          description: "Response code. Possible values:\n  * `2000` - Request accepted. Please wait for operation status via Callback or query the status manually\n"
+          type: integer
+          example: 2000
+        message:
+          description: Response message
+          type: string
+          example: Request accepted. Wait for operation processing information in Callback or request status
+        result:
+          description: Transfer details with current status
+          allOf:
+          - $ref: '#/components/schemas/TransferResultStatusForConfirmPending'
+          - $ref: '#/components/schemas/TransferResult'
+    StatusTransferResponse:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          description: "Response code. Possible values:\n  * `0` - Request completed successfully\n  * `3054` - Transfer with the specified ID not found\n  * `9000` - Internal error\n"
+          type: integer
+          example: 0
+        message:
+          description: Response message
+          type: string
+          example: Request completed successfully
+        result:
+          description: Transfer details with current status
+          allOf:
+          - $ref: '#/components/schemas/TransferResultStatusForGetStatus'
+          - $ref: '#/components/schemas/TransferResult'
+        confirmationData:
+          description: 'Confirmation type and value. Returned when transfer confirmation is required.
+
+
+            For **DEBIT** transfers in the `CONFIRMATION` status only.
+
+            '
+          allOf:
+          - $ref: '#/components/schemas/ConfirmationData'
+    TransferResultStatusForResendOtp:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          description: "Current transfer status. \n\nPossible values (only for **DEBIT** transfer):\n  * `CONFIRMATION` - Transfer awaiting client confirmation\n  * `FAILED` - Transfer rejected\n"
+          type: string
+          enum:
+          - CONFIRMATION
+          - FAILED
+          example: CONFIRMATION
+    CancelTransferResponse:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          description: "Response code. Possible values:\n  * `0` - Request completed successfully\n  * `3038` - Transfer status does not allow the requested operation\n  * `3054` - Transfer with the specified ID not found\n  * `3055` - Cancellation failed. Please retry the request\n  * `8003` - Cancellation for credit transfer type prohibited\n  * `9000` - Internal error\n  * `9100` - External service interaction error\n"
+          type: integer
+          example: 0
+        message:
+          description: Response message
+          type: string
+          example: Request completed successfully
+        result:
+          description: Transfer details with current status
+          allOf:
+          - $ref: '#/components/schemas/TransferResultStatusForCancel'
+          - $ref: '#/components/schemas/TransferResult'
+    TransferResultStatusForCancelPending:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          description: "Current transfer status. \n\nPossible values (only for **DEBIT** transfer):\n  * `CANCELLING` - Transfer cancellation in progress\n"
+          type: string
+          enum:
+          - CANCELLING
+          example: CANCELLING
+    ErrorDetails:
+      type: object
+      required:
+      - field
+      - message
+      properties:
+        field:
+          description: Name of the field containing the error
+          type: string
+          example: receiverCurrencyCode
+        message:
+          description: Description of the validation error for this field
+          type: string
+          example: Currency code must be 3 characters
+    TransferResultStatusForProcessPending:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          description: "Current transfer status. \n\nPossible values (for both **CREDIT** and **DEBIT** transfer):\n  * `PROCESSING` - Transfer processing initiated\n"
+          type: string
+          enum:
+          - PROCESSING
+          example: PROCESSING
+    CreditTargetInstrument:
+      description: 'Payment instrument identifying the **recipient** for a CREDIT transfer.
+
+        Remit Core uses this to credit funds to the recipient
+
+        '
+      oneOf:
+      - $ref: '#/components/schemas/PI.CardPan'
+      - $ref: '#/components/schemas/PI.Phone'
+    TransferResultStatusForConfirmPending:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          description: "Current transfer status. \n\nPossible values (only for **DEBIT** transfer):\n  * `CONFIRMING` - Transfer confirmation in progress\n"
+          type: string
+          enum:
+          - CONFIRMING
+          example: CONFIRMING
+    TransferResult:
+      type: object
+      required:
+      - transferId
+      - externalTransferId
+      - senderCurrencyCode
+      - receiverCurrencyCode
+      properties:
+        transferId:
+          description: Transfer identifier in Remit Core
+          type: string
+          format: uuid
+          example: 01990610-f6fb-72fd-84c1-ff8cf5840599
+        externalTransferId:
+          type: string
+          description: Transfer identifier in the Partner's system
+          example: partner-tx-00123
+        senderAmount:
+          type: integer
+          format: int64
+          description: Transfer amount in minor units of sender's currency
+          example: 100000
+        senderCurrencyCode:
+          type: string
+          description: Sender's currency code according to ISO 4217 alpha-3
+          pattern: ^[A-Z]{3}$
+          example: UZS
+        senderName:
+          description: First name+Last name or cardholder name of transfer sender
+          type: string
+          example: PETR PETROV
+        receiverAmount:
+          type: integer
+          format: int64
+          description: Amount received by the recipient in minor units of recipient's currency
+          example: 13900000
+        receiverCurrencyCode:
+          type: string
+          description: Recipient's currency code according to ISO 4217 alpha-3
+          pattern: ^[A-Z]{3}$
+          example: UZS
+        receiverName:
+          description: First name+Last name or cardholder name of transfer recipient
+          type: string
+          example: IVAN IVANOV
+        receiverPaymentSystem:
+          description: Payment system of transfer recipient's payment instrument
+          type: string
+          example: UZCARD
+        fee:
+          type: integer
+          format: int64
+          description: Fee amount in minor units of settlements currency
+          example: 1000
+        exchangeRate:
+          type: string
+          description: Exchange rate from sender's currency to recipient's currency (with exactly 4 decimal places)
+          example: '140.0000'
+        rrn:
+          description: Retrieval Reference Number - unique bank operation number
+          type: string
+          example: '524818898472'
+    SenderPersonDataExtraFields:
+      type: object
+      description: Additional sender identification fields required for DEBIT transfers from Uzbekistan
+      properties:
+        pinfl:
+          description: 'Personal identification number (PINFL) of an individual in Uzbekistan.
+
+            Required for `transferType = DEBIT` and `senderCountry = UZB`
+
+            '
+          type: string
+          example: '12345678901234'
+        residencyCode:
+          description: "Residency status in Uzbekistan.\nRequired for `transferType = DEBIT` and `senderCountry = UZB`.\nPossible values:\n  * `1` - Resident\n  * `2` - Non-resident\n"
+          type: integer
+          example: 1
+    TransferResultStatusForInfoCallback:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          description: "Final transfer status. \n\nPossible values for **CREDIT** transfer (for callback after `POST /process` with code `2000` in response):\n  * `SUCCESS` - Transfer successfully completed\n  * `FAILED` - Transfer rejected\n\nPossible values for **DEBIT** transfer:\n  * For callback after `POST /process` or `POST /confirm` with code `2000` in response:\n     * `SUCCESS` - Transfer successfully completed \n     * `FAILED` - Transfer rejected\n  * Only for callback after `POST /process` with code `2000` in response:\n     * `CONFIRMATION` - Transfer awaiting client confirmation\n  * For callback after `POST /cancel` with code `2000` in response:\n     * `CANCELLED` - Transfer successfully cancelled\n     * `CANCELLING_FAILED` - Transfer cancellation is failed\n"
+          type: string
+          enum:
+          - CONFIRMATION
+          - SUCCESS
+          - FAILED
+          - CANCELLED
+          - CANCELLING_FAILED
+          example: SUCCESS
+    PI.Account:
+      type: object
+      description: 'Payment instrument - bank account number.
+
+        Used in `source` for **CREDIT** transfers or `target` for **DEBIT** transfers
+
+        '
+      required:
+      - paymentInstrumentType
+      - accountNumber
+      properties:
+        paymentInstrumentType:
+          description: Payment instrument type identifier. Must be `ACCOUNT`
+          type: string
+          enum:
+          - ACCOUNT
+          example: ACCOUNT
+        accountNumber:
+          description: Bank account number (digits only)
+          type: string
+          pattern: ^\d*$
+          example: '40817810099910004312'
+    DebitSourceInstrument:
+      description: 'Payment instrument identifying the **sender** for a DEBIT transfer.
+
+        Remit Core uses this to debit funds from the sender
+
+        '
+      oneOf:
+      - $ref: '#/components/schemas/PI.Card'
+    PI.MaskedCard:
+      type: object
+      description: 'Payment instrument - masked card number.
+
+        Used in `source` for **CREDIT** transfers or `target` for **DEBIT** transfers
+
+        '
+      required:
+      - paymentInstrumentType
+      - maskedPan
+      properties:
+        paymentInstrumentType:
+          description: Payment instrument type identifier. Must be `MASKED_CARD`
+          type: string
+          enum:
+          - MASKED_CARD
+          example: MASKED_CARD
+        maskedPan:
+          description: Masked card number with asterisks replacing the middle digits
+          type: string
+          example: 400078******7810
+    ProcessPendingTransferResponse:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          description: "Response code. Possible values:\n  * `2000` - Request accepted. Please wait for operation status via Callback or query the status manually\n"
+          type: integer
+          example: 2000
+        message:
+          description: Response message
+          type: string
+          example: Request accepted. Wait for operation processing information in Callback or request status
+        result:
+          description: Transfer details with current status
+          allOf:
+          - $ref: '#/components/schemas/TransferResultStatusForProcessPending'
+          - $ref: '#/components/schemas/TransferResult'
+    PI.Card:
+      type: object
+      description: 'Payment instrument - full card details for debit authorization.
+
+        Used in `source` for **DEBIT** transfers
+
+        '
+      required:
+      - paymentInstrumentType
+      - pan
+      - expiryDate
+      - phoneNumber
+      properties:
+        paymentInstrumentType:
+          description: Payment instrument type identifier. Must be `CARD`
+          type: string
+          enum:
+          - CARD
+          example: CARD
+        pan:
+          description: Card number (16–19 digits)
+          type: string
+          minLength: 16
+          maxLength: 19
+          pattern: ^\d{16,19}$
+          example: '4000789077777810'
+        expiryDate:
+          description: Card expiry date in `MMYY` format
+          type: string
+          minLength: 4
+          maxLength: 4
+          pattern: ^\d{4}$
+          example: '0530'
+        securityCode:
+          description: Card security code (CVC/CVV), 3–4 digits
+          type: string
+          minLength: 3
+          maxLength: 4
+          pattern: ^\d{3,4}$
+          example: '433'
+        phoneNumber:
+          description: Phone number linked to the card (E.164 format)
+          type: string
+          pattern: ^\+[1-9]\d{1,14}$
+          example: '+998948063815'
+    TransferResultStatusForConfirm:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          description: "Current transfer status. \n\nPossible values (only for **DEBIT** transfer):\n  * `CONFIRMATION` - Transfer awaiting client confirmation (returns with response code `3008` - OTP is incorrect. Please resend the code)\n  * `SUCCESS` - Transfer successfully completed\n  * `FAILED` - Transfer rejected\n"
+          type: string
+          enum:
+          - CONFIRMATION
+          - SUCCESS
+          - FAILED
+          example: SUCCESS
+    ErrorResponse:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          description: Response code
+          type: integer
+        message:
+          description: Error message
+          type: string
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorDetails'
+    ThreeDsExtraFields:
+      properties:
+        acsUrl:
+          description: Link to the issuer bank’s ACS. Required for  `confirmationType = 3DS`
+          type: string
+        termUrl:
+          description: Return URL from the issuer bank's ACS. Required for `confirmationType = 3DS`
+          type: string
+        paReq:
+          description: Payment Authentication Request message (base64). Required for `confirmationType = 3DS`
+          type:
+          - string
+          - 'null'
+    PI.CardPan:
+      type: object
+      description: 'Payment instrument - full card number (PAN).
+
+        Used in `target` for **CREDIT** transfers when crediting by card number
+
+        '
+      required:
+      - paymentInstrumentType
+      - cardPan
+      properties:
+        paymentInstrumentType:
+          description: Payment instrument type identifier. Must be `CARD_PAN`
+          type: string
+          enum:
+          - CARD_PAN
+          example: CARD_PAN
+        cardPan:
+          description: Full card number (16–19 digits)
+          type: string
+          minLength: 16
+          maxLength: 19
+          pattern: ^\d{16,19}$
+          example: '40817810099910004312'
+    TransferRequest:
+      type: object
+      required:
+      - transferType
+      - externalTransferId
+      - clientId
+      - transferData
+      - target
+      properties:
+        transferType:
+          description: "Transfer type. Possible values:\n  * `CREDIT` - Partner debits the sender; Remit Core credits the recipient\n  * `DEBIT` - Remit Core debits the sender; Partner credits the recipient\n"
+          type: string
+          enum:
+          - CREDIT
+          - DEBIT
+          example: CREDIT
+        externalTransferId:
+          description: Unique transfer identifier in the Partner's system. Used for idempotency
+          type: string
+          example: partner-tx-00123
+        clientId:
+          description: "Unique identifier of the sender on the partner's side.\n\nAcceptable values include:\n  - the sender's phone number;\n  - an internal client ID in the partner's system;\n  - the sender's email address;\n  - any other unique identifying attribute.\n\nImportant: the clientId value must uniquely correspond to a single\nindividual sender of the transfer. Using the same clientId for\ndifferent individuals is not allowed\n"
+          type: string
+          example: client-7890
+        transferData:
+          $ref: '#/components/schemas/TransferData'
+        target:
+          type: object
+        source:
+          type: object
+        sender:
+          $ref: '#/components/schemas/PersonData'
+        receiver:
+          $ref: '#/components/schemas/PersonData'
+    DebitTransferRequest:
+      description: 'Request body for **DEBIT** transfer registration.
+
+        Remit Core debits the sender; the Partner credits the recipient independently.
+
+        '
+      allOf:
+      - $ref: '#/components/schemas/TransferRequest'
+      - type: object
+        required:
+        - sender
+        - receiver
+        - source
+        properties:
+          source:
+            $ref: '#/components/schemas/DebitSourceInstrument'
+          target:
+            $ref: '#/components/schemas/DebitTargetInstrument'
+          sender:
+            allOf:
+            - $ref: '#/components/schemas/PersonData'
+            - type: object
+              required:
+              - firstName
+              - lastName
+              - birthday
+              - birthPlace
+              - identityDocument
+              properties:
+                identityDocument:
+                  allOf:
+                  - $ref: '#/components/schemas/IdentityDocument'
+                  - type: object
+                    required:
+                    - documentType
+                    - documentCountry
+                    - number
+                    - issuedDate
+                    - issuedBy
+                extraFields:
+                  $ref: '#/components/schemas/SenderPersonDataExtraFields'
+          receiver:
+            allOf:
+            - $ref: '#/components/schemas/PersonData'
+            - type: object
+              required:
+              - firstName
+              - lastName
+              properties:
+                extraFields:
+                  type: object
+                  description: Additional recipient data (if required)
+    CreditSourceInstrument:
+      description: 'Payment instrument identifying the **sender''s** account for a CREDIT transfer.
+
+        The Partner uses this to indicate the source account on their side.
+
+
+        Optional. If provided, all fields of the selected instrument are required
+
+        '
+      oneOf:
+      - $ref: '#/components/schemas/PI.Account'
+      - $ref: '#/components/schemas/PI.MaskedCard'
+    CancelPendingTransferResponse:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          description: "Response code. Possible values:\n  * `2000` - Request accepted. Please wait for operation status via Callback or query the status manually\n"
+          type: integer
+          example: 2000
+        message:
+          description: Response message
+          type: string
+          example: Request accepted. Wait for operation processing information in Callback or request status
+        result:
+          description: Transfer details with current status
+          allOf:
+          - $ref: '#/components/schemas/TransferResultStatusForCancelPending'
+          - $ref: '#/components/schemas/TransferResult'
+    CreditTransferRequest:
+      description: 'Request body for **CREDIT** transfer registration.
+
+        The Partner debits the sender independently; Remit Core credits the recipient.
+
+        '
+      allOf:
+      - $ref: '#/components/schemas/TransferRequest'
+      - type: object
+        required:
+        - sender
+        properties:
+          source:
+            $ref: '#/components/schemas/CreditSourceInstrument'
+          target:
+            $ref: '#/components/schemas/CreditTargetInstrument'
+          sender:
+            allOf:
+            - $ref: '#/components/schemas/PersonData'
+            - type: object
+              required:
+              - firstName
+              - lastName
+    TransferResultStatusForNeedConfirmationProcess:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          description: "Current transfer status. \n\nPossible values (only for **DEBIT** transfer):\n  * `CONFIRMATION` - Transfer awaiting client confirmation\n"
+          type: string
+          enum:
+          - CONFIRMATION
+          example: CONFIRMATION
+    TransferResultStatusForCancel:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          description: "Current transfer status. \n\nPossible values (only for **DEBIT** transfer):\n  * `CANCELLED` - Transfer successfully cancelled\n  * `CANCELLING_FAILED` - Transfer cancellation is failed\n"
+          type: string
+          enum:
+          - CANCELLED
+          - CANCELLING_FAILED
+          example: CANCELLED
+    StatusTransferRequest:
+      type: object
+      description: At least one of `transferId` or `externalTransferId` must be provided
+      properties:
+        transferId:
+          description: 'Transfer identifier in Remit Core, received in the response to `POST /register`.
+
+            Required if `externalTransferId` is not specified
+
+            '
+          type: string
+          example: 01990610-f6fb-72fd-84c1-ff8cf5840599
+        externalTransferId:
+          description: 'Transfer identifier in the Partner''s system.
+
+            Required if `transferId` is not specified
+
+            '
+          type: string
+    RegisterTransferResponse:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          description: "Response code. Possible values:\n  * `0` - Request completed successfully\n  * `3001` - A transfer with the provided externalTransferId has already been registered\n  * `3003` - The transfer amount exceeds the single transaction limit\n  * `3004` - The daily transfer amount limit has been reached or exceeded\n  * `3010` - The specified identificationType is not allowed for this direction\n  * `3011` - Required PersonData fields are missing according to the rules\n  * `3012` - The monthly transfer amount limit has been reached or exceeded\n  * `3013` - The daily number of transfers exceeds the allowed limit\n  * `3014` - The monthly number of transfers exceeds the allowed limit\n  * `3017` - Limits are not configured for the partner, or the limits service is unavailable\n  * `3021` - Recipient’s card not found in the system\n  * `3024` - Recipient’s bank not found or not supported by the system\n  * `3030` - Sender failed stop-list check\n  * `3031` - Recipient failed stop-list check\n  * `3034` - Recipient’s card type/payment system not supported\n  * `3102` - Exceeded the limit\n  * `3103` - Rejected by security settings\n  * `8002` - Access restriction by partner/direction/country/currency\n  * `9000` - Internal error\n  * `9100` - External service interaction error\n"
+          type: integer
+          example: 0
+        message:
+          description: Response message
+          type: string
+          example: Request completed successfully
+        result:
+          description: Transfer information
+          allOf:
+          - $ref: '#/components/schemas/TransferResultStatusForRegister'
+          - $ref: '#/components/schemas/TransferResult'
+    TransferResultStatusForRegister:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          description: "Current transfer status. \n\nPossible values (for both **CREDIT** and **DEBIT** transfer):\n  * `REGISTERED` - Transfer successfully registered\n  * `FAILED` - Transfer rejected\n"
+          type: string
+          enum:
+          - REGISTERED
+          - FAILED
+          example: REGISTERED
+    ResendOtpResponse:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          description: "Response code. Possible values:\n  * `0` - Request completed successfully\n  * `3017` - Limits are not configured for the partner, or the limits service is unavailable\n  * `3018` - Maximum number of OTP attempts exceeded. Operation rejected\n  * `3035` - Transfer confirmation is not possible in the current status\n  * `3036` - Confirmation performed after the allowed time window — transfer expired\n  * `3041` - Error occurred while debiting funds\n  * `3054` - Transfer with the specified ID not found\n  * `9000` - Internal error\n  * `9100` - External service interaction error\n  * `9051` - Timeout while waiting for response from external service\n"
+          type: integer
+          example: 0
+        message:
+          description: Response message
+          type: string
+          example: Request completed successfully
+        result:
+          description: Transfer details with current status
+          allOf:
+          - $ref: '#/components/schemas/TransferResultStatusForResendOtp'
+          - $ref: '#/components/schemas/TransferResult'
+    ConfirmationData:
+      type: object
+      required:
+      - confirmationType
+      properties:
+        confirmationType:
+          type: string
+          enum:
+          - OTP
+          - 3DS
+          description: "Confirmation method required to proceed. Possible values:\n  * `OTP` - One-time password sent to the client\n  * `3DS` - Three-Domain Secure protocol for online payment authentication.\n"
+          example: OTP
+        confirmationValue:
+          type: string
+          description: 'Confirmation value, if provided by Remit Core.
+
+            For `confirmationType = OTP` contains the one-time password.
+
+            May be absent if the OTP is delivered directly to the client
+
+            '
+          example: '66549'
+        extraFields:
+          type: object
+          allOf:
+          - $ref: '#/components/schemas/ThreeDsExtraFields'
+    TransferResultStatusForGetStatus:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          description: "Current transfer status. \n\nPossible values for **CREDIT** transfer:\n  * `INIT` - Transfer initiated, registration in progress\n  * `REGISTERED` - Transfer successfully registered\n  * `PROCESSING` - Transfer processing initiated\n  * `SUCCESS` - Transfer successfully completed\n  * `FAILED` - Transfer rejected\n  * `CANCELLED` - Transfer cancelled\n\nPossible values for **DEBIT** transfer:\n  * `INIT` - Transfer initiated, registration in progress\n  * `REGISTERED` - Transfer successfully registered\n  * `PROCESSING` - Transfer processing initiated\n  * `CONFIRMATION` - Transfer awaiting client confirmation\n  * `CONFIRMING` - Transfer confirmation in progress\n  * `SUCCESS` - Transfer successfully completed\n  * `FAILED` - Transfer rejected\n  * `CANCELLING` - Transfer cancellation in progress\n  * `CANCELLED` - Transfer cancelled\n  * `CANCELLING_FAILED` - Transfer cancellation is failed\n"
+          type: string
+          enum:
+          - INIT
+          - REGISTERED
+          - PROCESSING
+          - CONFIRMATION
+          - CONFIRMING
+          - SUCCESS
+          - FAILED
+          - CANCELLING
+          - CANCELLING_FAILED
+          - CANCELLED
+          example: SUCCESS
+    PI.Phone:
+      type: object
+      description: 'Payment instrument - recipient''s phone number with bank label.
+
+        Used in `target` for **CREDIT** transfers when crediting by phone number.
+
+        To obtain the list of available `bankLabel` values for a phone number, use `POST /info/v1/get_banks`
+
+        '
+      required:
+      - paymentInstrumentType
+      - phoneNumber
+      - bankLabel
+      properties:
+        paymentInstrumentType:
+          description: Payment instrument type identifier. Must be `PHONE`
+          type: string
+          enum:
+          - PHONE
+          example: PHONE
+        phoneNumber:
+          type: string
+          description: Phone number (E.164 format)
+          pattern: ^\+[1-9]\d{1,14}$
+          example: '+998901234567'
+        bankLabel:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: Short bank code (3 characters) identifying the recipient's bank
+          example: KPT
+    ConfirmTransferResponse:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          description: "Response code. Possible values:\n  * `0` - Request completed successfully\n  * `3003` - The transfer amount exceeds the single transaction limit\n  * `3008` - OTP is incorrect. Please resend the code\n  * `3012` - The monthly transfer amount limit has been reached or exceeded\n  * `3013` - The daily number of transfers exceeds the allowed limit\n  * `3014` - The monthly number of transfers exceeds the allowed limit\n  * `3017` - Limits are not configured for the partner, or the limits service is unavailable\n  * `3018` - Maximum number of OTP attempts exceeded. Operation rejected\n  * `3035` - Transfer confirmation is not possible in the current status\n  * `3036` - Confirmation performed after the allowed time window — transfer expired\n  * `3040` - One-time password has expired. Please request a new code\n  * `3041` - Error occurred while debiting funds\n  * `3054` - Transfer with the specified ID not found\n  * `5003` - Exchange rate has changed since the transfer registration\n  * `9000` - Internal error\n  * `9100` - External service interaction error\n"
+          type: integer
+          example: 0
+        message:
+          description: Response message
+          type: string
+          example: Request completed successfully
+        result:
+          description: Transfer details
+          allOf:
+          - $ref: '#/components/schemas/TransferResultStatusForConfirm'
+          - $ref: '#/components/schemas/TransferResult'
+    ConfirmTransferRequest:
+      type: object
+      required:
+      - transferId
+      - otp
+      properties:
+        transferId:
+          description: Transfer identifier in Remit Core, received in the response to `POST /register`
+          type: string
+          example: 01990610-f6fb-72fd-84c1-ff8cf5840599
+        otp:
+          description: One-time code for confirmation received by the client
+          type: string
+          example: '766855'
+    PersonData:
+      type: object
+      properties:
+        firstName:
+          description: First name (ASCII Latin characters only)
+          type: string
+          minLength: 1
+          example: IVAN
+        middleName:
+          description: Middle name/Second name (ASCII Latin characters only)
+          type: string
+          minLength: 2
+          example: IVANOVICH
+        lastName:
+          description: Last name (ASCII Latin characters only)
+          type: string
+          minLength: 2
+          example: IVANOV
+        nationality:
+          description: Nationality code according to ISO 3166-1 numeric (3 digits)
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: '860'
+        birthday:
+          description: Date of birth in `YYYY-MM-DD` format
+          type: string
+          format: date
+          example: '1995-11-17'
+        birthPlace:
+          description: Place of birth
+          type: string
+          example: Tashkent
+        address:
+          description: Residential address
+          type: string
+          minLength: 2
+          example: Republic of Uzbekistan, Tashkent, Fidokor str., 30, room 18
+        identityDocument:
+          $ref: '#/components/schemas/IdentityDocument'
+        extraFields:
+          type: object
+          description: Additional fields (if required)
+    NeedConfirmationProcessTransferResponse:
+      type: object
+      required:
+      - code
+      - message
+      - confirmationData
+      properties:
+        code:
+          description: "Response code. Possible values:\n  * `2001` - Request completed successfully. Transfer confirmation required\n"
+          type: integer
+          example: 2001
+        message:
+          description: Response message
+          type: string
+          example: Request completed successfully. Transfer confirmation required
+        confirmationData:
+          description: Confirmation type and value. Returned when transfer confirmation is required
+          allOf:
+          - $ref: '#/components/schemas/ConfirmationData'
+        result:
+          description: Transfer details
+          allOf:
+          - $ref: '#/components/schemas/TransferResultStatusForNeedConfirmationProcess'
+          - $ref: '#/components/schemas/TransferResult'
+    DebitTargetInstrument:
+      description: 'Payment instrument identifying the **recipient''s** account for a DEBIT transfer.
+
+        The Partner uses this to indicate the destination account on their side
+
+        '
+      oneOf:
+      - $ref: '#/components/schemas/PI.Account'
+      - $ref: '#/components/schemas/PI.MaskedCard'
+    ProcessTransferResponse:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          description: "Response code. Possible values:\n  * `0` - Request completed successfully\n  * `2002` - Request must be repeated\n  * `3003` - The transfer amount exceeds the single transaction limit\n  * `3012` - The monthly transfer amount limit has been reached or exceeded\n  * `3013` - The daily number of transfers exceeds the allowed limit\n  * `3014` - The monthly number of transfers exceeds the allowed limit\n  * `3017` - Limits are not configured for the partner, or the limits service is unavailable\n  * `3020` - Sender’s card not found in the system\n  * `3023` - Sender’s bank not found or not supported by the system\n  * `3030` - Sender failed stop-list check\n  * `3031` - Recipient failed stop-list check\n  * `3032` - The client’s phone number in the request does not match the number linked to the card\n  * `3035` - Transfer confirmation is not possible in the current status\n  * `3036` - Confirmation performed after the allowed time window — transfer expired\n  * `3037` - Error occurred while crediting funds\n  * `3039` - Sender’s card type/payment system not supported\n  * `3041` - Error occurred while debiting funds\n  * `3054` - Transfer with the specified ID not found\n  * `3102` - Exceeded the limit\n  * `3103` - Rejected by security settings\n  * `5003` - Exchange rate has changed since the transfer registration\n  * `9000` - Internal error\n  * `9100` - External service interaction error\n"
+          type: integer
+          example: 0
+        message:
+          description: Response message
+          type: string
+          example: Request completed successfully
+        result:
+          description: Transfer details
+          allOf:
+          - $ref: '#/components/schemas/TransferResultStatusForProcess'
+          - $ref: '#/components/schemas/TransferResult'
+    TransferData:
+      type: object
+      description: 'Financial parameters of the transfer.
+
+
+        Exactly one of the following must be provided:
+
+        - `senderAmount` - if the sender wants to send a fixed amount
+
+        - `receiverAmount` - if the recipient must receive a fixed amount
+
+        '
+      required:
+      - senderCurrencyCode
+      - senderCountry
+      - receiverCountry
+      - receiverCurrencyCode
+      properties:
+        senderAmount:
+          type: integer
+          format: int64
+          description: 'Transfer amount in minor units of sender''s currency. Must be greater than zero.
+
+            Required if `receiverAmount` is not specified
+
+            '
+          example: 100000
+        senderCurrencyCode:
+          type: string
+          description: Sender's currency code according to ISO 4217 alpha-3
+          pattern: ^[A-Z]{3}$
+          example: UZS
+        senderCountry:
+          description: Sender's country code according to ISO 3166-1 alpha-3
+          type: string
+          pattern: ^[A-Z]{3}$
+          example: UZB
+        receiverCountry:
+          description: Recipient's country code according to ISO 3166-1 alpha-3
+          type: string
+          pattern: ^[A-Z]{3}$
+          example: RUS
+        receiverAmount:
+          type: integer
+          format: int64
+          description: 'Amount to be received by the recipient in minor units of recipient''s currency. Must be greater than zero.
+
+            Required if `senderAmount` is not specified
+
+            '
+          example: 13900000
+        receiverCurrencyCode:
+          type: string
+          description: Recipient's currency code according to ISO 4217 alpha-3
+          pattern: ^[A-Z]{3}$
+          example: RUB
+        reason:
+          type: string
+          description: Transfer purpose/reason
+          example: Business payment
+    TransferIdRequest:
+      type: object
+      required:
+      - transferId
+      properties:
+        transferId:
+          description: Transfer identifier in Remit Core, received in the response to `POST /register`
+          type: string
+          example: 01990610-f6fb-72fd-84c1-ff8cf5840599
+    TransferResultStatusForProcess:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          description: "Current transfer status. \n\nPossible values for **CREDIT** transfer:\n  * `SUCCESS` - Transfer successfully completed\n  * `FAILED` - Transfer rejected\n\nPossible values for **DEBIT** transfer:\n  * `REGISTERED` - Transfer registered (returns with response code `2002` - Request must be repeated)\n  * `FAILED` - Transfer rejected\n"
+          type: string
+          enum:
+          - REGISTERED
+          - SUCCESS
+          - FAILED
+          example: SUCCESS
+    422ErrorResponse:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          description: "Response code. Possible values:\n  * `1001` - The request body is not a valid JSON or does not match the expected schema structure\n  * `1002` - Required fields are missing\n  * `1003` - Format/range/enum requirements violated; the 'errors' array contains the fields and descriptions of the issues\n  * `1101` - Required header is missing\n"
+          type: integer
+          example: 1001
+        message:
+          description: Error message
+          type: string
+          example: Required field is missing
+        errors:
+          type: array
+          description: List of field-level validation errors
+          items:
+            $ref: '#/components/schemas/ErrorDetails'
+  callbacks:
+    TransferResultInfo:
+      '{/callbackUrl}':
+        post:
+          summary: Transfer result callback
+          description: 'Asynchronous notification sent by Remit Core when transfer processing completes.
+
+            Sent after `POST /process`, `POST /confirm` or `POST /cancel` returned code `2000`.
+
+            The callback URL is agreed upon during Partner onboarding
+
+            '
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/TransferResultInfoCallback'
+          responses:
+            '200':
+              description: Standard success response
+            '500':
+              description: Partner-side error while processing the callback
+            2XX:
+              description: Any other 2xx is also treated as success
+  securitySchemes:
+    XApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+      description: Partner API key in UUID format. Issued upon onboarding. Required for all methods
+x-tagGroups:
+- name: API
+  tags:
+  - Transfer process
+  - Information retrieval

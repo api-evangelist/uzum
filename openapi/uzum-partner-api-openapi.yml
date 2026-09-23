@@ -1,0 +1,357 @@
+openapi: 3.2.0
+info:
+  title: rate-keeper-back Partner API
+  version: 0.0.1
+tags:
+- name: Partner
+paths:
+  /api/v1/partner/convert:
+    post:
+      tags:
+      - Partner
+      summary: Convert
+      operationId: convert_api_v1_partner_convert_post
+      parameters:
+      - name: X-API-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          description: API Key
+          title: X-Api-Key
+        description: API Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/ConvertToUzCommand'
+              - $ref: '#/components/schemas/ConvertFromUzCommand'
+              title: Command
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_ConvertResponse_'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/partner/limits:
+    post:
+      tags:
+      - Partner
+      summary: Limits
+      operationId: limits_api_v1_partner_limits_post
+      parameters:
+      - name: X-API-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          description: API Key
+          title: X-Api-Key
+        description: API Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LimitsCommand'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_LimitsResponse_'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    ErrorCode:
+      type: integer
+      enum:
+      - 0
+      - 1000
+      - 2000
+      - 3000
+      - 3001
+      - 3002
+      - 3003
+      - 3004
+      - 5000
+      - 5001
+      title: ErrorCode
+    ApiResponse_LimitsResponse_:
+      properties:
+        code:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message
+          examples:
+          - successful
+        result:
+          anyOf:
+          - $ref: '#/components/schemas/LimitsResponse'
+          - type: 'null'
+      type: object
+      required:
+      - code
+      - result
+      title: ApiResponse[LimitsResponse]
+    ApiResponse_ConvertResponse_:
+      properties:
+        code:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message
+          examples:
+          - successful
+        result:
+          anyOf:
+          - $ref: '#/components/schemas/ConvertResponse'
+          - type: 'null'
+      type: object
+      required:
+      - code
+      - result
+      title: ApiResponse[ConvertResponse]
+    LimitsCommand:
+      properties:
+        amount:
+          type: integer
+          title: Amount
+          description: The amount of currency to be converted in UZS, in the smallest currency units.
+        currencyTo:
+          type: string
+          enum:
+          - USD
+          - EUR
+          title: Currencyto
+          description: Currency code according to ISO 4217.
+        rateType:
+          allOf:
+          - $ref: '#/components/schemas/RateType'
+          description: Type of exchange rate for conversion.
+      type: object
+      required:
+      - amount
+      - currencyTo
+      - rateType
+      title: LimitsCommand
+    LimitsResponse:
+      properties:
+        amountFrom:
+          type: integer
+          title: Amountfrom
+          description: Amount of currency received for conversion in UZS, in the smallest currency units.
+        amountTo:
+          type: integer
+          title: Amountto
+          description: Сконвертированная сумма в минимальных единицах валюты
+        currencyTo:
+          allOf:
+          - $ref: '#/components/schemas/Currency'
+          description: Валюта конвертации
+      type: object
+      required:
+      - amountFrom
+      - amountTo
+      - currencyTo
+      title: LimitsResponse
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    RateType:
+      type: string
+      enum:
+      - OFFICIAL
+      - SELL
+      - BUY
+      title: RateType
+    ConvertToUzCommand:
+      properties:
+        partnerId:
+          type: string
+          format: uuid
+          title: Partnerid
+          description: Partner ID within Rate Keeper
+        amount:
+          type: integer
+          title: Amount
+          description: The amount of currency to be converted, in the smallest currency units.
+        ips:
+          anyOf:
+          - $ref: '#/components/schemas/IPS'
+          - type: 'null'
+          description: Payment system within Uzbekistan.
+        currencyFrom:
+          type: string
+          enum:
+          - USD
+          - RUB
+          - EUR
+          - UZS
+          title: Currencyfrom
+          description: Currency code of the source currency for the transfer, following the ISO 4217 standard.
+        currencyTo:
+          type: string
+          enum:
+          - USD
+          - RUB
+          - EUR
+          - UZS
+          title: Currencyto
+          description: Currency code of the target currency for the transfer, following the ISO 4217 standard.
+        direction:
+          type: string
+          enum:
+          - TO_UZ
+          const: TO_UZ
+          title: Direction
+          description: Transfer direction.
+      type: object
+      required:
+      - partnerId
+      - amount
+      - currencyFrom
+      - currencyTo
+      - direction
+      title: ConvertToUzCommand
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    ConvertFromUzCommand:
+      properties:
+        partnerId:
+          type: string
+          format: uuid
+          title: Partnerid
+          description: Partner ID within Rate Keeper
+        amount:
+          type: integer
+          title: Amount
+          description: The amount of currency to be converted, in the smallest currency units.
+        ips:
+          anyOf:
+          - $ref: '#/components/schemas/IPS'
+          - type: 'null'
+          description: Payment system within Uzbekistan.
+        currencyFrom:
+          type: string
+          enum:
+          - USD
+          - RUB
+          - EUR
+          - UZS
+          title: Currencyfrom
+          description: Currency code of the source currency for the transfer, following the ISO 4217 standard.
+        currencyTo:
+          type: string
+          enum:
+          - USD
+          - RUB
+          - EUR
+          - UZS
+          title: Currencyto
+          description: Currency code of the target currency for the transfer, following the ISO 4217 standard.
+        direction:
+          type: string
+          enum:
+          - FROM_UZ
+          const: FROM_UZ
+          title: Direction
+          description: Transfer direction.
+      type: object
+      required:
+      - partnerId
+      - amount
+      - currencyFrom
+      - currencyTo
+      - direction
+      title: ConvertFromUzCommand
+    ConvertResponse:
+      properties:
+        currencyFrom:
+          allOf:
+          - $ref: '#/components/schemas/Currency'
+          description: Currency code of the source currency for the transfer, following the ISO 4217 standard.
+        currencyTo:
+          allOf:
+          - $ref: '#/components/schemas/Currency'
+          description: Currency code of the target currency for the transfer, following the ISO 4217 standard.
+        rate:
+          type: string
+          title: Rate
+          description: Курс конвертации
+        amountFrom:
+          type: integer
+          title: Amountfrom
+          description: Сумма до конвертации. В минимальных единицах валюты
+        amountTo:
+          type: integer
+          title: Amountto
+          description: Сумма после конвертации. В минимальных единицах валюты
+      type: object
+      required:
+      - currencyFrom
+      - currencyTo
+      - rate
+      - amountFrom
+      - amountTo
+      title: ConvertResponse
+    Currency:
+      type: string
+      enum:
+      - USD
+      - EUR
+      - RUB
+      - UZS
+      - UNKNOWN
+      title: Currency
+    IPS:
+      type: string
+      enum:
+      - HUMO
+      - UZCARD
+      title: IPS

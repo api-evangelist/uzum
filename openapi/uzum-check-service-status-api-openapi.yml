@@ -1,0 +1,42 @@
+openapi: 3.2.0
+info:
+  title: Uzum Fiscalization Check Service Status API
+  version: 0.0.2
+  description: '**Uzum Fiscalization** is a service for fiscalizing receipts and submitting them to the Uzbekistan tax authority via API.'
+tags:
+- name: Check Service Status
+  description: This method allows you to check the basic functionality and availability of the fiscalization service.
+paths:
+  /health/:
+    get:
+      tags:
+      - Check Service Status
+      summary: /health
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: true
+        schema:
+          type: string
+        description: Unique API key. We assign and provide this key to each partner.
+      operationId: health_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            text/plain:
+              schema:
+                type: string
+x-tagGroups:
+- name: API
+  description: hi
+  tags:
+  - Check Service Status
+  - Fiscalization
+  - Submit QR Code Payment Receipt to Tax Authorities
+- name: Testing
+  tags:
+  - Testing
+- name: Additional information
+  tags:
+  - Updates

@@ -1,0 +1,647 @@
+openapi: 3.2.0
+info:
+  title: Uzum CrossBorder Transfer From Uzbekistan API
+  version: 0.1.0
+  description: '**Uzum CrossBorder Transfer** is an international money transfer service between Uzbekistan and other countries.'
+servers:
+- url: https://crossborder.transfer.uz
+security:
+- basicAuth: []
+tags:
+- name: From Uzbekistan
+  description: Methods for transfers from Uzbekistan
+paths:
+  /cbt/v1/transfer/check_debit:
+    post:
+      tags:
+      - From Uzbekistan
+      summary: Register Transfer from Uzbekistan and Send OTP
+      operationId: checkDebit
+      requestBody:
+        description: JSON object with request parameters.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckDebitRequest'
+        required: true
+      responses:
+        '200':
+          description: description
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/CheckDebitResponse'
+                - type: object
+                  properties:
+                    error:
+                      $ref: '#/components/schemas/Error'
+        '400':
+          description: Error object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /cbt/v1/transfer/resend_otp:
+    post:
+      tags:
+      - From Uzbekistan
+      summary: Resend OTP
+      operationId: resendOTP
+      requestBody:
+        description: JSON object with request parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendOTPRequest'
+        required: true
+      responses:
+        '200':
+          description: description
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/CheckDebitResponse'
+                - type: object
+                  properties:
+                    error:
+                      $ref: '#/components/schemas/Error'
+        '400':
+          description: Error object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '408':
+          description: Timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /cbt/v1/transfer/confirm_debit:
+    post:
+      tags:
+      - From Uzbekistan
+      summary: Confirm Transfer from Uzbekistan
+      description: To confirm the transfer, the operation must have the status `APPROVED`. ⚠️ We do not send callbacks for transfers with the `PENDING` status. If you receive this status, request the transfer state using the /transfer/status method every hour until a final status (`SUCCESS` or `FAILED`) is returned.
+      operationId: confirmDebit
+      requestBody:
+        description: JSON object with request parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmDebitRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/TransferStatusResponse'
+                - type: object
+                  properties:
+                    error:
+                      $ref: '#/components/schemas/Error'
+        '400':
+          description: Error object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /cbt/v1/transfer/cancel_debit:
+    post:
+      tags:
+      - From Uzbekistan
+      summary: Cancel Transfer
+      description: To cancel the transfer, the operation must have the status SUCCESS. This means that the debit from the client’s account was successfully processed, but for some reason, the crediting to the recipient’s side failed. In this case, the service correctly processed the debit, but the crediting of funds in another system (e.g., in Russia) did not take place, which allows for initiating the cancellation. After a successful cancellation, the operation status will change to REVERSED.
+      operationId: cancelDebit
+      requestBody:
+        description: JSON object with request parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelDebitRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/TransferStatusResponse'
+                - type: object
+                  properties:
+                    error:
+                      $ref: '#/components/schemas/Error'
+        '400':
+          description: Error object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    CheckDebitResponse:
+      required:
+      - externalTransferId
+      - status
+      - transferId
+      type: object
+      properties:
+        externalTransferId:
+          type: string
+          description: Transfer ID on the partner's side
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        transferId:
+          type: string
+          description: Transfer ID on the Crossborder Transfer side
+          format: uuid
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        senderAmount:
+          type: integer
+          description: Sender's payment amount in minimal units
+          example: 13640000
+        senderCurrencyCode:
+          type: string
+          description: Sender's payment currency (ISO 4217 alphabetical code)
+          example: UZS
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        receiverAmount:
+          type: integer
+          description: Recipient's payment amount in minimal units
+          example: 40000
+        receiverCurrencyCode:
+          type: string
+          description: Recipient's currency (ISO 4217 alphabetical code)
+          example: RUB
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        exchangeRate:
+          type: string
+          description: Conversion rate from senderCurrencyCode to receiverCurrencyCode
+          example: '0.00000756'
+        status:
+          type: string
+          description: Transfer status
+          example: APPROVED
+          enum:
+          - REGISTERED
+          - PENDING
+          - APPROVED
+          - SUCCESS
+          - FAILED
+          - REVERSED
+    CancelDebitRequest:
+      required:
+      - externalTransferId
+      type: object
+      properties:
+        externalTransferId:
+          type: string
+          description: Transfer ID in the partner's system
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        reason:
+          type: string
+          description: Cancelation reason
+          example: Debiting error
+    IdentityDocument:
+      description: An object containing information about the identity document.
+      type: object
+      required:
+      - identityDocumentCode
+      - identityDocumentSeries
+      - identityDocumentNumber
+      - identityDocumentIssuer
+      - identityDocumentIssueDate
+      - pinfl
+      properties:
+        identityDocumentCode:
+          description: "Identity document code according to directory 008\nResidents:\n«0» – ID card of the Republic of Uzbekistan\n«1» - Passport of a citizen of the Republic of Uzbekistan \n«2» – Military ID\n«5» – Residence permit\n«6» – Biometric passport of a citizen of the Republic of Uzbekistan\n«8» – National driver’s license (new format)\n\nNon-residents:\n«4» – Foreign citizen’s passport\n«9» – Other\n"
+          type: string
+          enum:
+          - '0'
+          - '1'
+          - '2'
+          - '4'
+          - '5'
+          - '6'
+          - '8'
+          - '9'
+        identityDocumentSeries:
+          description: Identity document series
+          type: string
+          example: AA
+        identityDocumentNumber:
+          description: Identity document number
+          type: string
+          example: '7374658'
+        identityDocumentIssuer:
+          description: Name of the organization that issued the identity document
+          type: string
+          example: STATE PERSONALIZATION CENTRE
+        identityDocumentIssueDate:
+          description: Identity document issue date in the format YYYY-MM-DD (ISO 8601)
+          type: string
+          example: '2020-05-13'
+        pinfl:
+          description: PINFL (Personal Identification Number of the Physical Person)
+          minLength: 14
+          maxLength: 14
+          example: '30101800050014'
+    SenderInfo:
+      description: An object containing information about the identity of the transfer initiator.
+      required:
+      - personFirstName
+      - personLastName
+      - birthday
+      - birthPlace
+      - residencyCode
+      - document
+      type: object
+      properties:
+        personFirstName:
+          type: string
+          description: Sender’s first name.
+          example: NIKITA
+        personMiddleName:
+          type: string
+          description: Sender’s middle name.
+          example: IVANOVICH
+        personLastName:
+          type: string
+          description: Sender’s first name.
+          example: ABRAMOV
+        birthday:
+          type: string
+          description: Date of birth in the format YYYY-MM-DD (ISO 8601).
+          example: '2000-04-18'
+        birthPlace:
+          type: string
+          description: Place of birth.
+          example: NAMAGAN REGION
+        residencyCode:
+          description: "Residency code according to directory 027\n  \"1\" - Resident\n  \"2\" - Non-resident\n"
+          type: string
+          enum:
+          - '1'
+          - '2'
+          example: '1'
+        document:
+          $ref: '#/components/schemas/IdentityDocument'
+    ReceiverInfo:
+      description: An object containing information about the identity of the transfer recipient.
+      required:
+      - personFullName
+      type: object
+      properties:
+        personFullName:
+          description: Recipient's full name (First, Middle, Last).
+          type: string
+          example: O VON CHAN
+        birthday:
+          description: Date of birth in the format YYYY-MM-DD (ISO 8601)
+          type: string
+          example: '1999-12-15'
+        birthPlace:
+          type: string
+          description: Place of birth.
+          example: NAMAGAN REGION
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: integer
+          example: 0
+        errorMessage:
+          type: string
+          example: string
+        errorDetails:
+          type: object
+          additionalProperties: true
+    CheckDebitRequest:
+      required:
+      - externalTransferId
+      - receiver
+      - receiverAccount
+      - receiverCountry
+      - receiverCurrencyCode
+      - sender
+      - senderAmount
+      - senderCurrencyCode
+      - phone
+      type: object
+      properties:
+        clientId:
+          type: string
+          description: Client ID in the partner's system.
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        externalTransferId:
+          type: string
+          description: Transfer ID in the partner’s system.
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        receiverAccount:
+          type: string
+          description: Masked recipient’s card number or account number.
+          example: 553609******2598
+        senderCardToken:
+          type:
+          - string
+          - 'null'
+          description: Card token. Not sent if senderCardPan and senderCardExpireDate are provided.
+          example: vlKeomyUYGh8ktD+1hvI68kuApMKq1s8uyfgvHA=
+        senderCardPan:
+          type:
+          - string
+          - 'null'
+          description: Card PAN. Not sent if senderCardToken is provided.
+          example: '5536123443212699'
+        senderCardExpireDate:
+          type:
+          - string
+          - 'null'
+          description: Card expiration date in the format YYMM. Not sent if senderCardToken is provided.
+          example: '2811'
+        senderAmount:
+          type: integer
+          description: Sender’s payment amount in the minimal currency units.
+          example: 13640000
+        senderCurrencyCode:
+          type: string
+          description: Sender’s payment currency (ISO 4217 alphabetic code)
+          example: UZS
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        receiverAmount:
+          type: integer
+          description: Recipient’s payment amount in the smallest currency units.
+          example: 40000
+        receiverCurrencyCode:
+          type: string
+          description: Recipient’s payment currency (ISO 4217 alphabetic code).
+          example: RUB
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        exchangeRate:
+          type: string
+          description: Conversion rate from senderCurrencyCode to receiverCurrencyCode.
+          example: '0.00000756'
+        sender:
+          $ref: '#/components/schemas/SenderInfo'
+        receiver:
+          $ref: '#/components/schemas/ReceiverInfo'
+        receiverCountry:
+          maxLength: 2
+          minLength: 2
+          type: string
+          description: Recipient’s country (two-letter country code according to ISO 3166-1 Alpha-2).
+          example: RU
+        phone:
+          description: Sender’s phone number linked to the specified card.
+          type: string
+          pattern: \d{12}
+        smsHash:
+          description: SMS Hash
+          type: string
+          example: 2asio1
+    ErrorDetails:
+      required:
+      - message
+      - field
+      type: object
+      properties:
+        field:
+          type: string
+          description: Field name from the request body
+          example: externalTransferId
+        message:
+          type: string
+          description: Error description in the specified field
+          example: Must not be null
+    ResendOTPRequest:
+      required:
+      - externalTransferId
+      type: object
+      properties:
+        externalTransferId:
+          type: string
+          description: Transfer ID in the partner's system
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        smsHash:
+          description: SMS Hash
+          type: string
+          example: 2asio1
+    ConfirmDebitRequest:
+      required:
+      - code
+      - externalTransferId
+      type: object
+      properties:
+        externalTransferId:
+          type: string
+          description: Transfer ID in the partner's system
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        code:
+          pattern: '[0-9a-zA-Z]{4,6}'
+          type: string
+          description: OTP code
+          example: '77777'
+    TransferStatusResponse:
+      required:
+      - completedDateTime
+      - createdDateTime
+      - exchangeRate
+      - externalTransferId
+      - receiverPaymentSystem
+      - receiverAmount
+      - senderAmount
+      - senderCurrencyCode
+      - status
+      - transferId
+      - transferType
+      type: object
+      properties:
+        rrn:
+          description: Reference Retrieval Number
+          type: string
+          example: '524818898472'
+        externalTransferId:
+          type: string
+          description: Transfer ID in the partner's system
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        transferId:
+          type: string
+          description: Transfer ID in the Uzum Crossborder Transfer system
+          format: uuid
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        senderAmount:
+          type: integer
+          description: Amount sent by the payment sender in minimum currency units
+          example: 40000
+        senderCurrencyCode:
+          type: string
+          description: Currency of the payment sender (ISO 4217 alphabetic code)
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        receiverAmount:
+          type: integer
+          description: Amount received by the recipient in minimum currency units
+          example: 13640000
+        receiverCurrencyCode:
+          type: string
+          description: Currency of the payment recipient (ISO 4217 alphabetic code)
+          example: UZS
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        receiverPaymentSystem:
+          type: string
+          description: Payment system in Uzbekistan
+          enum:
+          - HUMO
+          - UZCARD
+          - MASTERCARD
+          - VISA
+        exchangeRate:
+          type: string
+          description: Conversion rate from senderCurrencyCode to receiverCurrencyCode
+          example: '113.5105'
+        transferType:
+          type: string
+          description: Transfer direction
+          example: TO_UZ
+          enum:
+          - FROM_UZ
+          - TO_UZ
+        createdDateTime:
+          type: string
+          description: Date and time of the transfer registration in the bank's system
+          format: date-time
+          example: '2024-10-19T09:55:30.250'
+        completedDateTime:
+          type: string
+          description: Date and time of the transfer execution
+          format: date-time
+          example: '2024-10-19T10:55:30.250'
+        status:
+          type: string
+          description: Transfer status
+          example: SUCCESS
+          enum:
+          - REGISTERED
+          - PENDING
+          - APPROVED
+          - SUCCESS
+          - FAILED
+          - REVERSED
+        cardToken:
+          type: string
+          description: Card token
+          example: vlKeomyUYGh8ktD+1hvI68kuApMKq1s8uyfgvHA=
+    ErrorResponse:
+      required:
+      - errorCode
+      - errorMessage
+      type: object
+      properties:
+        errorCode:
+          type: integer
+          description: Integer error code
+          example: 81
+        errorMessage:
+          type: string
+          description: Error text
+          example: Internal error
+        errorDetails:
+          type: array
+          description: Error description
+          items:
+            $ref: '#/components/schemas/ErrorDetails'
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+x-tagGroups:
+- name: API
+  tags:
+  - Common methods
+  - From Uzbekistan
+  - To Uzbekistan
+  - Cross-border payments
+  - Testing
+  - Error Codes

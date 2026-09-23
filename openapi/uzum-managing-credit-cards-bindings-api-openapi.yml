@@ -1,0 +1,660 @@
+openapi: 3.2.0
+info:
+  title: Uzum Checkout Managing Credit Cards Bindings API
+  version: 1.10.3
+  description: '**Uzum Checkout** is a payment gateway for websites and mobile applications.'
+tags:
+- name: Managing Credit Cards Bindings
+paths:
+  /api/v1/payment/merchantPay:
+    post:
+      tags:
+      - Managing Credit Cards Bindings
+      summary: Confirm back-to-back payment
+      description: Used for server-to-server payments, including payments by card binding or encrypted card data
+      operationId: merchant_pay_api_v1_payment_merchantPay_post
+      parameters:
+      - description: Idempotency key. Unique for each operation.
+        required: true
+        schema:
+          title: X-Operation-Id
+          type: string
+          description: Idempotency key. Unique for each operation.
+          format: uuid
+        name: X-Operation-Id
+        in: header
+      - description: Terminal ID
+        required: true
+        schema:
+          title: X-Terminal-Id
+          type: string
+          description: Terminal ID
+          format: uuid
+        name: X-Terminal-Id
+        in: header
+      - description: A unique key is used to authenticate requests.
+        required: false
+        schema:
+          title: X-API-Key
+          type: string
+          description: A unique key is used to authenticate requests.
+          format: uuid
+        name: X-API-Key
+        in: header
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MerchantPayCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_MerchantPayResult_'
+      callbacks:
+        acquiring_merchant_callback:
+          '{$callback_url}':
+            post:
+              summary: Acquiring Merchant Callback
+              description: '[REQUIRED] Callbacks for financial operations, configured on the terminal side'
+              operationId: acquiring_merchant_callback__callback_url__post
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/AcquiringCallbackData'
+                required: true
+              responses:
+                '200':
+                  description: Successful Response
+                  content:
+                    application/json:
+                      schema: {}
+        event_merchant_callback:
+          '{$event_callback_url}':
+            post:
+              summary: Event Merchant Callback
+              description: '[OPTIONAL] Business event callbacks configured on the terminal side'
+              operationId: event_merchant_callback__event_callback_url__post
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/BusinessEvent'
+                required: true
+              responses:
+                '200':
+                  description: Successful Response
+                  content:
+                    application/json:
+                      schema: {}
+        receipt_merchant_callback:
+          '{$receipt_callback_url}':
+            post:
+              summary: Receipt Merchant Callback
+              description: '[OPTIONAL] Callbacks for receipt creation'
+              operationId: receipt_merchant_callback__receipt_callback_url__post
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/ReceiptGeneratedCallbackData'
+                required: true
+              responses:
+                '200':
+                  description: Successful Response
+                  content:
+                    application/json:
+                      schema: {}
+  /api/v1/acquiring/getBindings:
+    post:
+      tags:
+      - Managing Credit Cards Bindings
+      summary: Get customer bindings
+      description: Retrieves a list of customer bindings
+      operationId: get_bindings_api_v1_acquiring_getBindings_post
+      parameters:
+      - description: JWT token received when user authenticates using UzumID
+        required: false
+        schema:
+          title: X-Merchant-Access-Token
+          type: string
+          description: JWT token received when user authenticates using UzumID. Used only for Uzum ecosystem services.
+        name: X-Merchant-Access-Token
+        in: header
+      - description: Terminal ID
+        required: true
+        schema:
+          title: X-Terminal-Id
+          type: string
+          description: Terminal ID
+          format: uuid
+        name: X-Terminal-Id
+        in: header
+      - description: A unique key is used to authenticate requests.
+        required: false
+        schema:
+          title: X-API-Key
+          type: string
+          description: A unique key is used to authenticate requests.
+          format: uuid
+        name: X-API-Key
+        in: header
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetBindingsCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_GetBindingsResponse_'
+  /api/v1/acquiring/unBindCard:
+    post:
+      tags:
+      - Managing Credit Cards Bindings
+      summary: Unbinding customer card
+      description: Method for unbinding a customer card
+      operationId: unbind_card_api_v1_acquiring_unBindCard_post
+      parameters:
+      - description: Terminal ID
+        required: true
+        schema:
+          title: X-Terminal-Id
+          type: string
+          description: Terminal ID
+          format: uuid
+        name: X-Terminal-Id
+        in: header
+      - description: A unique key is used to authenticate requests
+        required: false
+        schema:
+          title: X-API-Key
+          type: string
+          description: A unique key is used to authenticate requests.
+        name: X-API-Key
+        in: header
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnbindCardCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_UnBindCardResponse_'
+components:
+  schemas:
+    BusinessEvent:
+      title: BusinessEvent
+      required:
+      - orderId
+      - orderNumber
+      - eventType
+      - actionCode
+      - actionCodeDescription
+      type: object
+      properties:
+        orderId:
+          title: Orderid
+          type: string
+          description: Order ID on the Checkout side
+        orderNumber:
+          title: Ordernumber
+          type: string
+          description: Order ID on the merchant's side
+        eventType:
+          allOf:
+          - $ref: '#/components/schemas/BusinessEventType'
+          description: Business event type
+        actionCode:
+          allOf:
+          - $ref: '#/components/schemas/ErrorCode'
+          description: Event code
+        actionCodeDescription:
+          title: Actioncodedescription
+          type: string
+          description: Event code description
+    AcquiringCallbackData:
+      title: AcquiringCallbackData
+      required:
+      - orderId
+      - operationState
+      - operationType
+      - orderNumber
+      type: object
+      properties:
+        orderId:
+          title: Orderid
+          type: string
+          description: Order ID on the Checkout side
+        operationState:
+          allOf:
+          - $ref: '#/components/schemas/CallbackOperationState'
+          description: Operation status
+        operationType:
+          allOf:
+          - $ref: '#/components/schemas/PaymentOperationType'
+          description: Operation type
+        cardType:
+          title: Card Type
+          description: "Type of card used for the transaction:\n* `1` – Corporate card  \n* `2` – Personal card\n"
+          type: integer
+          enum:
+          - 1
+          - 2
+        merchantOperationId:
+          title: Merchantoperationid
+          type: string
+          description: "Operation ID on the merchant's side, will be returned if it was\n passed when initializing the operation"
+        orderNumber:
+          title: Ordernumber
+          type: string
+          description: Order ID on the merchant's side
+        rrn:
+          title: Rrn
+          type: string
+          description: Unique identifier of the banking transaction
+    PayByCardTokenWithExternalMPICommandData:
+      title: PayByCardTokenWithExternalMPICommandData
+      required:
+      - type
+      - aesToken
+      - cardToken
+      - certificateFingerprint
+      - needBindCard
+      type: object
+      properties:
+        type:
+          title: Type
+          enum:
+          - card
+          type: string
+        aesToken:
+          title: Aestoken
+          minLength: 1
+          type: string
+          description: Couple <init. vector> (base64)
+        cardToken:
+          title: Cardtoken
+          minLength: 1
+          type: string
+          description: Encrypted JSON-message with a card data (base64)
+        certificateFingerprint:
+          title: Certificatefingerprint
+          minLength: 1
+          type: string
+          description: Certificate fingerprint (base64)
+        needBindCard:
+          title: Needbindcard
+          type: boolean
+          description: ID for bind creating
+        externalMpi:
+          title: Externalmpi
+          allOf:
+          - $ref: '#/components/schemas/ExternalMPI'
+          description: 3DS external mpi parameters
+    BindingInfoResponse:
+      title: BindingInfoResponse
+      required:
+      - ips
+      type: object
+      properties:
+        bindingId:
+          title: Binding Id
+          maxLength: 255
+          type: string
+          description: Binding ID
+        maskedPan:
+          title: Masked Pan
+          maxLength: 19
+          pattern: ^[\*0-9]*$
+          type: string
+          description: Masked pan
+        expiryDate:
+          title: Expiry Date
+          maxLength: 6
+          minLength: 6
+          pattern: ^[0-9]*$
+          type: string
+          description: Binding expiration date YYYYMM
+        ips:
+          $ref: '#/components/schemas/app__api__models__payment__BindingIPS'
+    ReceiptGeneratedCallbackData:
+      title: ReceiptGeneratedCallbackData
+      required:
+      - orderId
+      - receiptType
+      - receiptUrl
+      type: object
+      properties:
+        orderId:
+          title: Orderid
+          type: string
+          description: Order ID on Checkout side
+        receiptType:
+          allOf:
+          - $ref: '#/components/schemas/ReceiptType'
+          description: Receipt type
+        receiptUrl:
+          title: Receipturl
+          type: string
+          description: Link to the receipt
+    PayByTechCardCommandData:
+      title: PayByTechCardCommandData
+      required:
+      - type
+      - techCardId
+      type: object
+      properties:
+        type:
+          title: Type
+          enum:
+          - tech_card
+          type: string
+        techCardId:
+          title: Techcardid
+          type: integer
+          description: Technical card ID
+        tariffPlan:
+          title: Tariffplan
+          type: string
+          description: Installment plan
+        subMerchant:
+          title: Submerchant
+          allOf:
+          - $ref: '#/components/schemas/SubMerchant'
+          description: Information about sub-merchant
+    GetBindingsResponse:
+      title: GetBindingsResponse
+      required:
+      - bindings
+      type: object
+      properties:
+        bindings:
+          title: Bindings
+          type: array
+          items:
+            $ref: '#/components/schemas/BindingInfoResponse'
+          description: Card bindings
+    PaymentOperationType:
+      title: PaymentOperationType
+      enum:
+      - AUTHORIZE
+      - COMPLETE
+      - REFUND
+      - REVERSE
+      - TOP_UP_COMPLETED
+      type: string
+      description: An enumeration.
+    CallbackOperationState:
+      title: CallbackOperationState
+      enum:
+      - SUCCESS
+      - FAIL
+      type: string
+      description: An enumeration.
+    MerchantPayResult:
+      title: MerchantPayResult
+      required:
+      - operationId
+      - mdOrder
+      type: object
+      properties:
+        operationId:
+          title: Operationid
+          type: string
+          description: Operation ID on the checkout side
+          format: uuid
+        mdOrder:
+          title: Mdorder
+          type: string
+          description: Order ID for opening the 3ds form
+        dataFor3ds:
+          title: Datafor3Ds
+          allOf:
+          - $ref: '#/components/schemas/APIDataFor3DS'
+          description: Data for 3DS passing
+    ApiResponse_UnBindCardResponse_:
+      title: ApiResponse[UnBindCardResponse]
+      required:
+      - errorCode
+      type: object
+      properties:
+        errorCode:
+          title: Error code
+          type: string
+          description: Error code
+        message:
+          title: Message
+          type: string
+    PayByBindCardCommandData:
+      title: PayByBindCardCommandData
+      required:
+      - type
+      - bindingId
+      type: object
+      properties:
+        type:
+          title: Type
+        bindingId:
+          title: Bindingid
+          minLength: 1
+          type: string
+          description: "ID of the link created when paying for the order or used\n for payment."
+        cvc:
+          title: Cvc
+          pattern: ^\d{3}$
+          type: string
+          description: CVC of card
+    MerchantPayCommand:
+      title: MerchantPayCommand
+      required:
+      - processData
+      - orderId
+      - returnUrl
+      type: object
+      properties:
+        processData:
+          title: Processdata
+          oneOf:
+          - $ref: '#/components/schemas/PayByBindCardCommandData'
+          - $ref: '#/components/schemas/PayByCardTokenWithExternalMPICommandData'
+          - $ref: '#/components/schemas/PayByTechCardCommandData'
+          description: Payment method details.
+          discriminator:
+            propertyName: type
+            mapping:
+              bind: '#/components/schemas/PayByBindCardCommandData'
+              card: '#/components/schemas/PayByCardTokenWithExternalMPICommandData'
+              tech_card: '#/components/schemas/PayByTechCardCommandData'
+        orderId:
+          title: Orderid
+          type: string
+          description: Order ID
+          format: uuid
+        returnUrl:
+          title: Returnurl
+          type: string
+          description: URL for redirecting after the payment
+    SubMerchant:
+      title: SubMerchant
+      type: object
+      properties:
+        id:
+          title: Id
+          type: string
+          description: Sub-merchant's ID
+        tinPinfl:
+          title: Tinpinfl
+          type: string
+          description: Sub-merchant's Tin or Pinfl
+        account:
+          title: Account
+          type: string
+          description: Sub-merchant's account number
+        MFO:
+          title: Mfo
+          type: string
+          description: Sub-merchant's bank MFO
+        name:
+          title: Name
+          type: string
+          description: Sub-merchant's name
+    ApiResponse_GetBindingsResponse_:
+      title: ApiResponse[GetBindingsResponse]
+      required:
+      - errorCode
+      type: object
+      properties:
+        errorCode:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          title: Message
+          type: string
+        result:
+          $ref: '#/components/schemas/GetBindingsResponse'
+    GetBindingsCommand:
+      title: GetBindingsCommand
+      required:
+      - clientId
+      type: object
+      properties:
+        clientId:
+          title: Clientid
+          type: string
+          description: 'Client ID in the merchant''s system.
+
+            '
+    BusinessEventType:
+      title: BusinessEventType
+      enum:
+      - FORM_CLOSED
+      type: string
+      description: An enumeration.
+    IPS:
+      title: IPS
+      enum:
+      - MASTERCARD
+      - VISA
+      - HUMO
+      - UZCARD
+      type: string
+      description: Type of card payment system
+    ErrorCode:
+      title: ErrorCode
+      type: integer
+    APIDataFor3DS:
+      title: APIDataFor3DS
+      type: object
+      properties:
+        acsUrl:
+          title: Acsurl
+          type: string
+          description: AcsUrl for 3DS passing. 3ds form will be opened if AcsUrl is received
+        paReq:
+          title: Pareq
+          type: string
+          description: Massage PAReq (base64), parameter of this payment query which include all important data about the payment.
+        termUrl:
+          title: Termurl
+          type: string
+          description: URL of terminal
+    ReceiptType:
+      title: ReceiptType
+      enum:
+      - PURCHASE
+      - PREPAID
+      - REFUND
+      type: string
+      description: An enumeration.
+    UnbindCardCommand:
+      title: UnbindCardCommand
+      required:
+      - bindingId
+      type: object
+      properties:
+        bindingId:
+          title: Binding Id
+          maxLength: 255
+          type: string
+          description: Binding ID
+    app__api__models__payment__BindingIPS:
+      title: BindingIPS
+      type: object
+      properties:
+        name:
+          allOf:
+          - $ref: '#/components/schemas/IPS'
+    ApiResponse_MerchantPayResult_:
+      title: ApiResponse[MerchantPayResult]
+      required:
+      - errorCode
+      type: object
+      properties:
+        errorCode:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          title: Message
+          type: string
+        result:
+          $ref: '#/components/schemas/MerchantPayResult'
+    ExternalMPI:
+      title: ExternalMPI
+      type: object
+      properties:
+        dsTransId:
+          title: Dstransid
+          type: string
+          description: 3DS 2.0 UUID of the transaction in a directory server
+        cavv:
+          title: Cavv
+          type: string
+          description: Cardholder Authentication Verification Value
+        flowType:
+          title: flowType
+          enum:
+          - CHALLENGE
+          - FRICTIONLESS
+          type: string
+          description: 3DS 2.0 authentication flow type
+        aresStatus:
+          title: aresStatus
+          enum:
+          - Y
+          - N
+          - U
+          - A
+          - C
+          - D
+          - R
+          - I
+          type: string
+          description: 3DS 2.0 authentication (ARes) respond status
+        xid:
+          title: Xid
+          type: string
+          description: 3DS 1.x transaction ID in a 3ds server
+x-tagGroups:
+- name: API
+  tags:
+  - One-Step Payment
+  - Managing Credit Cards Bindings
+  - Back-to-back Payment
+  - Auxiliary Methods
+- name: Additional Info
+  tags:
+  - Testing
+  - Error Codes
+  - Post Messages

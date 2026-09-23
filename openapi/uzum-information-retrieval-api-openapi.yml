@@ -1,0 +1,503 @@
+openapi: 3.2.0
+info:
+  title: Remit Core Information retrieval API
+  version: 1.0.4
+  description: '> **Remit Core** Partners should be aware that **new fields and/or values** may appear
+
+    > in requests and responses over time.'
+servers:
+- url: https://remit-core.ipt-merch.com
+  description: Test environment
+tags:
+- name: Information retrieval
+  description: Auxiliary Information Methods
+paths:
+  /v1/convert:
+    post:
+      tags:
+      - Information retrieval
+      summary: Convert amount and get exchange rate
+      description: 'Returns the current exchange rate and calculates the transfer amount in the target currency.
+
+
+        This method is **optional** and **informational** - it does not create a transfer
+
+        and is not a required step before `POST /register`.
+
+        It can be used to display preliminary transfer terms to the end client.
+
+
+        Exactly one of the following fields must be provided:
+
+        - `senderAmount` - to calculate the amount the recipient will receive
+
+        - `receiverAmount` - to calculate the amount the sender needs to send'
+      operationId: convert
+      security:
+      - XApiKeyAuth: []
+      requestBody:
+        description: Currency pair and amount for conversion. Provide either `senderAmount` or `receiverAmount`, not both
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConvertRequest'
+      responses:
+        '200':
+          description: 'Successful response or business logic error.
+
+            Check the `code` field to determine the outcome - code `0` indicates success
+
+            '
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConvertResponse'
+        '401':
+          description: Authentication error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authorization error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Request validation error - invalid JSON, missing required fields, or constraint violations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/422ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /info/v1/get_banks:
+    post:
+      tags:
+      - Information retrieval
+      summary: Get available recipient banks
+      description: 'Returns a list of banks (short bank codes) where an active card was found for the specified recipient phone number.
+
+
+        This method is **optional** and **informational** - it does not create a transfer.
+
+
+        Use this method when crediting by phone number (payment instrument `PHONE`):
+
+        in this case, `phoneNumber` and `bankLabel` must both be provided in the `target` field
+
+        of the `POST /register` request. This method helps determine which banks have an active card
+
+        for the recipient, so the end client can choose the correct bank.
+
+
+        Currently supported recipient country: **Uzbekistan** (`UZB`) only.'
+      operationId: getBanks
+      security:
+      - XApiKeyAuth: []
+      requestBody:
+        description: Recipient phone number and country code
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetBanksRequest'
+      responses:
+        '200':
+          description: 'Successful response or business logic error.
+
+            Check the `code` field to determine the outcome - code `0` indicates success.
+
+            The `banks` array may be empty if no active cards were found
+
+            '
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetBanksResponse'
+        '401':
+          description: Authentication error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authorization error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Request validation error - invalid JSON, missing required fields, or constraint violations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/422ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /info/v1/get_balance:
+    post:
+      tags:
+      - Information retrieval
+      summary: Get partner account balance
+      description: 'Returns the current balance of the partner''s account as reflected in the core banking system (ABS) at the moment of the request.
+
+
+        This method is **informational** - it does not create a transfer.
+
+
+        The partner is identified by the `X-Api-Key` header, so no request parameters are required.
+
+        The request body must be an empty JSON object `{}`.
+
+
+        **Important:** depending on the ABS operational day cycle, some transactions of the current day
+
+        may not yet be reflected in the returned balance. The finalised daily balance is available
+
+        only after the ABS end-of-day processing completes.'
+      operationId: getBalance
+      security:
+      - XApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Empty JSON object
+              example: {}
+      responses:
+        '200':
+          description: 'Successful response or business logic error.
+
+            Check the `code` field to determine the outcome - code `0` indicates success.
+
+            '
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetBalanceResponse'
+        '401':
+          description: Authentication error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authorization error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Request validation error - invalid JSON, missing required fields, or constraint violations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/422ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    GetBanksRequest:
+      type: object
+      required:
+      - phoneNumber
+      - receiverCountry
+      properties:
+        phoneNumber:
+          description: Recipient's phone number (E.164 format)
+          pattern: ^\+[1-9]\d{1,14}$
+          type: string
+          example: '+998948063815'
+        receiverCountry:
+          description: 'Recipient''s country code according to ISO 3166-1 alpha-3.
+
+            Currently only `UZB` is supported
+
+            '
+          type: string
+          pattern: ^[A-Z]{3}$
+          example: UZB
+          enum:
+          - UZB
+    GetBalanceResult:
+      type: object
+      required:
+      - accountNumber
+      - closingBalance
+      - currency
+      properties:
+        accountNumber:
+          type: string
+          description: 'Partner''s account number to which the balance refers.
+
+            '
+          example: '29126840100001190019'
+        closingBalance:
+          type: integer
+          format: int64
+          description: 'Account balance in minor units of the account currency (e.g. cents for USD),
+
+            as reflected in the core banking system (ABS) at the moment of the request.
+
+            Note: some transactions of the current operational day may not yet be reflected
+
+            until the ABS end-of-day processing completes.
+
+            '
+          example: 8280085
+        currency:
+          type: string
+          pattern: ^[A-Z]{3}$
+          description: 'Account currency code according to ISO 4217 alpha-3
+
+            '
+          example: USD
+    GetBanksResponse:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          description: "Response code. Possible values:\n  * `0` - Request completed successfully\n  * `9100` - External service interaction error\n"
+          type: integer
+          example: 0
+        message:
+          description: Response status message
+          type: string
+          example: Request completed successfully
+        result:
+          description: Response data. Present when `code = 0`
+          allOf:
+          - $ref: '#/components/schemas/GetBanksResult'
+    ConvertResult:
+      type: object
+      required:
+      - senderAmount
+      - senderCurrencyCode
+      - senderCountry
+      - receiverCurrencyCode
+      - receiverCountry
+      - exchangeRate
+      - receiverAmount
+      properties:
+        exchangeRate:
+          type: string
+          description: Exchange rate from sender's currency to recipient's currency (with exactly 4 decimal places)
+          example: '140.0000'
+        senderAmount:
+          type: integer
+          format: int64
+          description: Transfer amount in minor units of sender's currency
+          example: 100000
+        senderCurrencyCode:
+          type: string
+          description: Sender's currency code according to ISO 4217 alpha-3
+          pattern: ^[A-Z]{3}$
+          example: UZS
+        senderCountry:
+          description: Sender's country code according to ISO 3166-1 alpha-3
+          type: string
+          pattern: ^[A-Z]{3}$
+          example: UZB
+        receiverCurrencyCode:
+          type: string
+          description: Recipient's currency code according to ISO 4217 alpha-3
+          pattern: ^[A-Z]{3}$
+          example: RUB
+        receiverCountry:
+          description: Recipient's country code according to ISO 3166-1 alpha-3
+          type: string
+          pattern: ^[A-Z]{3}$
+          example: RUS
+        receiverAmount:
+          type: integer
+          format: int64
+          description: Amount to be received by recipient in minor units of recipient's currency
+          example: 13900000
+        fee:
+          type: integer
+          format: int64
+          description: Fee amount in minor units of sender's currency
+          example: 1000
+    GetBanksResult:
+      type: object
+      required:
+      - banks
+      properties:
+        banks:
+          description: 'List of short bank codes where an active card was found for the specified phone number.
+
+            May be empty if no active cards were found
+
+            '
+          type: array
+          items:
+            type: string
+          example:
+          - NBU
+          - SQB
+          - UZB
+    ConvertRequest:
+      type: object
+      required:
+      - senderCurrencyCode
+      - senderCountry
+      - receiverCurrencyCode
+      - receiverCountry
+      properties:
+        senderAmount:
+          type: integer
+          format: int64
+          description: 'Transfer amount in minor units of sender''s currency. Must be greater than zero.
+
+            Provide this field to calculate `receiverAmount`.
+
+            Must not be specified if `receiverAmount` is provided
+
+            '
+          example: 100000
+        senderCurrencyCode:
+          type: string
+          description: Sender's currency code according to ISO 4217 alpha-3
+          pattern: ^[A-Z]{3}$
+          example: UZS
+        senderCountry:
+          description: Sender's country code according to ISO 3166-1 alpha-3
+          type: string
+          pattern: ^[A-Z]{3}$
+          example: UZB
+        receiverCurrencyCode:
+          type: string
+          description: Recipient's currency code according to ISO 4217 alpha-3
+          pattern: ^[A-Z]{3}$
+          example: RUB
+        receiverCountry:
+          description: Recipient's country code according to ISO 3166-1 alpha-3
+          type: string
+          pattern: ^[A-Z]{3}$
+          example: RUS
+        receiverAmount:
+          type: integer
+          format: int64
+          description: 'Amount to be received by the recipient in minor units of recipient''s currency. Must be greater than zero.
+
+            Provide this field to calculate `senderAmount`.
+
+            Must not be specified if `senderAmount` is provided
+
+            '
+          example: 13900000
+    ErrorDetails:
+      type: object
+      required:
+      - field
+      - message
+      properties:
+        field:
+          description: Name of the field containing the error
+          type: string
+          example: receiverCurrencyCode
+        message:
+          description: Description of the validation error for this field
+          type: string
+          example: Currency code must be 3 characters
+    ConvertResponse:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          description: "Response code. Possible values:\n  * `0` - Request completed successfully\n  * `8002` - Access restriction by partner/direction/country/currency\n  * `9100` - External service interaction error\n"
+          type: integer
+          example: 0
+        message:
+          description: Response status message
+          type: string
+          example: Request completed successfully
+        result:
+          description: Conversion result. Present when `code = 0`
+          allOf:
+          - $ref: '#/components/schemas/ConvertResult'
+    GetBalanceResponse:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          description: "Response code. Possible values:\n  * `0` - Request completed successfully\n  * `3060` - Invalid account number in balance request\n  * `9100` - External service interaction error\n"
+          type: integer
+          example: 0
+        message:
+          description: Response status message
+          type: string
+          example: Request completed successfully
+        result:
+          description: Response data. Present when `code = 0`
+          allOf:
+          - $ref: '#/components/schemas/GetBalanceResult'
+    ErrorResponse:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          description: Response code
+          type: integer
+        message:
+          description: Error message
+          type: string
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorDetails'
+    422ErrorResponse:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          description: "Response code. Possible values:\n  * `1001` - The request body is not a valid JSON or does not match the expected schema structure\n  * `1002` - Required fields are missing\n  * `1003` - Format/range/enum requirements violated; the 'errors' array contains the fields and descriptions of the issues\n  * `1101` - Required header is missing\n"
+          type: integer
+          example: 1001
+        message:
+          description: Error message
+          type: string
+          example: Required field is missing
+        errors:
+          type: array
+          description: List of field-level validation errors
+          items:
+            $ref: '#/components/schemas/ErrorDetails'
+  securitySchemes:
+    XApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+      description: Partner API key in UUID format. Issued upon onboarding. Required for all methods
+x-tagGroups:
+- name: API
+  tags:
+  - Transfer process
+  - Information retrieval

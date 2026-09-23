@@ -1,0 +1,250 @@
+openapi: 3.2.0
+info:
+  title: Uzum Fiscalization Submit QR Code Payment Receipt to Tax…
+  version: 0.0.2
+  description: '**Uzum Fiscalization** is a service for fiscalizing receipts and submitting them to the Uzbekistan tax authority via API.'
+tags:
+- name: Submit QR Code Payment Receipt to Tax Authorities
+  description: 'The method is designed to send information about payments made using QR codes directly to the tax authority.
+
+
+    Using this method allows automating the fiscalization process for payments made at offline points of sale, ensuring immediate registration of financial transactions in accordance with the law.
+
+
+    The use of this method must be pre-coordinated with the Uzum development team.'
+paths:
+  /v2/qr_payment:
+    post:
+      tags:
+      - Submit QR Code Payment Receipt to Tax Authorities
+      summary: /v2/qr_payment
+      parameters:
+      - in: header
+        name: X-API-Key
+        required: true
+        schema:
+          type: string
+        description: Unique API key. We assign and provide this key to each partner.
+      operationId: save_qr_code_url_save_qr_code_url_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QrPaymentRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+        '202':
+          description: Request accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QrPaymentRequestAccepted'
+        '400':
+          description: Bad Request Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadQrPaymentRequestResponse'
+        '403':
+          description: Auth Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerErrorResponse'
+components:
+  schemas:
+    InternalServerErrorResponse:
+      title: Internal Server Error
+      required:
+      - message
+      type: object
+      properties:
+        message:
+          type: string
+          example: Server encountered an unexpected condition that prevented it from fulfilling the request. Please, contact support
+    AuthErrorResponse:
+      title: AuthErrorResponse
+      type: object
+      properties:
+        message:
+          title: Operation Id
+          type: string
+          format: string
+          description: "Available Values:\n * Multiple auth headers are defined\n * Auth header is not defined\n * User is not found\n"
+    QrPaymentRequestAccepted:
+      title: QR Payment Request Accepted
+      required:
+      - message
+      - code
+      type: object
+      properties:
+        code:
+          title: Code
+          type: integer
+          description: "Possible values\n * 0 - Didn't receive a timely response from an ofd.soliq.uz server. Your request was accepted and QR payment will be send as soon as ofd.soliq.uz is available. You can retry request later\n * 1 - Error occurred in communications with ofd.soliq.uz. We will retry it later\n * 2 - Didn't send QR payment yet. We're in process of retrying it\n"
+        message:
+          title: Message
+          type: string
+          description: "Possible values\n * Didn't receive a timely response from an ofd.soliq.uz server. Your request was accepted and QR payment will be send as soon as ofd.soliq.uz is available. You can retry request later\n * Error occurred in communications with ofd.soliq.uz. We will retry it later\n * Didn't send QR payment yet. We're in process of retrying it\n"
+          example: Didn't receive a timely response from an ofd.soliq.uz server. Your request was accepted and QR payment will be send as soon as ofd.soliq.uz is available. You can retry request later
+    ValidationError:
+      title: ValidationError
+      required:
+      - loc
+      - msg
+      - type
+      type: object
+      properties:
+        loc:
+          title: Location
+          type: array
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+    ReceiptDataCommissionInfo:
+      title: ReceiptDataCommissionInfo
+      type: object
+      properties:
+        TIN:
+          title: Tin
+          type: string
+          description: Taxpayer Identification Number (TIN) of the principal. It is mandatory if PINF is not provided. Simultaneous filling of both TIN and PINF is not allowed.
+        PINFL:
+          title: Pinfl
+          maxLength: 14
+          minLength: 14
+          type: string
+          description: PINF of the principal. It is mandatory if TIN is not provided. Simultaneous filling of both PINF and TIN is not allowed.
+    HTTPValidationError:
+      title: HTTPValidationError
+      type: object
+      properties:
+        detail:
+          title: Detail
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+    BadQrPaymentRequestResponse:
+      title: Bad QR Payment Request
+      required:
+      - message
+      type: object
+      properties:
+        message:
+          type: string
+          example: Sale QR payment with the same payment_id was already send
+    QrPaymentRequest:
+      title: QR Payment Request
+      required:
+      - payment_id
+      - operation_id
+      - paid_sum
+      - date_time
+      - commission_info
+      - phone_number
+      - receipt_info
+      type: object
+      properties:
+        payment_id:
+          title: QR Payment Id
+          type: string
+          maxLength: 36
+          example: f8ba6f5a97934a8bb36d0fefb9684d0d
+          description: Unique identifier of the QR payment in the electronic payment system.
+        operation_id:
+          title: QR Operation Id
+          type: string
+          format: uuid
+          example: db95b04e-add0-427d-a1f8-6b79eec0efe3
+          description: Unique identifier of the operation that you must generate in your system.
+        paid_sum:
+          title: Paid Sum
+          type: integer
+          min: 1
+          example: 256675
+          description: Amount of payment in tyiyns. A tyiyn is a subunit of currency, equal to 1/100 of an Uzbek sum. Therefore, if the payment amount is 1,000 sums, you should provide the value of 100,000 tyiyns (1,000 * 100).
+        date_time:
+          title: Date Time
+          type: string
+          description: 'The payment time is specified in the UTC +5:00 time zone and must follow the format: YYYY-MM-DD HH:MM:SS.'
+          format: date-time
+          example: '2022-06-21 12:26:54'
+        commission_info:
+          title: Commission Info
+          allOf:
+          - $ref: '#/components/schemas/ReceiptDataCommissionInfo'
+          description: Principal's information.
+        phone_number:
+          title: Phone Number
+          type: string
+          description: 'Client''s phone number in international format, for example, `''998940202903''`.
+
+
+            Numbers from Russia and Kazakhstan are also allowed, such as `''79991116921''`. Cashback will not be granted if the phone number is not provided or if it is from Russia or Kazakhstan.
+
+            '
+          maxLength: 12
+        sale_point_address:
+          title: Sale Point Address
+          description: Sale point address
+          type: string
+          maxLength: 128
+          example: Tashkent, Chilanzar District, Mukimi Street, 166.
+        receipt_info:
+          $ref: '#/components/schemas/ReceiptInfo'
+    ReceiptInfo:
+      title: Receipt Info
+      type: object
+      description: Information about the registered receipt
+      required:
+      - terminal_id
+      - receipt_seq
+      properties:
+        terminal_id:
+          type: string
+          maxLength: 14
+          description: FM number
+          example: UZ000000000002
+        receipt_seq:
+          type: string
+          maxLength: 16
+          description: Receipt number
+          example: '123'
+x-tagGroups:
+- name: API
+  description: hi
+  tags:
+  - Check Service Status
+  - Fiscalization
+  - Submit QR Code Payment Receipt to Tax Authorities
+- name: Testing
+  tags:
+  - Testing
+- name: Additional information
+  tags:
+  - Updates

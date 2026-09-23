@@ -1,0 +1,745 @@
+openapi: 3.2.0
+info:
+  title: Uzum CrossBorder Transfer Common methods API
+  version: 0.1.0
+  description: '**Uzum CrossBorder Transfer** is an international money transfer service between Uzbekistan and other countries.'
+servers:
+- url: https://crossborder.transfer.uz
+security:
+- basicAuth: []
+tags:
+- name: Common methods
+paths:
+  /cbt/v1/transfer/convert:
+    post:
+      tags:
+      - Common methods
+      summary: Get Currency Conversion Rates
+      operationId: convert
+      requestBody:
+        description: JSON object with request parameters.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConvertRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConvertResponse'
+        '400':
+          description: Error object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /cbt/v1/transfer/status:
+    post:
+      tags:
+      - Common methods
+      summary: Get Payment Status
+      description: 'The method is used to check the current status of a payment transaction.
+
+
+        The partner can call this method if there are any questions about the transfer status or to additionally verify the state of the operation.
+
+
+        The response returns:
+
+        - the current transaction status if the transfer was registered in the service;
+
+        - error `10212` if the transfer was not received by the service.'
+      operationId: transferStatus
+      requestBody:
+        description: JSON object with request parameters.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferStatusRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/TransferStatusResponse'
+                - type: object
+                  properties:
+                    error:
+                      $ref: '#/components/schemas/Error'
+        '400':
+          description: Error object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /cbt/v1/transfer/transfer_list:
+    post:
+      tags:
+      - Common methods
+      summary: Get Transfer List
+      description: The method returns a transaction registry for the past 2 months (60 calendar days).
+      operationId: transferList
+      requestBody:
+        description: JSON object with request parameters.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferListRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+        '400':
+          description: Error object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /cbt/v1/partner/account/closing_balance:
+    get:
+      tags:
+      - Common methods
+      operationId: getClosingBalance
+      summary: Get Current Closing Balance
+      description: A method for retrieving the partner's account current closing balance from the ABS. Some transactions may not be included in the balance due to clearing.
+      parameters:
+      - name: accountNumber
+        description: Partner's account number
+        in: query
+        required: true
+        schema:
+          type: string
+          example: '22618000790000077701'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClosingBalanceResponse'
+        '400':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Service Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '504':
+          description: Could not receive a response from the ABS
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /cbt/v1/partner/account/operations:
+    get:
+      tags:
+      - Common methods
+      operationId: getAccountOperations
+      summary: Get Account Operations
+      description: A method for retrieving detailed information about the partner's account and transactions. Some transactions may be missing due to clearing. The data is updated several times a day.
+      parameters:
+      - name: accountNumber
+        description: Partner's account number
+        in: query
+        required: true
+        schema:
+          type: string
+          example: '22618000790000077701'
+      - name: startDate
+        description: Start date of filtering in UTC.
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+          example: '2024-11-20'
+      - name: endDate
+        description: End date of filtering in UTC.
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+          example: '2024-11-21'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountOperationsResponse'
+        '400':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Service Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '504':
+          description: Could not receive a response from the ABS
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    PaginationResponse:
+      type: object
+      properties:
+        totalRecords:
+          type: integer
+          description: Total number of records
+          example: 995
+        totalPages:
+          type: integer
+          description: Total number of pages with the given limit
+          example: 40
+        currentPage:
+          type: integer
+          description: Current page
+          example: 1
+        nextPage:
+          type: integer
+          description: Number of the next page of the response. 0 - page does not exist
+          example: 2
+        previousPage:
+          type: integer
+          description: Number of the previous page of the response. 0 - page does not exist
+          example: 0
+    AccountOperationsResponse:
+      type: object
+      properties:
+        accountNumber:
+          description: Account number, for which the information is displayed
+          type: string
+          example: '22618000790000077701'
+        accountName:
+          description: Account name
+          type: string
+          example: Deposit account for (SUPER-PAY)
+        closingBalance:
+          description: Balance on the partner's account in fractional units of the currency at the end of the time period
+          type: integer
+          example: 8059900
+        openingBalance:
+          description: Balance on the partner's account in fractional units of the currency at the beginning of the time period
+          type: integer
+          example: 8459900
+        currency:
+          description: Account currency (ISO 4217 code)
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: USD
+        operationsInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperationInfo'
+    TransferListRequest:
+      required:
+      - createTime
+      - limit
+      - page
+      type: object
+      properties:
+        createTime:
+          description: Object with creation time filters
+          allOf:
+          - $ref: '#/components/schemas/FilterTime'
+        status:
+          type: string
+          description: Operation status. If operations are to be retrieved in all statuses, this field is not specified in the request body
+          example: APPROVED
+          enum:
+          - REGISTERED
+          - PENDING
+          - APPROVED
+          - SUCCESS
+          - FAILED
+          - REVERSED
+        transferType:
+          type: string
+          description: Transfer direction
+          example: TO_UZ
+          enum:
+          - FROM_UZ
+          - TO_UZ
+        page:
+          type: integer
+          description: Requested response page number
+          example: 1
+          default: 1
+        limit:
+          type: integer
+          description: Number of response records per page. Maximum - 100
+          example: 25
+          default: 25
+    TransferStatusRequest:
+      required:
+      - externalTransferId
+      type: object
+      properties:
+        externalTransferId:
+          type: string
+          description: Transfer ID in the partner's system
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: integer
+          example: 0
+        errorMessage:
+          type: string
+          example: string
+        errorDetails:
+          type: object
+          additionalProperties: true
+    FilterTime:
+      required:
+      - from
+      - to
+      type: object
+      properties:
+        from:
+          type: string
+          description: Start date and time for filtering in UTC
+          example: '2024-10-19T09:55:30.250'
+        to:
+          type: string
+          description: End date and time for filtering in UTC
+          example: '2024-10-22T09:55:30.250'
+    ConvertRequest:
+      required:
+      - amount
+      - currencyFrom
+      - currencyTo
+      - direction
+      type: object
+      properties:
+        amount:
+          type: integer
+          description: Amount to convert (in minimum currency units)
+          example: 40000
+        currencyFrom:
+          type: string
+          description: Source currency (ISO 4217)
+          example: RUB
+        currencyTo:
+          type: string
+          description: Target currency (ISO 4217)
+          example: UZS
+        direction:
+          type: string
+          description: Transfer direction
+          example: TO_UZ
+          enum:
+          - TO_UZ
+          - FROM_UZ
+    TransferListResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/TransferResponse'
+    inline_response_200:
+      type: object
+      properties:
+        paginationResponse:
+          $ref: '#/components/schemas/PaginationResponse'
+        transferList:
+          $ref: '#/components/schemas/TransferListResponse'
+    TransferResponse:
+      required:
+      - completedDateTime
+      - createdDateTime
+      - exchangeRate
+      - externalTransferId
+      - receiverPaymentSystem
+      - receiverAmount
+      - senderAmount
+      - senderCurrencyCode
+      - status
+      - transferId
+      - transferType
+      type: object
+      properties:
+        externalTransferId:
+          type: string
+          description: Transfer ID in the partner's system.
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        transferId:
+          type: string
+          description: Payment identifier on the Crossborder Transfer side.
+          format: uuid
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        senderAmount:
+          type: integer
+          description: Sender's payment amount in minimal currency units.
+          example: 40000
+        senderCurrencyCode:
+          type: string
+          description: Sender's payment currency (ISO 4217 alphabetic code).
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        receiverAmount:
+          type: integer
+          description: Recipient's payment amount in minimal currency units.
+          example: 13640000
+        receiverCurrencyCode:
+          type: string
+          description: Recipient's payment currency (ISO 4217 alphabetic code).
+          example: UZS
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        receiverPaymentSystem:
+          type: string
+          description: Payment system of the recipient's card (Uzbekistan)
+          enum:
+          - HUMO
+          - UZCARD
+          - MASTERCARD
+          - VISA
+        exchangeRate:
+          type: string
+          description: Exchange rate from senderCurrencyCode to receiverCurrencyCode
+          example: '113.5105'
+        transferType:
+          type: string
+          description: Transfer direction
+          example: TO_UZ
+          enum:
+          - FROM_UZ
+          - TO_UZ
+        createdDateTime:
+          type: string
+          description: Date and time the transfer was registered in the bank's system.
+          format: date-time
+          example: '2024-10-19T09:55:30.250'
+        completedDateTime:
+          type: string
+          description: Date and time the transfer was executed.
+          format: date-time
+          example: '2024-10-19T10:55:30.250'
+        status:
+          type: string
+          description: Transfer status.
+          example: SUCCESS
+          enum:
+          - REGISTERED
+          - PENDING
+          - APPROVED
+          - SUCCESS
+          - FAILED
+          - REVERSED
+    OperationInfo:
+      type: object
+      properties:
+        date:
+          description: Current operation date
+          type: string
+          format: date
+        documentNumber:
+          description: Document number
+          type: string
+          example: '11363893'
+        senderAccount:
+          description: Payer's account number
+          type: string
+          example: '28896850100001190019'
+        senderName:
+          description: Payer's name
+          type: string
+          example: Deposit account for (SUPER-PAY)
+        receiverAccount:
+          description: Recipient's account number
+          type: string
+          example: '28896850100001190019'
+        receiverName:
+          description: Recipient's name
+          type: string
+          example: Transit account for money transfers (SUPER-PAY) Uzcard
+        type:
+          description: Turnover type (Debit Turnover or Credit Turnover)
+          type: string
+          enum:
+          - DEBIT
+          - CREDIT
+        amount:
+          description: Turnover in the fractional units of the account's currency. Example, 1 dollar is 100 cents or 100 fractional units.
+          type: number
+          format: integer
+          example: 11223
+        details:
+          description: Payment purpose
+          type: string
+          example: Commissioned amount by Humo Bank for October 24, 2024, according to the distribution order No. ОД2510/10 dated October 25, 2024.
+    ErrorDetails:
+      required:
+      - message
+      - field
+      type: object
+      properties:
+        field:
+          type: string
+          description: Field name from the request body
+          example: externalTransferId
+        message:
+          type: string
+          description: Error description in the specified field
+          example: Must not be null
+    ClosingBalanceResponse:
+      type: object
+      properties:
+        accountNumber:
+          description: Account number, for which the information is displayed
+          type: string
+          example: '22618000790000077701'
+        accountName:
+          description: Account name
+          type: string
+          example: Deposit account for (SUPER-PAY)
+        closingBalance:
+          description: Outgoing balance on the partner's account in fractional units of the account currency
+          type: integer
+          example: 8459900
+        currency:
+          description: Account currency (ISO 4217 code)
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: USD
+    ConvertResponse:
+      required:
+      - amountFrom
+      - amountTo
+      - currencyFrom
+      - currencyTo
+      - rate
+      type: object
+      properties:
+        amountFrom:
+          type: integer
+          description: Amount before conversion (in minimum currency units)
+          example: 40000
+        amountTo:
+          type: integer
+          description: Amount after conversion (in minimum currency units)
+          example: 5600000
+        currencyFrom:
+          type: string
+          description: Currency of the amount for conversion (code according to ISO 4217)
+          example: RUB
+        currencyTo:
+          type: string
+          description: Currency of the converted amount (code according to ISO 4217)
+          example: UZS
+        rate:
+          type: string
+          description: Conversion rate
+          example: '140.0000'
+    TransferStatusResponse:
+      required:
+      - completedDateTime
+      - createdDateTime
+      - exchangeRate
+      - externalTransferId
+      - receiverPaymentSystem
+      - receiverAmount
+      - senderAmount
+      - senderCurrencyCode
+      - status
+      - transferId
+      - transferType
+      type: object
+      properties:
+        rrn:
+          description: Reference Retrieval Number
+          type: string
+          example: '524818898472'
+        externalTransferId:
+          type: string
+          description: Transfer ID in the partner's system
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        transferId:
+          type: string
+          description: Transfer ID in the Uzum Crossborder Transfer system
+          format: uuid
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        senderAmount:
+          type: integer
+          description: Amount sent by the payment sender in minimum currency units
+          example: 40000
+        senderCurrencyCode:
+          type: string
+          description: Currency of the payment sender (ISO 4217 alphabetic code)
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        receiverAmount:
+          type: integer
+          description: Amount received by the recipient in minimum currency units
+          example: 13640000
+        receiverCurrencyCode:
+          type: string
+          description: Currency of the payment recipient (ISO 4217 alphabetic code)
+          example: UZS
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        receiverPaymentSystem:
+          type: string
+          description: Payment system in Uzbekistan
+          enum:
+          - HUMO
+          - UZCARD
+          - MASTERCARD
+          - VISA
+        exchangeRate:
+          type: string
+          description: Conversion rate from senderCurrencyCode to receiverCurrencyCode
+          example: '113.5105'
+        transferType:
+          type: string
+          description: Transfer direction
+          example: TO_UZ
+          enum:
+          - FROM_UZ
+          - TO_UZ
+        createdDateTime:
+          type: string
+          description: Date and time of the transfer registration in the bank's system
+          format: date-time
+          example: '2024-10-19T09:55:30.250'
+        completedDateTime:
+          type: string
+          description: Date and time of the transfer execution
+          format: date-time
+          example: '2024-10-19T10:55:30.250'
+        status:
+          type: string
+          description: Transfer status
+          example: SUCCESS
+          enum:
+          - REGISTERED
+          - PENDING
+          - APPROVED
+          - SUCCESS
+          - FAILED
+          - REVERSED
+        cardToken:
+          type: string
+          description: Card token
+          example: vlKeomyUYGh8ktD+1hvI68kuApMKq1s8uyfgvHA=
+    ErrorResponse:
+      required:
+      - errorCode
+      - errorMessage
+      type: object
+      properties:
+        errorCode:
+          type: integer
+          description: Integer error code
+          example: 81
+        errorMessage:
+          type: string
+          description: Error text
+          example: Internal error
+        errorDetails:
+          type: array
+          description: Error description
+          items:
+            $ref: '#/components/schemas/ErrorDetails'
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+x-tagGroups:
+- name: API
+  tags:
+  - Common methods
+  - From Uzbekistan
+  - To Uzbekistan
+  - Cross-border payments
+  - Testing
+  - Error Codes
