@@ -225,131 +225,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
-    ReceiverCardsByPhoneRequest:
-      type: object
-      properties:
-        phone:
-          description: Phone number linked to the card
-          type: string
-          pattern: ^\d{12}$
-          example: '998910142976'
-    Error:
-      type: object
-      properties:
-        errorCode:
-          type: integer
-          example: 0
-        errorMessage:
-          type: string
-          example: string
-        errorDetails:
-          type: object
-          additionalProperties: true
-    ConfirmCreditRequest:
-      required:
-      - externalTransferId
-      type: object
-      properties:
-        externalTransferId:
-          type: string
-          description: Payment identificator on the partner's side.
-          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
-        transferId:
-          type: string
-          description: Payment identificator on the Uzum Crossborder Transfer side
-          format: uuid
-          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
-    TransferResponse:
-      required:
-      - completedDateTime
-      - createdDateTime
-      - exchangeRate
-      - externalTransferId
-      - receiverPaymentSystem
-      - receiverAmount
-      - senderAmount
-      - senderCurrencyCode
-      - status
-      - transferId
-      - transferType
-      type: object
-      properties:
-        externalTransferId:
-          type: string
-          description: Transfer ID in the partner's system.
-          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
-        transferId:
-          type: string
-          description: Payment identifier on the Crossborder Transfer side.
-          format: uuid
-          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
-        senderAmount:
-          type: integer
-          description: Sender's payment amount in minimal currency units.
-          example: 40000
-        senderCurrencyCode:
-          type: string
-          description: Sender's payment currency (ISO 4217 alphabetic code).
-          enum:
-          - UZS
-          - RUB
-          - USD
-          - EUR
-          - TJS
-        receiverAmount:
-          type: integer
-          description: Recipient's payment amount in minimal currency units.
-          example: 13640000
-        receiverCurrencyCode:
-          type: string
-          description: Recipient's payment currency (ISO 4217 alphabetic code).
-          example: UZS
-          enum:
-          - UZS
-          - RUB
-          - USD
-          - EUR
-          - TJS
-        receiverPaymentSystem:
-          type: string
-          description: Payment system of the recipient's card (Uzbekistan)
-          enum:
-          - HUMO
-          - UZCARD
-          - MASTERCARD
-          - VISA
-        exchangeRate:
-          type: string
-          description: Exchange rate from senderCurrencyCode to receiverCurrencyCode
-          example: '113.5105'
-        transferType:
-          type: string
-          description: Transfer direction
-          example: TO_UZ
-          enum:
-          - FROM_UZ
-          - TO_UZ
-        createdDateTime:
-          type: string
-          description: Date and time the transfer was registered in the bank's system.
-          format: date-time
-          example: '2024-10-19T09:55:30.250'
-        completedDateTime:
-          type: string
-          description: Date and time the transfer was executed.
-          format: date-time
-          example: '2024-10-19T10:55:30.250'
-        status:
-          type: string
-          description: Transfer status.
-          example: SUCCESS
-          enum:
-          - REGISTERED
-          - PENDING
-          - APPROVED
-          - SUCCESS
-          - FAILED
-          - REVERSED
     CardResponse:
       type: object
       required:
@@ -501,20 +376,6 @@ components:
           - SUCCESS
           - FAILED
           - REVERSED
-    ErrorDetails:
-      required:
-      - message
-      - field
-      type: object
-      properties:
-        field:
-          type: string
-          description: Field name from the request body
-          example: externalTransferId
-        message:
-          type: string
-          description: Error description in the specified field
-          example: Must not be null
     ReceiverBanksRequest:
       type: object
       required:
@@ -522,6 +383,89 @@ components:
       properties:
         phone:
           description: Recipient's phone number
+          type: string
+          pattern: ^\d{12}$
+          example: '998910142976'
+    ErrorResponse:
+      required:
+      - errorCode
+      - errorMessage
+      type: object
+      properties:
+        errorCode:
+          type: integer
+          description: Integer error code
+          example: 81
+        errorMessage:
+          type: string
+          description: Error text
+          example: Internal error
+        errorDetails:
+          type: array
+          description: Error description
+          items:
+            $ref: '#/components/schemas/ErrorDetails'
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: integer
+          example: 0
+        errorMessage:
+          type: string
+          example: string
+        errorDetails:
+          type: object
+          additionalProperties: true
+    ReceiverBanksResponse:
+      type: object
+      properties:
+        banks:
+          type: array
+          items:
+            enum:
+            - NBU
+            - SQB
+            - AGB
+            - XLQ
+            - SDG
+            - QQB
+            - TRN
+            - ASK
+            - IPY
+            - ZRT
+            - TTB
+            - ALQ
+            - IPT
+            - KDB
+            - TRK
+            - SDT
+            - UNB
+            - KPT
+            - RNQ
+            - INF
+            - AAC
+            - HTK
+            - OFB
+            - MDI
+            - AEB
+            - PTT
+            - TNG
+            - TBC
+            - ANR
+            - DVR
+            - YGB
+            - HYB
+            - SMB
+            - AXB
+            - HMK
+            - MKR
+            - UZB
+    ReceiverCardsByPhoneRequest:
+      type: object
+      properties:
+        phone:
+          description: Phone number linked to the card
           type: string
           pattern: ^\d{12}$
           example: '998910142976'
@@ -554,6 +498,10 @@ components:
           type: string
           description: Passport details. Series and number
           example: '4109355455'
+    ReceiverCardsByPhoneResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/CardResponse'
     CheckCreditRequest:
       required:
       - externalTransferId
@@ -692,6 +640,125 @@ components:
           description: Recepient's ersonal data
           allOf:
           - $ref: '#/components/schemas/PersonalData'
+    ErrorDetails:
+      required:
+      - message
+      - field
+      type: object
+      properties:
+        field:
+          type: string
+          description: Field name from the request body
+          example: externalTransferId
+        message:
+          type: string
+          description: Error description in the specified field
+          example: Must not be null
+    TransferResponse:
+      required:
+      - completedDateTime
+      - createdDateTime
+      - exchangeRate
+      - externalTransferId
+      - receiverPaymentSystem
+      - receiverAmount
+      - senderAmount
+      - senderCurrencyCode
+      - status
+      - transferId
+      - transferType
+      type: object
+      properties:
+        externalTransferId:
+          type: string
+          description: Transfer ID in the partner's system.
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        transferId:
+          type: string
+          description: Payment identifier on the Crossborder Transfer side.
+          format: uuid
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        senderAmount:
+          type: integer
+          description: Sender's payment amount in minimal currency units.
+          example: 40000
+        senderCurrencyCode:
+          type: string
+          description: Sender's payment currency (ISO 4217 alphabetic code).
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        receiverAmount:
+          type: integer
+          description: Recipient's payment amount in minimal currency units.
+          example: 13640000
+        receiverCurrencyCode:
+          type: string
+          description: Recipient's payment currency (ISO 4217 alphabetic code).
+          example: UZS
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        receiverPaymentSystem:
+          type: string
+          description: Payment system of the recipient's card (Uzbekistan)
+          enum:
+          - HUMO
+          - UZCARD
+          - MASTERCARD
+          - VISA
+        exchangeRate:
+          type: string
+          description: Exchange rate from senderCurrencyCode to receiverCurrencyCode
+          example: '113.5105'
+        transferType:
+          type: string
+          description: Transfer direction
+          example: TO_UZ
+          enum:
+          - FROM_UZ
+          - TO_UZ
+        createdDateTime:
+          type: string
+          description: Date and time the transfer was registered in the bank's system.
+          format: date-time
+          example: '2024-10-19T09:55:30.250'
+        completedDateTime:
+          type: string
+          description: Date and time the transfer was executed.
+          format: date-time
+          example: '2024-10-19T10:55:30.250'
+        status:
+          type: string
+          description: Transfer status.
+          example: SUCCESS
+          enum:
+          - REGISTERED
+          - PENDING
+          - APPROVED
+          - SUCCESS
+          - FAILED
+          - REVERSED
+    ConfirmCreditRequest:
+      required:
+      - externalTransferId
+      type: object
+      properties:
+        externalTransferId:
+          type: string
+          description: Payment identificator on the partner's side.
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        transferId:
+          type: string
+          description: Payment identificator on the Uzum Crossborder Transfer side
+          format: uuid
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
     ReceiverCardsByPANRequest:
       type: object
       properties:
@@ -699,73 +766,6 @@ components:
           description: Recipient’s card number
           type: string
           example: '9860101111115488'
-    ReceiverBanksResponse:
-      type: object
-      properties:
-        banks:
-          type: array
-          items:
-            enum:
-            - NBU
-            - SQB
-            - AGB
-            - XLQ
-            - SDG
-            - QQB
-            - TRN
-            - ASK
-            - IPY
-            - ZRT
-            - TTB
-            - ALQ
-            - IPT
-            - KDB
-            - TRK
-            - SDT
-            - UNB
-            - KPT
-            - RNQ
-            - INF
-            - AAC
-            - HTK
-            - OFB
-            - MDI
-            - AEB
-            - PTT
-            - TNG
-            - TBC
-            - ANR
-            - DVR
-            - YGB
-            - HYB
-            - SMB
-            - AXB
-            - HMK
-            - MKR
-            - UZB
-    ErrorResponse:
-      required:
-      - errorCode
-      - errorMessage
-      type: object
-      properties:
-        errorCode:
-          type: integer
-          description: Integer error code
-          example: 81
-        errorMessage:
-          type: string
-          description: Error text
-          example: Internal error
-        errorDetails:
-          type: array
-          description: Error description
-          items:
-            $ref: '#/components/schemas/ErrorDetails'
-    ReceiverCardsByPhoneResponse:
-      type: array
-      items:
-        $ref: '#/components/schemas/CardResponse'
   securitySchemes:
     basicAuth:
       type: http

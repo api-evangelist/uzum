@@ -197,58 +197,13 @@ paths:
           description: Internal Server Error
 components:
   schemas:
-    InternalServerErrorResponse:
-      title: Internal Server Error
-      required:
-      - message
-      type: object
-      properties:
-        message:
-          type: string
-          example: Server encountered an unexpected condition that prevented it from fulfilling the request. Please, contact support
-    AuthErrorResponse:
-      title: AuthErrorResponse
-      type: object
-      properties:
-        message:
-          title: Operation Id
-          type: string
-          format: string
-          description: "Available Values:\n * Multiple auth headers are defined\n * Auth header is not defined\n * User is not found\n"
-    ValidationError:
-      title: ValidationError
-      required:
-      - loc
-      - msg
-      - type
-      type: object
-      properties:
-        loc:
-          title: Location
-          type: array
-          items:
-            anyOf:
-            - type: string
-            - type: integer
-        msg:
-          title: Message
-          type: string
-        type:
-          title: Error Type
-          type: string
-    RequestAccepted:
-      title: Request Accepted
+    RefundAccepted:
+      title: Refund Request Accepted
       required:
       - message
       - code
       type: object
       properties:
-        payment_id:
-          title: Payment Id
-          type: string
-          format: uuid
-          example: 61e057d9-b737-42fa-ae33-614a284a5a92
-          description: Unique payment identifier in the electronic payment system. Returned if the `payment_id` is not provided in the fiscalization request.
         code:
           title: Code
           type: integer
@@ -258,132 +213,15 @@ components:
           type: string
           description: "Possible values\n * Didn't receive a timely response from an ofd.soliq.uz server. Your request was accepted and receipt will be fiscalized as soon as ofd.soliq.uz is available. You can either retry request later, call /v2/receipt_url/{operation_id} method or subscribe to callbacks\n * Error occurred in communications with ofd.soliq.uz. We will retry it later. You can either retry request later, call /v2/receipt_url/{operation_id} method or subscribe to callbacks\n * Didn't fiscalized receipt yet. We're in process of retrying it. You can either retry request later, call /v2/receipt_url/{operation_id} method or subscribe to callbacks\n"
           example: Didn't receive a timely response from an ofd.soliq.uz server. Your request was accepted and receipt receipt will be fiscalized as soon as ofd.soliq.uz is available. You can either retry request later, call /v2/receipt_url/{operation_id} method or subscribe to callbacks
-    RefundData:
-      title: RefundData
-      required:
-      - payment_id
-      - operation_id
-      - cash_amount
-      - card_amount
-      - date_time
-      - items
-      type: object
-      properties:
-        payment_id:
-          title: Payment Id
-          type: string
-          format: uuid
-          example: 61e057d9-b737-42fa-ae33-614a284a5a92
-          description: Unique payment identifier.
-        operation_id:
-          title: Operation Id
-          type: string
-          format: uuid
-          example: 61e057d9-b737-42fa-ae33-614a284a5a92
-          description: Unique operation identifier.
-        cash_amount:
-          title: Cash Amount
-          type: integer
-          minimum: 0
-          description: Amount of cash refund in tiyns before discount. Tiyn is the fractional monetary unit equal to 1/100 of the Uzbek som. Accordingly, if the cash refund amount is 1,000 som, you need to pass the value of 100,000 tiyns (1,000 * 100).
-        card_amount:
-          title: Card Amount
-          type: integer
-          minimum: 0
-          description: Amount of card refund in tiyns before discount. Tiyn is the fractional monetary unit equal to 1/100 of the Uzbek som. Accordingly, if the card refund amount is 1,000 som, you need to pass the value of 100,000 tiyns (1,000 * 100).
-        date_time:
-          title: Date Time
-          type: string
-          description: 'Date and time should be specified in ISO 8601 format. If the time zone is not specified, the service will interpret them according to the time of Tashkent city. Specify the date and time within 24 hours after receiving confirmation of the successful payment.
-
-            '
-          format: date-time
-        ppt_id:
-          title: PPT ID
-          type: string
-          description: Unique transaction identifier assigned by the payment processing center.
-        card_type:
-          title: Card Type
-          description: "Type of card used for the transaction:\n* `1` – Corporate card  \n* `2` – Personal card\n"
-          type: integer
-          enum:
-          - 1
-          - 2
-        items:
-          title: Items
-          type: array
-          items:
-            $ref: '#/components/schemas/ReceiptDataItem'
-          description: List of items to be returned.
-    HTTPValidationError:
-      title: HTTPValidationError
-      type: object
-      properties:
-        detail:
-          title: Detail
-          type: array
-          items:
-            $ref: '#/components/schemas/ValidationError'
-    NotFoundByPAOResponse:
-      title: Reciept not found by PAO
+    BadRefundRequestResponse:
+      title: Bad Refund Request
       required:
       - message
       type: object
       properties:
         message:
-          title: message
           type: string
-          example: Receipt with {payment id} payment id and {operation id} operation id was not found
-    ReceiptRefundResponse:
-      title: RefundReceiptGenerationResponse
-      type: object
-      required:
-      - receipt_url
-      - receipt_id
-      properties:
-        receipt_id:
-          title: Receipt Id
-          type: integer
-          example: 209726
-          description: Receipt number in the tax committee (GNC).
-        receipt_url:
-          title: Receipt URL
-          type: string
-          example: https://ofd.soliq.uz/epi?t=EZ000000000296&r=51&c=20230807182725&s=176112857133
-          description: Link to the receipt; not provided in the case of advance or credit receipts.
-    ReceiptGenerationResponse:
-      title: ReceiptGenerationResponse
-      type: object
-      required:
-      - payment_id
-      - receipt_id
-      properties:
-        receipt_id:
-          title: Receipt Id
-          type: integer
-          example: 209726
-          description: Receipt number in the tax committee (GNC).
-        payment_id:
-          title: Payment Id
-          type: string
-          format: uuid
-          example: 61e057d9-b737-42fa-ae33-614a284a5a92
-          description: Unique payment identifier in the electronic payment system. It is generated on our side if `payment_id` is not specified in the fiscalization request.
-        receipt_url:
-          title: Receipt URL
-          type: string
-          example: https://ofd.soliq.uz/epi?t=EZ000000000296&r=51&c=20230807182725&s=176112857133
-          description: Link to the receipt; not provided in the case of advance or credit receipts.
-    NotFoundByPaymentIdResponse:
-      title: Reciept not found by PaymentId
-      required:
-      - message
-      type: object
-      properties:
-        message:
-          title: message
-          type: string
-          example: Receipt with {payment id} payment id was not found
+          example: Refund is unavailable due to expiration
     BadRequestResponse:
       title: Bad Request
       required:
@@ -400,97 +238,6 @@ components:
         message:
           type: string
           example: Invalid spic/package code. Please check values and resend request
-    ReceiptDataItem:
-      title: ReceiptDataItem
-      required:
-      - product_name
-      - price
-      - count
-      - spic
-      - package_code
-      - vat_percent
-      type: object
-      properties:
-        product_name:
-          title: Product Name
-          type: string
-          description: Name of the product or service.
-          maxLength: 63
-        price:
-          title: Price
-          type: integer
-          minimum: 0
-          description: The cost of the product in tyiyn. Tyiyn is the subunit of the Uzbek sum, equal to 1/100 of a sum. Accordingly, if the cost of the product is 1,000 sum, you should send the value of 100,000 tyiyn (1,000 * 100).
-        discount:
-          title: Discount
-          type: integer
-          minimum: 0
-          description: The total discount amount for all units of this product in the cart, expressed in tyiyn. Tyiyn is the subunit of the Uzbek sum, equal to 1/100 of a sum. Accordingly, if the discount amount is 1,000 sum, you should send the value of 100,000 tyiyn (1,000 * 100).
-        voucher:
-          title: Voucher
-          type: integer
-          minimum: 0
-          description: The total marketplace discount amount, calculated based on the number of products and expressed in tyiyn. This discount does not reduce the total check amount, but it is not charged to the customer during the checkout payment. Tyiyn is the subunit of the Uzbek sum, equal to 1/100 of a sum. Accordingly, if the discount amount is 1,000 sum, you should send the value of 100,000 tyiyn (1,000 * 100).
-        count:
-          title: Count
-          type: number
-          mininum: 0
-          format: double
-          example: 1.998
-          description: The quantity of the product in the order.
-        spic:
-          title: Spic
-          type: string
-          description: IKPU code.
-        package_code:
-          title: Package Code
-          type: string
-          description: Packaging code.
-          minLength: 0
-          maxLength: 20
-        vat_percent:
-          title: Vat Percent
-          type: integer
-          minimum: 0
-          description: VAT rate in % for this item.
-        commission_info:
-          title: Commission Info
-          allOf:
-          - $ref: '#/components/schemas/ReceiptDataCommissionInfo'
-          description: Payer data.
-        owner_type:
-          title: Owner Type
-          type: integer
-          description: 'Product/Service owner type: * 0 - Resale * 1 - In-house production * 2 - Service
-
-            '
-          enum:
-          - 0
-          - 1
-          - 2
-    GetReceiptURLResponse:
-      required:
-      - receipt_url
-      title: GetReceiptURLResponse
-      type: object
-      properties:
-        receipt_url:
-          title: Receipt Url
-          type: string
-    ReceiptDataCommissionInfo:
-      title: ReceiptDataCommissionInfo
-      type: object
-      properties:
-        TIN:
-          title: Tin
-          type: string
-          description: Taxpayer Identification Number (TIN) of the principal. It is mandatory if PINF is not provided. Simultaneous filling of both TIN and PINF is not allowed.
-        PINFL:
-          title: Pinfl
-          maxLength: 14
-          minLength: 14
-          type: string
-          description: PINF of the principal. It is mandatory if TIN is not provided. Simultaneous filling of both PINF and TIN is not allowed.
     ReceiptData:
       title: ReceiptData
       required:
@@ -575,6 +322,48 @@ components:
           items:
             $ref: '#/components/schemas/ReceiptDataItem'
           description: Detailed list of products or services included in the customer's cart.
+    AuthErrorResponse:
+      title: AuthErrorResponse
+      type: object
+      properties:
+        message:
+          title: Operation Id
+          type: string
+          format: string
+          description: "Available Values:\n * Multiple auth headers are defined\n * Auth header is not defined\n * User is not found\n"
+    ReceiptGenerationResponse:
+      title: ReceiptGenerationResponse
+      type: object
+      required:
+      - payment_id
+      - receipt_id
+      properties:
+        receipt_id:
+          title: Receipt Id
+          type: integer
+          example: 209726
+          description: Receipt number in the tax committee (GNC).
+        payment_id:
+          title: Payment Id
+          type: string
+          format: uuid
+          example: 61e057d9-b737-42fa-ae33-614a284a5a92
+          description: Unique payment identifier in the electronic payment system. It is generated on our side if `payment_id` is not specified in the fiscalization request.
+        receipt_url:
+          title: Receipt URL
+          type: string
+          example: https://ofd.soliq.uz/epi?t=EZ000000000296&r=51&c=20230807182725&s=176112857133
+          description: Link to the receipt; not provided in the case of advance or credit receipts.
+    NotFoundByPaymentIdResponse:
+      title: Reciept not found by PaymentId
+      required:
+      - message
+      type: object
+      properties:
+        message:
+          title: message
+          type: string
+          example: Receipt with {payment id} payment id was not found
     WaitingForReceiptURLResponse:
       title: Waiting For Receipt URL Response
       required:
@@ -585,31 +374,123 @@ components:
           title: message
           type: string
           example: Your request was accepted, but receipt still not has been fiscalized. Retry later, please
-    BadRefundRequestResponse:
-      title: Bad Refund Request
-      required:
-      - message
+    HTTPValidationError:
+      title: HTTPValidationError
       type: object
       properties:
-        message:
+        detail:
+          title: Detail
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+    ReceiptDataItem:
+      title: ReceiptDataItem
+      required:
+      - product_name
+      - price
+      - count
+      - spic
+      - package_code
+      - vat_percent
+      type: object
+      properties:
+        product_name:
+          title: Product Name
           type: string
-          example: Refund is unavailable due to expiration
-    RefundAccepted:
-      title: Refund Request Accepted
-      required:
-      - message
-      - code
-      type: object
-      properties:
-        code:
-          title: Code
+          description: Name of the product or service.
+          maxLength: 63
+        price:
+          title: Price
           type: integer
-          description: "Possible values\n * 0 - Didn't receive a timely response from an ofd.soliq.uz server. Your request was accepted and receipt will be fiscalized as soon as ofd.soliq.uz is available. You can either retry request later, call /v2/receipt_url/{operation_id} method or subscribe to callbacks\n * 1 - Error occurred in communications with ofd.soliq.uz. We will retry it later. You can either retry request later, call /v2/receipt_url/{operation_id} method or subscribe to callbacks\n * 2 - Didn't fiscalized receipt yet. We're in process of retrying it. You can either retry request later, call /v2/receipt_url/{operation_id} method or subscribe to callbacks\n"
-        message:
-          title: Message
+          minimum: 0
+          description: The cost of the product in tyiyn. Tyiyn is the subunit of the Uzbek sum, equal to 1/100 of a sum. Accordingly, if the cost of the product is 1,000 sum, you should send the value of 100,000 tyiyn (1,000 * 100).
+        discount:
+          title: Discount
+          type: integer
+          minimum: 0
+          description: The total discount amount for all units of this product in the cart, expressed in tyiyn. Tyiyn is the subunit of the Uzbek sum, equal to 1/100 of a sum. Accordingly, if the discount amount is 1,000 sum, you should send the value of 100,000 tyiyn (1,000 * 100).
+        voucher:
+          title: Voucher
+          type: integer
+          minimum: 0
+          description: The total marketplace discount amount, calculated based on the number of products and expressed in tyiyn. This discount does not reduce the total check amount, but it is not charged to the customer during the checkout payment. Tyiyn is the subunit of the Uzbek sum, equal to 1/100 of a sum. Accordingly, if the discount amount is 1,000 sum, you should send the value of 100,000 tyiyn (1,000 * 100).
+        count:
+          title: Count
+          type: number
+          mininum: 0
+          format: double
+          example: 1.998
+          description: The quantity of the product in the order.
+        spic:
+          title: Spic
           type: string
-          description: "Possible values\n * Didn't receive a timely response from an ofd.soliq.uz server. Your request was accepted and receipt will be fiscalized as soon as ofd.soliq.uz is available. You can either retry request later, call /v2/receipt_url/{operation_id} method or subscribe to callbacks\n * Error occurred in communications with ofd.soliq.uz. We will retry it later. You can either retry request later, call /v2/receipt_url/{operation_id} method or subscribe to callbacks\n * Didn't fiscalized receipt yet. We're in process of retrying it. You can either retry request later, call /v2/receipt_url/{operation_id} method or subscribe to callbacks\n"
-          example: Didn't receive a timely response from an ofd.soliq.uz server. Your request was accepted and receipt receipt will be fiscalized as soon as ofd.soliq.uz is available. You can either retry request later, call /v2/receipt_url/{operation_id} method or subscribe to callbacks
+          description: IKPU code.
+        package_code:
+          title: Package Code
+          type: string
+          description: Packaging code.
+          minLength: 0
+          maxLength: 20
+        vat_percent:
+          title: Vat Percent
+          type: integer
+          minimum: 0
+          description: VAT rate in % for this item.
+        commission_info:
+          title: Commission Info
+          allOf:
+          - $ref: '#/components/schemas/ReceiptDataCommissionInfo'
+          description: Payer data.
+        owner_type:
+          title: Owner Type
+          type: integer
+          description: 'Product/Service owner type: * 0 - Resale * 1 - In-house production * 2 - Service
+
+            '
+          enum:
+          - 0
+          - 1
+          - 2
+    ReceiptRefundResponse:
+      title: RefundReceiptGenerationResponse
+      type: object
+      required:
+      - receipt_url
+      - receipt_id
+      properties:
+        receipt_id:
+          title: Receipt Id
+          type: integer
+          example: 209726
+          description: Receipt number in the tax committee (GNC).
+        receipt_url:
+          title: Receipt URL
+          type: string
+          example: https://ofd.soliq.uz/epi?t=EZ000000000296&r=51&c=20230807182725&s=176112857133
+          description: Link to the receipt; not provided in the case of advance or credit receipts.
+    InternalServerErrorResponse:
+      title: Internal Server Error
+      required:
+      - message
+      type: object
+      properties:
+        message:
+          type: string
+          example: Server encountered an unexpected condition that prevented it from fulfilling the request. Please, contact support
+    ReceiptDataCommissionInfo:
+      title: ReceiptDataCommissionInfo
+      type: object
+      properties:
+        TIN:
+          title: Tin
+          type: string
+          description: Taxpayer Identification Number (TIN) of the principal. It is mandatory if PINF is not provided. Simultaneous filling of both TIN and PINF is not allowed.
+        PINFL:
+          title: Pinfl
+          maxLength: 14
+          minLength: 14
+          type: string
+          description: PINF of the principal. It is mandatory if TIN is not provided. Simultaneous filling of both PINF and TIN is not allowed.
     NoURLForPrepaidCreditReceipt:
       title: No URL For Prepaid/Credit Receipt
       required:
@@ -620,6 +501,125 @@ components:
           title: message
           type: string
           example: URL for prepaid/credit receipt does not exists
+    NotFoundByPAOResponse:
+      title: Reciept not found by PAO
+      required:
+      - message
+      type: object
+      properties:
+        message:
+          title: message
+          type: string
+          example: Receipt with {payment id} payment id and {operation id} operation id was not found
+    GetReceiptURLResponse:
+      required:
+      - receipt_url
+      title: GetReceiptURLResponse
+      type: object
+      properties:
+        receipt_url:
+          title: Receipt Url
+          type: string
+    ValidationError:
+      title: ValidationError
+      required:
+      - loc
+      - msg
+      - type
+      type: object
+      properties:
+        loc:
+          title: Location
+          type: array
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+    RefundData:
+      title: RefundData
+      required:
+      - payment_id
+      - operation_id
+      - cash_amount
+      - card_amount
+      - date_time
+      - items
+      type: object
+      properties:
+        payment_id:
+          title: Payment Id
+          type: string
+          format: uuid
+          example: 61e057d9-b737-42fa-ae33-614a284a5a92
+          description: Unique payment identifier.
+        operation_id:
+          title: Operation Id
+          type: string
+          format: uuid
+          example: 61e057d9-b737-42fa-ae33-614a284a5a92
+          description: Unique operation identifier.
+        cash_amount:
+          title: Cash Amount
+          type: integer
+          minimum: 0
+          description: Amount of cash refund in tiyns before discount. Tiyn is the fractional monetary unit equal to 1/100 of the Uzbek som. Accordingly, if the cash refund amount is 1,000 som, you need to pass the value of 100,000 tiyns (1,000 * 100).
+        card_amount:
+          title: Card Amount
+          type: integer
+          minimum: 0
+          description: Amount of card refund in tiyns before discount. Tiyn is the fractional monetary unit equal to 1/100 of the Uzbek som. Accordingly, if the card refund amount is 1,000 som, you need to pass the value of 100,000 tiyns (1,000 * 100).
+        date_time:
+          title: Date Time
+          type: string
+          description: 'Date and time should be specified in ISO 8601 format. If the time zone is not specified, the service will interpret them according to the time of Tashkent city. Specify the date and time within 24 hours after receiving confirmation of the successful payment.
+
+            '
+          format: date-time
+        ppt_id:
+          title: PPT ID
+          type: string
+          description: Unique transaction identifier assigned by the payment processing center.
+        card_type:
+          title: Card Type
+          description: "Type of card used for the transaction:\n* `1` – Corporate card  \n* `2` – Personal card\n"
+          type: integer
+          enum:
+          - 1
+          - 2
+        items:
+          title: Items
+          type: array
+          items:
+            $ref: '#/components/schemas/ReceiptDataItem'
+          description: List of items to be returned.
+    RequestAccepted:
+      title: Request Accepted
+      required:
+      - message
+      - code
+      type: object
+      properties:
+        payment_id:
+          title: Payment Id
+          type: string
+          format: uuid
+          example: 61e057d9-b737-42fa-ae33-614a284a5a92
+          description: Unique payment identifier in the electronic payment system. Returned if the `payment_id` is not provided in the fiscalization request.
+        code:
+          title: Code
+          type: integer
+          description: "Possible values\n * 0 - Didn't receive a timely response from an ofd.soliq.uz server. Your request was accepted and receipt will be fiscalized as soon as ofd.soliq.uz is available. You can either retry request later, call /v2/receipt_url/{operation_id} method or subscribe to callbacks\n * 1 - Error occurred in communications with ofd.soliq.uz. We will retry it later. You can either retry request later, call /v2/receipt_url/{operation_id} method or subscribe to callbacks\n * 2 - Didn't fiscalized receipt yet. We're in process of retrying it. You can either retry request later, call /v2/receipt_url/{operation_id} method or subscribe to callbacks\n"
+        message:
+          title: Message
+          type: string
+          description: "Possible values\n * Didn't receive a timely response from an ofd.soliq.uz server. Your request was accepted and receipt will be fiscalized as soon as ofd.soliq.uz is available. You can either retry request later, call /v2/receipt_url/{operation_id} method or subscribe to callbacks\n * Error occurred in communications with ofd.soliq.uz. We will retry it later. You can either retry request later, call /v2/receipt_url/{operation_id} method or subscribe to callbacks\n * Didn't fiscalized receipt yet. We're in process of retrying it. You can either retry request later, call /v2/receipt_url/{operation_id} method or subscribe to callbacks\n"
+          example: Didn't receive a timely response from an ofd.soliq.uz server. Your request was accepted and receipt receipt will be fiscalized as soon as ofd.soliq.uz is available. You can either retry request later, call /v2/receipt_url/{operation_id} method or subscribe to callbacks
 x-tagGroups:
 - name: API
   description: hi

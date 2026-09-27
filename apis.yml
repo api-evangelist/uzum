@@ -23,7 +23,7 @@ tags:
 - Company
 - Payments
 - Banking
-- Financial-Services
+- Financial Services
 - E-Commerce
 - Marketplace
 - Money Transfer
@@ -51,6 +51,7 @@ tags_raw:
 - Banking as a Service
 - Uzbekistan
 - Central Asia
+- Financial-Services
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
