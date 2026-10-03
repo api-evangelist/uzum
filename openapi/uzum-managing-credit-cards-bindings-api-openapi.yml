@@ -196,158 +196,15 @@ paths:
                 $ref: '#/components/schemas/ApiResponse_UnBindCardResponse_'
 components:
   schemas:
-    app__api__models__payment__BindingIPS:
-      title: BindingIPS
-      type: object
-      properties:
-        name:
-          allOf:
-          - $ref: '#/components/schemas/IPS'
-    MerchantPayResult:
-      title: MerchantPayResult
-      required:
-      - operationId
-      - mdOrder
-      type: object
-      properties:
-        operationId:
-          title: Operationid
-          type: string
-          description: Operation ID on the checkout side
-          format: uuid
-        mdOrder:
-          title: Mdorder
-          type: string
-          description: Order ID for opening the 3ds form
-        dataFor3ds:
-          title: Datafor3Ds
-          allOf:
-          - $ref: '#/components/schemas/APIDataFor3DS'
-          description: Data for 3DS passing
-    SubMerchant:
-      title: SubMerchant
-      type: object
-      properties:
-        id:
-          title: Id
-          type: string
-          description: Sub-merchant's ID
-        tinPinfl:
-          title: Tinpinfl
-          type: string
-          description: Sub-merchant's Tin or Pinfl
-        account:
-          title: Account
-          type: string
-          description: Sub-merchant's account number
-        MFO:
-          title: Mfo
-          type: string
-          description: Sub-merchant's bank MFO
-        name:
-          title: Name
-          type: string
-          description: Sub-merchant's name
-    MerchantPayCommand:
-      title: MerchantPayCommand
-      required:
-      - processData
-      - orderId
-      - returnUrl
-      type: object
-      properties:
-        processData:
-          title: Processdata
-          oneOf:
-          - $ref: '#/components/schemas/PayByBindCardCommandData'
-          - $ref: '#/components/schemas/PayByCardTokenWithExternalMPICommandData'
-          - $ref: '#/components/schemas/PayByTechCardCommandData'
-          description: Payment method details.
-          discriminator:
-            propertyName: type
-            mapping:
-              bind: '#/components/schemas/PayByBindCardCommandData'
-              card: '#/components/schemas/PayByCardTokenWithExternalMPICommandData'
-              tech_card: '#/components/schemas/PayByTechCardCommandData'
-        orderId:
-          title: Orderid
-          type: string
-          description: Order ID
-          format: uuid
-        returnUrl:
-          title: Returnurl
-          type: string
-          description: URL for redirecting after the payment
-    APIDataFor3DS:
-      title: APIDataFor3DS
-      type: object
-      properties:
-        acsUrl:
-          title: Acsurl
-          type: string
-          description: AcsUrl for 3DS passing. 3ds form will be opened if AcsUrl is received
-        paReq:
-          title: Pareq
-          type: string
-          description: Massage PAReq (base64), parameter of this payment query which include all important data about the payment.
-        termUrl:
-          title: Termurl
-          type: string
-          description: URL of terminal
-    CallbackOperationState:
-      title: CallbackOperationState
+    IPS:
+      title: IPS
       enum:
-      - SUCCESS
-      - FAIL
+      - MASTERCARD
+      - VISA
+      - HUMO
+      - UZCARD
       type: string
-      description: An enumeration.
-    PayByTechCardCommandData:
-      title: PayByTechCardCommandData
-      required:
-      - type
-      - techCardId
-      type: object
-      properties:
-        type:
-          title: Type
-          enum:
-          - tech_card
-          type: string
-        techCardId:
-          title: Techcardid
-          type: integer
-          description: Technical card ID
-        tariffPlan:
-          title: Tariffplan
-          type: string
-          description: Installment plan
-        subMerchant:
-          title: Submerchant
-          allOf:
-          - $ref: '#/components/schemas/SubMerchant'
-          description: Information about sub-merchant
-    ErrorCode:
-      title: ErrorCode
-      type: integer
-    PayByBindCardCommandData:
-      title: PayByBindCardCommandData
-      required:
-      - type
-      - bindingId
-      type: object
-      properties:
-        type:
-          title: Type
-        bindingId:
-          title: Bindingid
-          minLength: 1
-          type: string
-          description: "ID of the link created when paying for the order or used\n for payment."
-        cvc:
-          title: Cvc
-          pattern: ^\d{3}$
-          type: string
-          description: CVC of card
+      description: Type of card payment system
     GetBindingsCommand:
       title: GetBindingsCommand
       required:
@@ -360,17 +217,6 @@ components:
           description: 'Client ID in the merchant''s system.
 
             '
-    UnbindCardCommand:
-      title: UnbindCardCommand
-      required:
-      - bindingId
-      type: object
-      properties:
-        bindingId:
-          title: Binding Id
-          maxLength: 255
-          type: string
-          description: Binding ID
     ApiResponse_GetBindingsResponse_:
       title: ApiResponse[GetBindingsResponse]
       required:
@@ -384,126 +230,6 @@ components:
           type: string
         result:
           $ref: '#/components/schemas/GetBindingsResponse'
-    ApiResponse_UnBindCardResponse_:
-      title: ApiResponse[UnBindCardResponse]
-      required:
-      - errorCode
-      type: object
-      properties:
-        errorCode:
-          title: Error code
-          type: string
-          description: Error code
-        message:
-          title: Message
-          type: string
-    PaymentOperationType:
-      title: PaymentOperationType
-      enum:
-      - AUTHORIZE
-      - COMPLETE
-      - REFUND
-      - REVERSE
-      - TOP_UP_COMPLETED
-      type: string
-      description: An enumeration.
-    BusinessEventType:
-      title: BusinessEventType
-      enum:
-      - FORM_CLOSED
-      type: string
-      description: An enumeration.
-    IPS:
-      title: IPS
-      enum:
-      - MASTERCARD
-      - VISA
-      - HUMO
-      - UZCARD
-      type: string
-      description: Type of card payment system
-    ApiResponse_MerchantPayResult_:
-      title: ApiResponse[MerchantPayResult]
-      required:
-      - errorCode
-      type: object
-      properties:
-        errorCode:
-          $ref: '#/components/schemas/ErrorCode'
-        message:
-          title: Message
-          type: string
-        result:
-          $ref: '#/components/schemas/MerchantPayResult'
-    PayByCardTokenWithExternalMPICommandData:
-      title: PayByCardTokenWithExternalMPICommandData
-      required:
-      - type
-      - aesToken
-      - cardToken
-      - certificateFingerprint
-      - needBindCard
-      type: object
-      properties:
-        type:
-          title: Type
-          enum:
-          - card
-          type: string
-        aesToken:
-          title: Aestoken
-          minLength: 1
-          type: string
-          description: Couple <init. vector> (base64)
-        cardToken:
-          title: Cardtoken
-          minLength: 1
-          type: string
-          description: Encrypted JSON-message with a card data (base64)
-        certificateFingerprint:
-          title: Certificatefingerprint
-          minLength: 1
-          type: string
-          description: Certificate fingerprint (base64)
-        needBindCard:
-          title: Needbindcard
-          type: boolean
-          description: ID for bind creating
-        externalMpi:
-          title: Externalmpi
-          allOf:
-          - $ref: '#/components/schemas/ExternalMPI'
-          description: 3DS external mpi parameters
-    BusinessEvent:
-      title: BusinessEvent
-      required:
-      - orderId
-      - orderNumber
-      - eventType
-      - actionCode
-      - actionCodeDescription
-      type: object
-      properties:
-        orderId:
-          title: Orderid
-          type: string
-          description: Order ID on the Checkout side
-        orderNumber:
-          title: Ordernumber
-          type: string
-          description: Order ID on the merchant's side
-        eventType:
-          allOf:
-          - $ref: '#/components/schemas/BusinessEventType'
-          description: Business event type
-        actionCode:
-          allOf:
-          - $ref: '#/components/schemas/ErrorCode'
-          description: Event code
-        actionCodeDescription:
-          title: Actioncodedescription
-          type: string
-          description: Event code description
     ExternalMPI:
       title: ExternalMPI
       type: object
@@ -540,6 +266,169 @@ components:
           title: Xid
           type: string
           description: 3DS 1.x transaction ID in a 3ds server
+    MerchantPayResult:
+      title: MerchantPayResult
+      required:
+      - operationId
+      - mdOrder
+      type: object
+      properties:
+        operationId:
+          title: Operationid
+          type: string
+          description: Operation ID on the checkout side
+          format: uuid
+        mdOrder:
+          title: Mdorder
+          type: string
+          description: Order ID for opening the 3ds form
+        dataFor3ds:
+          title: Datafor3Ds
+          allOf:
+          - $ref: '#/components/schemas/APIDataFor3DS'
+          description: Data for 3DS passing
+    PayByTechCardCommandData:
+      title: PayByTechCardCommandData
+      required:
+      - type
+      - techCardId
+      type: object
+      properties:
+        type:
+          title: Type
+          enum:
+          - tech_card
+          type: string
+        techCardId:
+          title: Techcardid
+          type: integer
+          description: Technical card ID
+        tariffPlan:
+          title: Tariffplan
+          type: string
+          description: Installment plan
+        subMerchant:
+          title: Submerchant
+          allOf:
+          - $ref: '#/components/schemas/SubMerchant'
+          description: Information about sub-merchant
+    BusinessEventType:
+      title: BusinessEventType
+      enum:
+      - FORM_CLOSED
+      type: string
+      description: An enumeration.
+    CallbackOperationState:
+      title: CallbackOperationState
+      enum:
+      - SUCCESS
+      - FAIL
+      type: string
+      description: An enumeration.
+    ReceiptType:
+      title: ReceiptType
+      enum:
+      - PURCHASE
+      - PREPAID
+      - REFUND
+      type: string
+      description: An enumeration.
+    APIDataFor3DS:
+      title: APIDataFor3DS
+      type: object
+      properties:
+        acsUrl:
+          title: Acsurl
+          type: string
+          description: AcsUrl for 3DS passing. 3ds form will be opened if AcsUrl is received
+        paReq:
+          title: Pareq
+          type: string
+          description: Massage PAReq (base64), parameter of this payment query which include all important data about the payment.
+        termUrl:
+          title: Termurl
+          type: string
+          description: URL of terminal
+    ApiResponse_MerchantPayResult_:
+      title: ApiResponse[MerchantPayResult]
+      required:
+      - errorCode
+      type: object
+      properties:
+        errorCode:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          title: Message
+          type: string
+        result:
+          $ref: '#/components/schemas/MerchantPayResult'
+    BusinessEvent:
+      title: BusinessEvent
+      required:
+      - orderId
+      - orderNumber
+      - eventType
+      - actionCode
+      - actionCodeDescription
+      type: object
+      properties:
+        orderId:
+          title: Orderid
+          type: string
+          description: Order ID on the Checkout side
+        orderNumber:
+          title: Ordernumber
+          type: string
+          description: Order ID on the merchant's side
+        eventType:
+          allOf:
+          - $ref: '#/components/schemas/BusinessEventType'
+          description: Business event type
+        actionCode:
+          allOf:
+          - $ref: '#/components/schemas/ErrorCode'
+          description: Event code
+        actionCodeDescription:
+          title: Actioncodedescription
+          type: string
+          description: Event code description
+    app__api__models__payment__BindingIPS:
+      title: BindingIPS
+      type: object
+      properties:
+        name:
+          allOf:
+          - $ref: '#/components/schemas/IPS'
+    UnbindCardCommand:
+      title: UnbindCardCommand
+      required:
+      - bindingId
+      type: object
+      properties:
+        bindingId:
+          title: Binding Id
+          maxLength: 255
+          type: string
+          description: Binding ID
+    PayByBindCardCommandData:
+      title: PayByBindCardCommandData
+      required:
+      - type
+      - bindingId
+      type: object
+      properties:
+        type:
+          title: Type
+        bindingId:
+          title: Bindingid
+          minLength: 1
+          type: string
+          description: "ID of the link created when paying for the order or used\n for payment."
+        cvc:
+          title: Cvc
+          pattern: ^\d{3}$
+          type: string
+          description: CVC of card
     BindingInfoResponse:
       title: BindingInfoResponse
       required:
@@ -598,14 +487,36 @@ components:
           items:
             $ref: '#/components/schemas/BindingInfoResponse'
           description: Card bindings
-    ReceiptType:
-      title: ReceiptType
-      enum:
-      - PURCHASE
-      - PREPAID
-      - REFUND
-      type: string
-      description: An enumeration.
+    MerchantPayCommand:
+      title: MerchantPayCommand
+      required:
+      - processData
+      - orderId
+      - returnUrl
+      type: object
+      properties:
+        processData:
+          title: Processdata
+          oneOf:
+          - $ref: '#/components/schemas/PayByBindCardCommandData'
+          - $ref: '#/components/schemas/PayByCardTokenWithExternalMPICommandData'
+          - $ref: '#/components/schemas/PayByTechCardCommandData'
+          description: Payment method details.
+          discriminator:
+            propertyName: type
+            mapping:
+              bind: '#/components/schemas/PayByBindCardCommandData'
+              card: '#/components/schemas/PayByCardTokenWithExternalMPICommandData'
+              tech_card: '#/components/schemas/PayByTechCardCommandData'
+        orderId:
+          title: Orderid
+          type: string
+          description: Order ID
+          format: uuid
+        returnUrl:
+          title: Returnurl
+          type: string
+          description: URL for redirecting after the payment
     AcquiringCallbackData:
       title: AcquiringCallbackData
       required:
@@ -646,6 +557,95 @@ components:
           title: Rrn
           type: string
           description: Unique identifier of the banking transaction
+    ApiResponse_UnBindCardResponse_:
+      title: ApiResponse[UnBindCardResponse]
+      required:
+      - errorCode
+      type: object
+      properties:
+        errorCode:
+          title: Error code
+          type: string
+          description: Error code
+        message:
+          title: Message
+          type: string
+    SubMerchant:
+      title: SubMerchant
+      type: object
+      properties:
+        id:
+          title: Id
+          type: string
+          description: Sub-merchant's ID
+        tinPinfl:
+          title: Tinpinfl
+          type: string
+          description: Sub-merchant's Tin or Pinfl
+        account:
+          title: Account
+          type: string
+          description: Sub-merchant's account number
+        MFO:
+          title: Mfo
+          type: string
+          description: Sub-merchant's bank MFO
+        name:
+          title: Name
+          type: string
+          description: Sub-merchant's name
+    PayByCardTokenWithExternalMPICommandData:
+      title: PayByCardTokenWithExternalMPICommandData
+      required:
+      - type
+      - aesToken
+      - cardToken
+      - certificateFingerprint
+      - needBindCard
+      type: object
+      properties:
+        type:
+          title: Type
+          enum:
+          - card
+          type: string
+        aesToken:
+          title: Aestoken
+          minLength: 1
+          type: string
+          description: Couple <init. vector> (base64)
+        cardToken:
+          title: Cardtoken
+          minLength: 1
+          type: string
+          description: Encrypted JSON-message with a card data (base64)
+        certificateFingerprint:
+          title: Certificatefingerprint
+          minLength: 1
+          type: string
+          description: Certificate fingerprint (base64)
+        needBindCard:
+          title: Needbindcard
+          type: boolean
+          description: ID for bind creating
+        externalMpi:
+          title: Externalmpi
+          allOf:
+          - $ref: '#/components/schemas/ExternalMPI'
+          description: 3DS external mpi parameters
+    ErrorCode:
+      title: ErrorCode
+      type: integer
+    PaymentOperationType:
+      title: PaymentOperationType
+      enum:
+      - AUTHORIZE
+      - COMPLETE
+      - REFUND
+      - REVERSE
+      - TOP_UP_COMPLETED
+      type: string
+      description: An enumeration.
 x-tagGroups:
 - name: API
   tags:

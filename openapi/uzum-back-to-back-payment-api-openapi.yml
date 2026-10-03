@@ -40,9 +40,6 @@ paths:
                 $ref: '#/components/schemas/ApiResponse_GetCertificateResponse_'
 components:
   schemas:
-    ErrorCode:
-      title: ErrorCode
-      type: integer
     ApiResponse_GetCertificateResponse_:
       title: ApiResponse[GetCertificateResponse]
       required:
@@ -71,6 +68,9 @@ components:
           title: Fingerprint
           type: string
           description: Certificate fingerprint (base64)
+    ErrorCode:
+      title: ErrorCode
+      type: integer
 x-tagGroups:
 - name: API
   tags:

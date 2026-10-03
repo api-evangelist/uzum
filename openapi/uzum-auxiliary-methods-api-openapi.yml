@@ -187,109 +187,80 @@ paths:
                 $ref: '#/components/schemas/ApiResponse_GetReceiptsResponse_'
 components:
   schemas:
-    ApiResponse_PurchaseReceiptResponse_:
+    ApiResponse_GetOrderStatusResponse_:
+      title: ApiResponse[GetOrderStatusResponse]
+      required:
+      - errorCode
+      type: object
       properties:
         errorCode:
           $ref: '#/components/schemas/ErrorCode'
         message:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Message
+          type: string
         result:
-          $ref: '#/components/schemas/PurchaseReceiptResponse'
-      type: object
-      required:
-      - errorCode
-      title: ApiResponse[PurchaseReceiptResponse]
-    UZReceiptParams:
-      title: UZReceiptParams
-      required:
-      - spic
-      - packageCode
-      - vatPercent
-      type: object
-      properties:
-        spic:
-          title: Spic
-          maxLength: 17
-          minLength: 17
-          type: string
-          description: IKPU (SPIC) product code
-        packageCode:
-          title: Packagecode
-          maxLength: 20
-          minLength: 1
-          type: string
-          description: Packaging code
-        vatPercent:
-          title: Vatpercent
-          minimum: 0
-          type: integer
-          description: VAT rate
-        TIN:
-          title: Tin
-          maxLength: 9
-          minLength: 1
-          type: string
-          description: Committee TIN. Must be filled in if the PINFL is not filled in. Can't be filled in together
-        PINFL:
-          title: Pinfl
-          maxLength: 14
-          minLength: 1
-          type: string
-          description: Committee PINFL. Must be filled in if the TIN is not filled in. Can't be filled in together
-        discount:
-          title: Discount
-          exclusiveMinimum: 0
-          type: integer
-          description: Discount amount
-        voucher:
-          title: Voucher
-          exclusiveMinimum: 0
-          type: integer
-          description: Discount marketplace (in tiyins)
-        labels:
-          title: Labels
-          type: array
-          items:
-            type: string
-          description: Array of product labels. Quantity of labels must correspond to the quantity of labelled items in the cart
-      description: Data for autofiscalization
-    GetReceiptRequest:
-      title: GetReceiptRequest
-      required:
-      - orderId
-      type: object
-      properties:
-        orderId:
-          title: Orderid
-          type: string
-          description: Order ID
-          format: uuid
-    GetReceiptsResponse:
-      title: GetReceiptsResponse
-      required:
-      - receipts
-      type: object
-      properties:
-        receipts:
-          title: Receipts
-          type: array
-          items:
-            $ref: '#/components/schemas/GetReceiptResponse'
-          description: Issued receipts
-    PurchaseReceiptResponse:
-      properties:
-        operationId:
-          type: string
-          format: uuid
-          title: Operationid
-          description: Operation ID on the Uzum Checkout side
-      type: object
+          $ref: '#/components/schemas/GetOrderStatusResponse'
+    GetOperationStateCommand:
+      title: GetOperationStateCommand
       required:
       - operationId
-      title: PurchaseReceiptResponse
+      type: object
+      properties:
+        operationId:
+          title: Operationid
+          type: string
+          description: Operation ID on the checkout side
+          format: uuid
+    FiscalizationCartItemRequest:
+      title: FiscalizationCartItemRequest
+      required:
+      - productId
+      - quantity
+      - receiptParams
+      type: object
+      properties:
+        productId:
+          title: Productid
+          minLength: 1
+          type: string
+          description: Item ID on the merchant's side
+        quantity:
+          title: Quantity
+          exclusiveMinimum: 0
+          type: integer
+          description: Quantity of the item
+        receiptParams:
+          title: Receiptparams
+          allOf:
+          - $ref: '#/components/schemas/UZReceiptParams'
+    AcquiringStatus:
+      title: AcquiringStatus
+      enum:
+      - REGISTERED
+      - AUTHORIZED
+      - TOP_UP_COMPLETED
+      - COMPLETED
+      - REFUNDED
+      - REVERSED
+      - DECLINED
+      type: string
+      description: An enumeration.
+    PurchaseReceiptRequest:
+      properties:
+        orderId:
+          type: string
+          format: uuid
+          title: Orderid
+          description: Order identifier
+        cart:
+          allOf:
+          - $ref: '#/components/schemas/PurchaseReceiptCartRequest'
+          description: Cart data for purchase receipt fiscalization
+      type: object
+      required:
+      - orderId
+      - cart
+      title: PurchaseReceiptRequest
     Operation:
       title: Operation
       required:
@@ -335,60 +306,22 @@ components:
           title: Actioncodedescription
           type: string
           description: Reason why payment was declined
-    ErrorCode:
-      title: ErrorCode
-      type: integer
-    PurchaseReceiptRequest:
-      properties:
-        orderId:
-          type: string
-          format: uuid
-          title: Orderid
-          description: Order identifier
-        cart:
-          allOf:
-          - $ref: '#/components/schemas/PurchaseReceiptCartRequest'
-          description: Cart data for purchase receipt fiscalization
-      type: object
-      required:
-      - orderId
-      - cart
-      title: PurchaseReceiptRequest
-    GetReceiptResponse:
-      title: GetReceiptResponse
-      required:
-      - receiptUrl
-      - receiptType
-      type: object
-      properties:
-        receiptUrl:
-          title: Receipturl
-          type: string
-          description: Link to the receipt
-        receiptType:
-          allOf:
-          - $ref: '#/components/schemas/ReceiptType'
-          description: Type of the receipt (purchase/refund)
-    PaymentOperationState:
-      title: PaymentOperationState
+    ReceiptType:
+      title: ReceiptType
       enum:
-      - IN_PROGRESS
-      - SUCCESS
-      - FAIL
+      - PURCHASE
+      - PREPAID
+      - REFUND
       type: string
       description: An enumeration.
-    AcquiringStatus:
-      title: AcquiringStatus
-      enum:
-      - REGISTERED
-      - AUTHORIZED
-      - TOP_UP_COMPLETED
-      - COMPLETED
-      - REFUNDED
-      - REVERSED
-      - DECLINED
-      type: string
-      description: An enumeration.
+    GetOperationStateResponse:
+      title: GetOperationStateResponse
+      required:
+      - operation
+      type: object
+      properties:
+        operation:
+          $ref: '#/components/schemas/Operation'
     PurchaseReceiptCartRequest:
       properties:
         total:
@@ -408,40 +341,47 @@ components:
       - total
       - items
       title: PurchaseReceiptCartRequest
-    PaymentOperationType:
-      title: PaymentOperationType
-      enum:
-      - AUTHORIZE
-      - COMPLETE
-      - REFUND
-      - REVERSE
-      - TOP_UP_COMPLETED
-      type: string
-      description: An enumeration.
-    ApiResponse_GetReceiptsResponse_:
-      title: ApiResponse[GetReceiptsResponse]
-      required:
-      - errorCode
+    PurchaseReceiptResponse:
+      properties:
+        operationId:
+          type: string
+          format: uuid
+          title: Operationid
+          description: Operation ID on the Uzum Checkout side
       type: object
+      required:
+      - operationId
+      title: PurchaseReceiptResponse
+    GetReceiptResponse:
+      title: GetReceiptResponse
+      required:
+      - receiptUrl
+      - receiptType
+      type: object
+      properties:
+        receiptUrl:
+          title: Receipturl
+          type: string
+          description: Link to the receipt
+        receiptType:
+          allOf:
+          - $ref: '#/components/schemas/ReceiptType'
+          description: Type of the receipt (purchase/refund)
+    ApiResponse_PurchaseReceiptResponse_:
       properties:
         errorCode:
           $ref: '#/components/schemas/ErrorCode'
         message:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Message
-          type: string
         result:
-          $ref: '#/components/schemas/GetReceiptsResponse'
-    GetOrderStatusCommand:
-      title: GetOrderStatusCommand
-      required:
-      - orderId
+          $ref: '#/components/schemas/PurchaseReceiptResponse'
       type: object
-      properties:
-        orderId:
-          title: Orderid
-          type: string
-          description: Order ID
-          format: uuid
+      required:
+      - errorCode
+      title: ApiResponse[PurchaseReceiptResponse]
     GetOrderStatusResponse:
       title: GetOrderStatusResponse
       required:
@@ -511,39 +451,17 @@ components:
           items:
             $ref: '#/components/schemas/Operation'
           description: Operations history
-    GetOperationStateCommand:
-      title: GetOperationStateCommand
+    GetOrderStatusCommand:
+      title: GetOrderStatusCommand
       required:
-      - operationId
+      - orderId
       type: object
       properties:
-        operationId:
-          title: Operationid
+        orderId:
+          title: Orderid
           type: string
-          description: Operation ID on the checkout side
+          description: Order ID
           format: uuid
-    FiscalizationCartItemRequest:
-      title: FiscalizationCartItemRequest
-      required:
-      - productId
-      - quantity
-      - receiptParams
-      type: object
-      properties:
-        productId:
-          title: Productid
-          minLength: 1
-          type: string
-          description: Item ID on the merchant's side
-        quantity:
-          title: Quantity
-          exclusiveMinimum: 0
-          type: integer
-          description: Quantity of the item
-        receiptParams:
-          title: Receiptparams
-          allOf:
-          - $ref: '#/components/schemas/UZReceiptParams'
     ReceiptGeneratedCallbackData:
       title: ReceiptGeneratedCallbackData
       required:
@@ -564,19 +482,14 @@ components:
           title: Receipturl
           type: string
           description: Link to the receipt
-    ApiResponse_GetOrderStatusResponse_:
-      title: ApiResponse[GetOrderStatusResponse]
-      required:
-      - errorCode
-      type: object
-      properties:
-        errorCode:
-          $ref: '#/components/schemas/ErrorCode'
-        message:
-          title: Message
-          type: string
-        result:
-          $ref: '#/components/schemas/GetOrderStatusResponse'
+    PaymentOperationState:
+      title: PaymentOperationState
+      enum:
+      - IN_PROGRESS
+      - SUCCESS
+      - FAIL
+      type: string
+      description: An enumeration.
     ApiResponse_GetOperationStateResponse_:
       title: ApiResponse[GetOperationStateResponse]
       required:
@@ -590,22 +503,109 @@ components:
           type: string
         result:
           $ref: '#/components/schemas/GetOperationStateResponse'
-    ReceiptType:
-      title: ReceiptType
-      enum:
-      - PURCHASE
-      - PREPAID
-      - REFUND
-      type: string
-      description: An enumeration.
-    GetOperationStateResponse:
-      title: GetOperationStateResponse
+    UZReceiptParams:
+      title: UZReceiptParams
       required:
-      - operation
+      - spic
+      - packageCode
+      - vatPercent
       type: object
       properties:
-        operation:
-          $ref: '#/components/schemas/Operation'
+        spic:
+          title: Spic
+          maxLength: 17
+          minLength: 17
+          type: string
+          description: IKPU (SPIC) product code
+        packageCode:
+          title: Packagecode
+          maxLength: 20
+          minLength: 1
+          type: string
+          description: Packaging code
+        vatPercent:
+          title: Vatpercent
+          minimum: 0
+          type: integer
+          description: VAT rate
+        TIN:
+          title: Tin
+          maxLength: 9
+          minLength: 1
+          type: string
+          description: Committee TIN. Must be filled in if the PINFL is not filled in. Can't be filled in together
+        PINFL:
+          title: Pinfl
+          maxLength: 14
+          minLength: 1
+          type: string
+          description: Committee PINFL. Must be filled in if the TIN is not filled in. Can't be filled in together
+        discount:
+          title: Discount
+          exclusiveMinimum: 0
+          type: integer
+          description: Discount amount
+        voucher:
+          title: Voucher
+          exclusiveMinimum: 0
+          type: integer
+          description: Discount marketplace (in tiyins)
+        labels:
+          title: Labels
+          type: array
+          items:
+            type: string
+          description: Array of product labels. Quantity of labels must correspond to the quantity of labelled items in the cart
+      description: Data for autofiscalization
+    GetReceiptRequest:
+      title: GetReceiptRequest
+      required:
+      - orderId
+      type: object
+      properties:
+        orderId:
+          title: Orderid
+          type: string
+          description: Order ID
+          format: uuid
+    ApiResponse_GetReceiptsResponse_:
+      title: ApiResponse[GetReceiptsResponse]
+      required:
+      - errorCode
+      type: object
+      properties:
+        errorCode:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          title: Message
+          type: string
+        result:
+          $ref: '#/components/schemas/GetReceiptsResponse'
+    GetReceiptsResponse:
+      title: GetReceiptsResponse
+      required:
+      - receipts
+      type: object
+      properties:
+        receipts:
+          title: Receipts
+          type: array
+          items:
+            $ref: '#/components/schemas/GetReceiptResponse'
+          description: Issued receipts
+    ErrorCode:
+      title: ErrorCode
+      type: integer
+    PaymentOperationType:
+      title: PaymentOperationType
+      enum:
+      - AUTHORIZE
+      - COMPLETE
+      - REFUND
+      - REVERSE
+      - TOP_UP_COMPLETED
+      type: string
+      description: An enumeration.
 x-tagGroups:
 - name: API
   tags:

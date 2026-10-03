@@ -71,45 +71,6 @@ paths:
                 $ref: '#/components/schemas/InternalServerErrorResponse'
 components:
   schemas:
-    QrPaymentRequestAccepted:
-      title: QR Payment Request Accepted
-      required:
-      - message
-      - code
-      type: object
-      properties:
-        code:
-          title: Code
-          type: integer
-          description: "Possible values\n * 0 - Didn't receive a timely response from an ofd.soliq.uz server. Your request was accepted and QR payment will be send as soon as ofd.soliq.uz is available. You can retry request later\n * 1 - Error occurred in communications with ofd.soliq.uz. We will retry it later\n * 2 - Didn't send QR payment yet. We're in process of retrying it\n"
-        message:
-          title: Message
-          type: string
-          description: "Possible values\n * Didn't receive a timely response from an ofd.soliq.uz server. Your request was accepted and QR payment will be send as soon as ofd.soliq.uz is available. You can retry request later\n * Error occurred in communications with ofd.soliq.uz. We will retry it later\n * Didn't send QR payment yet. We're in process of retrying it\n"
-          example: Didn't receive a timely response from an ofd.soliq.uz server. Your request was accepted and QR payment will be send as soon as ofd.soliq.uz is available. You can retry request later
-    HTTPValidationError:
-      title: HTTPValidationError
-      type: object
-      properties:
-        detail:
-          title: Detail
-          type: array
-          items:
-            $ref: '#/components/schemas/ValidationError'
-    ReceiptDataCommissionInfo:
-      title: ReceiptDataCommissionInfo
-      type: object
-      properties:
-        TIN:
-          title: Tin
-          type: string
-          description: Taxpayer Identification Number (TIN) of the principal. It is mandatory if PINF is not provided. Simultaneous filling of both TIN and PINF is not allowed.
-        PINFL:
-          title: Pinfl
-          maxLength: 14
-          minLength: 14
-          type: string
-          description: PINF of the principal. It is mandatory if TIN is not provided. Simultaneous filling of both PINF and TIN is not allowed.
     AuthErrorResponse:
       title: AuthErrorResponse
       type: object
@@ -119,6 +80,24 @@ components:
           type: string
           format: string
           description: "Available Values:\n * Multiple auth headers are defined\n * Auth header is not defined\n * User is not found\n"
+    ReceiptInfo:
+      title: Receipt Info
+      type: object
+      description: Information about the registered receipt
+      required:
+      - terminal_id
+      - receipt_seq
+      properties:
+        terminal_id:
+          type: string
+          maxLength: 14
+          description: FM number
+          example: UZ000000000002
+        receipt_seq:
+          type: string
+          maxLength: 16
+          description: Receipt number
+          example: '123'
     QrPaymentRequest:
       title: QR Payment Request
       required:
@@ -178,24 +157,29 @@ components:
           example: Tashkent, Chilanzar District, Mukimi Street, 166.
         receipt_info:
           $ref: '#/components/schemas/ReceiptInfo'
-    ReceiptInfo:
-      title: Receipt Info
-      type: object
-      description: Information about the registered receipt
+    InternalServerErrorResponse:
+      title: Internal Server Error
       required:
-      - terminal_id
-      - receipt_seq
+      - message
+      type: object
       properties:
-        terminal_id:
+        message:
           type: string
+          example: Server encountered an unexpected condition that prevented it from fulfilling the request. Please, contact support
+    ReceiptDataCommissionInfo:
+      title: ReceiptDataCommissionInfo
+      type: object
+      properties:
+        TIN:
+          title: Tin
+          type: string
+          description: Taxpayer Identification Number (TIN) of the principal. It is mandatory if PINF is not provided. Simultaneous filling of both TIN and PINF is not allowed.
+        PINFL:
+          title: Pinfl
           maxLength: 14
-          description: FM number
-          example: UZ000000000002
-        receipt_seq:
+          minLength: 14
           type: string
-          maxLength: 16
-          description: Receipt number
-          example: '123'
+          description: PINF of the principal. It is mandatory if TIN is not provided. Simultaneous filling of both PINF and TIN is not allowed.
     ValidationError:
       title: ValidationError
       required:
@@ -226,15 +210,31 @@ components:
         message:
           type: string
           example: Sale QR payment with the same payment_id was already send
-    InternalServerErrorResponse:
-      title: Internal Server Error
+    QrPaymentRequestAccepted:
+      title: QR Payment Request Accepted
       required:
       - message
+      - code
       type: object
       properties:
+        code:
+          title: Code
+          type: integer
+          description: "Possible values\n * 0 - Didn't receive a timely response from an ofd.soliq.uz server. Your request was accepted and QR payment will be send as soon as ofd.soliq.uz is available. You can retry request later\n * 1 - Error occurred in communications with ofd.soliq.uz. We will retry it later\n * 2 - Didn't send QR payment yet. We're in process of retrying it\n"
         message:
+          title: Message
           type: string
-          example: Server encountered an unexpected condition that prevented it from fulfilling the request. Please, contact support
+          description: "Possible values\n * Didn't receive a timely response from an ofd.soliq.uz server. Your request was accepted and QR payment will be send as soon as ofd.soliq.uz is available. You can retry request later\n * Error occurred in communications with ofd.soliq.uz. We will retry it later\n * Didn't send QR payment yet. We're in process of retrying it\n"
+          example: Didn't receive a timely response from an ofd.soliq.uz server. Your request was accepted and QR payment will be send as soon as ofd.soliq.uz is available. You can retry request later
+    HTTPValidationError:
+      title: HTTPValidationError
+      type: object
+      properties:
+        detail:
+          title: Detail
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
 x-tagGroups:
 - name: API
   description: hi

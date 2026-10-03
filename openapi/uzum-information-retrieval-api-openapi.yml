@@ -214,30 +214,64 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
-    ErrorResponse:
+    ConvertRequest:
       type: object
       required:
-      - code
-      - message
+      - senderCurrencyCode
+      - senderCountry
+      - receiverCurrencyCode
+      - receiverCountry
       properties:
-        code:
-          description: Response code
+        senderAmount:
           type: integer
-        message:
-          description: Error message
+          format: int64
+          description: 'Transfer amount in minor units of sender''s currency. Must be greater than zero.
+
+            Provide this field to calculate `receiverAmount`.
+
+            Must not be specified if `receiverAmount` is provided
+
+            '
+          example: 100000
+        senderCurrencyCode:
           type: string
-        errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/ErrorDetails'
-    ConvertResponse:
+          description: Sender's currency code according to ISO 4217 alpha-3
+          pattern: ^[A-Z]{3}$
+          example: UZS
+        senderCountry:
+          description: Sender's country code according to ISO 3166-1 alpha-3
+          type: string
+          pattern: ^[A-Z]{3}$
+          example: UZB
+        receiverCurrencyCode:
+          type: string
+          description: Recipient's currency code according to ISO 4217 alpha-3
+          pattern: ^[A-Z]{3}$
+          example: RUB
+        receiverCountry:
+          description: Recipient's country code according to ISO 3166-1 alpha-3
+          type: string
+          pattern: ^[A-Z]{3}$
+          example: RUS
+        receiverAmount:
+          type: integer
+          format: int64
+          description: 'Amount to be received by the recipient in minor units of recipient''s currency. Must be greater than zero.
+
+            Provide this field to calculate `senderAmount`.
+
+            Must not be specified if `senderAmount` is provided
+
+            '
+          example: 13900000
+    GetBanksResponse:
       type: object
       required:
       - code
       - message
       properties:
         code:
-          description: "Response code. Possible values:\n  * `0` - Request completed successfully\n  * `8002` - Access restriction by partner/direction/country/currency\n  * `9100` - External service interaction error\n"
+          description: "Response code. Possible values:\n  * `0` - Request completed successfully\n  * `9100` - External service interaction error\n"
           type: integer
           example: 0
         message:
@@ -245,9 +279,23 @@ components:
           type: string
           example: Request completed successfully
         result:
-          description: Conversion result. Present when `code = 0`
+          description: Response data. Present when `code = 0`
           allOf:
-          - $ref: '#/components/schemas/ConvertResult'
+          - $ref: '#/components/schemas/GetBanksResult'
+    ErrorDetails:
+      type: object
+      required:
+      - field
+      - message
+      properties:
+        field:
+          description: Name of the field containing the error
+          type: string
+          example: receiverCurrencyCode
+        message:
+          description: Description of the validation error for this field
+          type: string
+          example: Currency code must be 3 characters
     GetBalanceResult:
       type: object
       required:
@@ -281,45 +329,38 @@ components:
 
             '
           example: USD
-    GetBanksRequest:
-      type: object
-      required:
-      - phoneNumber
-      - receiverCountry
-      properties:
-        phoneNumber:
-          description: Recipient's phone number (E.164 format)
-          pattern: ^\+[1-9]\d{1,14}$
-          type: string
-          example: '+998948063815'
-        receiverCountry:
-          description: 'Recipient''s country code according to ISO 3166-1 alpha-3.
-
-            Currently only `UZB` is supported
-
-            '
-          type: string
-          pattern: ^[A-Z]{3}$
-          example: UZB
-          enum:
-          - UZB
-    422ErrorResponse:
+    GetBalanceResponse:
       type: object
       required:
       - code
       - message
       properties:
         code:
-          description: "Response code. Possible values:\n  * `1001` - The request body is not a valid JSON or does not match the expected schema structure\n  * `1002` - Required fields are missing\n  * `1003` - Format/range/enum requirements violated; the 'errors' array contains the fields and descriptions of the issues\n  * `1101` - Required header is missing\n"
+          description: "Response code. Possible values:\n  * `0` - Request completed successfully\n  * `3060` - Invalid account number in balance request\n  * `9100` - External service interaction error\n"
           type: integer
-          example: 1001
+          example: 0
+        message:
+          description: Response status message
+          type: string
+          example: Request completed successfully
+        result:
+          description: Response data. Present when `code = 0`
+          allOf:
+          - $ref: '#/components/schemas/GetBalanceResult'
+    ErrorResponse:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          description: Response code
+          type: integer
         message:
           description: Error message
           type: string
-          example: Required field is missing
         errors:
           type: array
-          description: List of field-level validation errors
           items:
             $ref: '#/components/schemas/ErrorDetails'
     ConvertResult:
@@ -372,106 +413,65 @@ components:
           format: int64
           description: Fee amount in minor units of sender's currency
           example: 1000
-    ConvertRequest:
+    ConvertResponse:
       type: object
       required:
-      - senderCurrencyCode
-      - senderCountry
-      - receiverCurrencyCode
+      - code
+      - message
+      properties:
+        code:
+          description: "Response code. Possible values:\n  * `0` - Request completed successfully\n  * `8002` - Access restriction by partner/direction/country/currency\n  * `9100` - External service interaction error\n"
+          type: integer
+          example: 0
+        message:
+          description: Response status message
+          type: string
+          example: Request completed successfully
+        result:
+          description: Conversion result. Present when `code = 0`
+          allOf:
+          - $ref: '#/components/schemas/ConvertResult'
+    GetBanksRequest:
+      type: object
+      required:
+      - phoneNumber
       - receiverCountry
       properties:
-        senderAmount:
-          type: integer
-          format: int64
-          description: 'Transfer amount in minor units of sender''s currency. Must be greater than zero.
+        phoneNumber:
+          description: Recipient's phone number (E.164 format)
+          pattern: ^\+[1-9]\d{1,14}$
+          type: string
+          example: '+998948063815'
+        receiverCountry:
+          description: 'Recipient''s country code according to ISO 3166-1 alpha-3.
 
-            Provide this field to calculate `receiverAmount`.
-
-            Must not be specified if `receiverAmount` is provided
+            Currently only `UZB` is supported
 
             '
-          example: 100000
-        senderCurrencyCode:
-          type: string
-          description: Sender's currency code according to ISO 4217 alpha-3
-          pattern: ^[A-Z]{3}$
-          example: UZS
-        senderCountry:
-          description: Sender's country code according to ISO 3166-1 alpha-3
           type: string
           pattern: ^[A-Z]{3}$
           example: UZB
-        receiverCurrencyCode:
-          type: string
-          description: Recipient's currency code according to ISO 4217 alpha-3
-          pattern: ^[A-Z]{3}$
-          example: RUB
-        receiverCountry:
-          description: Recipient's country code according to ISO 3166-1 alpha-3
-          type: string
-          pattern: ^[A-Z]{3}$
-          example: RUS
-        receiverAmount:
-          type: integer
-          format: int64
-          description: 'Amount to be received by the recipient in minor units of recipient''s currency. Must be greater than zero.
-
-            Provide this field to calculate `senderAmount`.
-
-            Must not be specified if `senderAmount` is provided
-
-            '
-          example: 13900000
-    ErrorDetails:
-      type: object
-      required:
-      - field
-      - message
-      properties:
-        field:
-          description: Name of the field containing the error
-          type: string
-          example: receiverCurrencyCode
-        message:
-          description: Description of the validation error for this field
-          type: string
-          example: Currency code must be 3 characters
-    GetBanksResponse:
+          enum:
+          - UZB
+    422ErrorResponse:
       type: object
       required:
       - code
       - message
       properties:
         code:
-          description: "Response code. Possible values:\n  * `0` - Request completed successfully\n  * `9100` - External service interaction error\n"
+          description: "Response code. Possible values:\n  * `1001` - The request body is not a valid JSON or does not match the expected schema structure\n  * `1002` - Required fields are missing\n  * `1003` - Format/range/enum requirements violated; the 'errors' array contains the fields and descriptions of the issues\n  * `1101` - Required header is missing\n"
           type: integer
-          example: 0
+          example: 1001
         message:
-          description: Response status message
+          description: Error message
           type: string
-          example: Request completed successfully
-        result:
-          description: Response data. Present when `code = 0`
-          allOf:
-          - $ref: '#/components/schemas/GetBanksResult'
-    GetBalanceResponse:
-      type: object
-      required:
-      - code
-      - message
-      properties:
-        code:
-          description: "Response code. Possible values:\n  * `0` - Request completed successfully\n  * `3060` - Invalid account number in balance request\n  * `9100` - External service interaction error\n"
-          type: integer
-          example: 0
-        message:
-          description: Response status message
-          type: string
-          example: Request completed successfully
-        result:
-          description: Response data. Present when `code = 0`
-          allOf:
-          - $ref: '#/components/schemas/GetBalanceResult'
+          example: Required field is missing
+        errors:
+          type: array
+          description: List of field-level validation errors
+          items:
+            $ref: '#/components/schemas/ErrorDetails'
     GetBanksResult:
       type: object
       required:

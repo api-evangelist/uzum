@@ -251,54 +251,33 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
-    ErrorResponse:
+    ConvertRequest:
       required:
-      - errorCode
-      - errorMessage
-      type: object
-      properties:
-        errorCode:
-          type: integer
-          description: Integer error code
-          example: 81
-        errorMessage:
-          type: string
-          description: Error text
-          example: Internal error
-        errorDetails:
-          type: array
-          description: Error description
-          items:
-            $ref: '#/components/schemas/ErrorDetails'
-    ConvertResponse:
-      required:
-      - amountFrom
-      - amountTo
+      - amount
       - currencyFrom
       - currencyTo
-      - rate
+      - direction
       type: object
       properties:
-        amountFrom:
+        amount:
           type: integer
-          description: Amount before conversion (in minimum currency units)
+          description: Amount to convert (in minimum currency units)
           example: 40000
-        amountTo:
-          type: integer
-          description: Amount after conversion (in minimum currency units)
-          example: 5600000
         currencyFrom:
           type: string
-          description: Currency of the amount for conversion (code according to ISO 4217)
+          description: Source currency (ISO 4217)
           example: RUB
         currencyTo:
           type: string
-          description: Currency of the converted amount (code according to ISO 4217)
+          description: Target currency (ISO 4217)
           example: UZS
-        rate:
+        direction:
           type: string
-          description: Conversion rate
-          example: '140.0000'
+          description: Transfer direction
+          example: TO_UZ
+          enum:
+          - TO_UZ
+          - FROM_UZ
     FilterTime:
       required:
       - from
@@ -313,38 +292,59 @@ components:
           type: string
           description: End date and time for filtering in UTC
           example: '2024-10-22T09:55:30.250'
-    TransferListResponse:
-      type: array
-      items:
-        $ref: '#/components/schemas/TransferResponse'
-    Error:
-      type: object
-      properties:
-        errorCode:
-          type: integer
-          example: 0
-        errorMessage:
-          type: string
-          example: string
-        errorDetails:
-          type: object
-          additionalProperties: true
-    TransferStatusRequest:
+    TransferListRequest:
       required:
-      - externalTransferId
+      - createTime
+      - limit
+      - page
       type: object
       properties:
-        externalTransferId:
+        createTime:
+          description: Object with creation time filters
+          allOf:
+          - $ref: '#/components/schemas/FilterTime'
+        status:
           type: string
-          description: Transfer ID in the partner's system
-          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
-    inline_response_200:
+          description: Operation status. If operations are to be retrieved in all statuses, this field is not specified in the request body
+          example: APPROVED
+          enum:
+          - REGISTERED
+          - PENDING
+          - APPROVED
+          - SUCCESS
+          - FAILED
+          - REVERSED
+        transferType:
+          type: string
+          description: Transfer direction
+          example: TO_UZ
+          enum:
+          - FROM_UZ
+          - TO_UZ
+        page:
+          type: integer
+          description: Requested response page number
+          example: 1
+          default: 1
+        limit:
+          type: integer
+          description: Number of response records per page. Maximum - 100
+          example: 25
+          default: 25
+    ErrorDetails:
+      required:
+      - message
+      - field
       type: object
       properties:
-        paginationResponse:
-          $ref: '#/components/schemas/PaginationResponse'
-        transferList:
-          $ref: '#/components/schemas/TransferListResponse'
+        field:
+          type: string
+          description: Field name from the request body
+          example: externalTransferId
+        message:
+          type: string
+          description: Error description in the specified field
+          example: Must not be null
     ClosingBalanceResponse:
       type: object
       properties:
@@ -366,29 +366,54 @@ components:
           minLength: 3
           maxLength: 3
           example: USD
-    PaginationResponse:
+    AccountOperationsResponse:
       type: object
       properties:
-        totalRecords:
+        accountNumber:
+          description: Account number, for which the information is displayed
+          type: string
+          example: '22618000790000077701'
+        accountName:
+          description: Account name
+          type: string
+          example: Deposit account for (SUPER-PAY)
+        closingBalance:
+          description: Balance on the partner's account in fractional units of the currency at the end of the time period
           type: integer
-          description: Total number of records
-          example: 995
-        totalPages:
+          example: 8059900
+        openingBalance:
+          description: Balance on the partner's account in fractional units of the currency at the beginning of the time period
           type: integer
-          description: Total number of pages with the given limit
-          example: 40
-        currentPage:
+          example: 8459900
+        currency:
+          description: Account currency (ISO 4217 code)
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: USD
+        operationsInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperationInfo'
+    ErrorResponse:
+      required:
+      - errorCode
+      - errorMessage
+      type: object
+      properties:
+        errorCode:
           type: integer
-          description: Current page
-          example: 1
-        nextPage:
-          type: integer
-          description: Number of the next page of the response. 0 - page does not exist
-          example: 2
-        previousPage:
-          type: integer
-          description: Number of the previous page of the response. 0 - page does not exist
-          example: 0
+          description: Integer error code
+          example: 81
+        errorMessage:
+          type: string
+          description: Error text
+          example: Internal error
+        errorDetails:
+          type: array
+          description: Error description
+          items:
+            $ref: '#/components/schemas/ErrorDetails'
     OperationInfo:
       type: object
       properties:
@@ -431,74 +456,33 @@ components:
           description: Payment purpose
           type: string
           example: Commissioned amount by Humo Bank for October 24, 2024, according to the distribution order No. ОД2510/10 dated October 25, 2024.
-    TransferListRequest:
-      required:
-      - createTime
-      - limit
-      - page
+    PaginationResponse:
       type: object
       properties:
-        createTime:
-          description: Object with creation time filters
-          allOf:
-          - $ref: '#/components/schemas/FilterTime'
-        status:
-          type: string
-          description: Operation status. If operations are to be retrieved in all statuses, this field is not specified in the request body
-          example: APPROVED
-          enum:
-          - REGISTERED
-          - PENDING
-          - APPROVED
-          - SUCCESS
-          - FAILED
-          - REVERSED
-        transferType:
-          type: string
-          description: Transfer direction
-          example: TO_UZ
-          enum:
-          - FROM_UZ
-          - TO_UZ
-        page:
+        totalRecords:
           type: integer
-          description: Requested response page number
+          description: Total number of records
+          example: 995
+        totalPages:
+          type: integer
+          description: Total number of pages with the given limit
+          example: 40
+        currentPage:
+          type: integer
+          description: Current page
           example: 1
-          default: 1
-        limit:
+        nextPage:
           type: integer
-          description: Number of response records per page. Maximum - 100
-          example: 25
-          default: 25
-    AccountOperationsResponse:
-      type: object
-      properties:
-        accountNumber:
-          description: Account number, for which the information is displayed
-          type: string
-          example: '22618000790000077701'
-        accountName:
-          description: Account name
-          type: string
-          example: Deposit account for (SUPER-PAY)
-        closingBalance:
-          description: Balance on the partner's account in fractional units of the currency at the end of the time period
+          description: Number of the next page of the response. 0 - page does not exist
+          example: 2
+        previousPage:
           type: integer
-          example: 8059900
-        openingBalance:
-          description: Balance on the partner's account in fractional units of the currency at the beginning of the time period
-          type: integer
-          example: 8459900
-        currency:
-          description: Account currency (ISO 4217 code)
-          type: string
-          minLength: 3
-          maxLength: 3
-          example: USD
-        operationsInfo:
-          type: array
-          items:
-            $ref: '#/components/schemas/OperationInfo'
+          description: Number of the previous page of the response. 0 - page does not exist
+          example: 0
+    TransferListResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/TransferResponse'
     TransferStatusResponse:
       required:
       - completedDateTime
@@ -598,47 +582,47 @@ components:
           type: string
           description: Card token
           example: vlKeomyUYGh8ktD+1hvI68kuApMKq1s8uyfgvHA=
-    ConvertRequest:
+    ConvertResponse:
       required:
-      - amount
+      - amountFrom
+      - amountTo
       - currencyFrom
       - currencyTo
-      - direction
+      - rate
       type: object
       properties:
-        amount:
+        amountFrom:
           type: integer
-          description: Amount to convert (in minimum currency units)
+          description: Amount before conversion (in minimum currency units)
           example: 40000
+        amountTo:
+          type: integer
+          description: Amount after conversion (in minimum currency units)
+          example: 5600000
         currencyFrom:
           type: string
-          description: Source currency (ISO 4217)
+          description: Currency of the amount for conversion (code according to ISO 4217)
           example: RUB
         currencyTo:
           type: string
-          description: Target currency (ISO 4217)
+          description: Currency of the converted amount (code according to ISO 4217)
           example: UZS
-        direction:
+        rate:
           type: string
-          description: Transfer direction
-          example: TO_UZ
-          enum:
-          - TO_UZ
-          - FROM_UZ
-    ErrorDetails:
-      required:
-      - message
-      - field
+          description: Conversion rate
+          example: '140.0000'
+    Error:
       type: object
       properties:
-        field:
+        errorCode:
+          type: integer
+          example: 0
+        errorMessage:
           type: string
-          description: Field name from the request body
-          example: externalTransferId
-        message:
-          type: string
-          description: Error description in the specified field
-          example: Must not be null
+          example: string
+        errorDetails:
+          type: object
+          additionalProperties: true
     TransferResponse:
       required:
       - completedDateTime
@@ -730,6 +714,22 @@ components:
           - SUCCESS
           - FAILED
           - REVERSED
+    TransferStatusRequest:
+      required:
+      - externalTransferId
+      type: object
+      properties:
+        externalTransferId:
+          type: string
+          description: Transfer ID in the partner's system
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+    inline_response_200:
+      type: object
+      properties:
+        paginationResponse:
+          $ref: '#/components/schemas/PaginationResponse'
+        transferList:
+          $ref: '#/components/schemas/TransferListResponse'
   securitySchemes:
     basicAuth:
       type: http

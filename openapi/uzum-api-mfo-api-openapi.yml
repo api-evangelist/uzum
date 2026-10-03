@@ -255,9 +255,19 @@ paths:
           $ref: '#/components/responses/Forbidden'
 components:
   schemas:
-    CancelContractResponse:
+    CheckContractStatusRequest:
       type: object
-      description: Ответ метода полной отмены договора.
+      description: Запрос на получение информации о договоре.
+      required:
+      - contract_id
+      properties:
+        contract_id:
+          type: integer
+          description: Номер договора в системе Uzum Nasiya.
+          example: 5511
+    ConfirmContractResponse:
+      type: object
+      description: Ответ при успешной активации договора.
       required:
       - status
       - error
@@ -266,8 +276,48 @@ components:
       properties:
         status:
           type: string
-          description: Общий результат выполнения запроса.
+          description: Статус выполнения запроса.
           example: success
+        error:
+          type: array
+          description: Массив ошибок. При успешном ответе — пустой.
+          items:
+            type: object
+          example: []
+        data:
+          type: object
+          description: Данные по активированному договору.
+          required:
+          - client_act_pdf
+          properties:
+            client_act_pdf:
+              type: string
+              description: Ссылка на подписанный пользователем акт.
+              example: https://ari.paymart.uz/storage/contract/968.pdf
+        response_code:
+          type: integer
+          description: "Код результата выполнения метода:\n\n0    — RESPONSE_SUCCESS  \n4004 — RESPONSE_CONTRACT_NOT_FOUND  \n4009 — RESPONSE_CONTRACT_INCORRECT_STATUS  \n4010 — RESPONSE_CONTRACT_ALREADY_ACTIVATED  \n5003 — RESPONSE_PARTNER_ACCESS_DENIED  \n5005 — RESPONSE_INVALID_PARTNER_DATA  \n1000 — RESPONSE_TECHNICAL_ERROR  \n\nПри получении 1000 или 5XX рекомендуется повторить запрос.\nПри других кодах необходимо проверить входные параметры.\n"
+          enum:
+          - 0
+          - 4004
+          - 4009
+          - 4010
+          - 5003
+          - 5005
+          - 1000
+          example: 0
+    SendSmsCodeResponse:
+      type: object
+      description: Ответ метода отправки SMS-кода.
+      required:
+      - status
+      - error
+      - data
+      properties:
+        status:
+          type: string
+          example: success
+          description: Статус выполнения запроса.
         error:
           type: array
           description: Массив ошибок.
@@ -275,22 +325,69 @@ components:
             type: object
           example: []
         data:
-          type: array
-          description: Массив даных. В этом ответе — пустой.
-          items:
-            type: object
-          example: []
-        response_code:
+          type: object
+          properties:
+            hashed:
+              type: string
+              description: Захешированный SMS-код.
+              example: $2y$10$B.ajVLZMnJZIk8nr6QbeveMP4w4ULF9M6Rr4ZfuZn
+            is_registered:
+              type: boolean
+              description: Признак регистрации пользователя в системе.
+              example: true
+    AvailablePeriodMFO:
+      type: object
+      description: Тарифный период, доступный пользователю.
+      required:
+      - period
+      - title_uz
+      - title_ru
+      - original_markup
+      - available_balance
+      - discount_markup
+      properties:
+        period:
+          type: string
+          description: 'Идентификатор тарифа.
+
+            Передается в поле `period` при создании договора.
+
+            '
+          example: 6 Default
+        title_uz:
+          type: string
+          description: Название тарифа на узбекском языке.
+          example: 6 Oy
+        title_ru:
+          type: string
+          description: Название тарифа на русском языке.
+          example: 6 Месяц
+        original_markup:
           type: integer
-          description: "Код результата выполнения метода полной отмены договора:\n\n`0`    — RESPONSE_SUCCESS  \n`4004` — RESPONSE_CONTRACT_NOT_FOUND  \n`4009` — RESPONSE_CONTRACT_INCORRECT_STATUS  \n`4005` — RESPONSE_INVALID_CONTRACT_DATA  \n`1000` — RESPONSE_TECHNICAL_ERROR  \n`6001` — RESPONSE_MAX_REQUEST_LIMIT  \n\nПри получении 1000 или 5XX — повторите запрос.\n"
-          enum:
-          - 0
-          - 4004
-          - 4009
-          - 4005
-          - 1000
-          - 6001
-          example: 4004
+          description: Базовая комиссия по тарифу (в процентах).
+          example: 26
+        available_balance:
+          type: string
+          description: Доступный лимит по данному тарифу.
+          example: '0.00'
+        discount_markup:
+          type: integer
+          description: Комиссия с учетом персональной скидки.
+          example: 26
+    ConfirmContractRequest:
+      type: object
+      description: Запрос на подтверждение (активацию) договора.
+      required:
+      - contract_id
+      properties:
+        contract_id:
+          type: integer
+          description: 'Идентификатор договора в системе Uzum Nasiya.
+
+            Получается при создании договора.
+
+            '
+          example: 5511
     CalculatedProduct:
       type: object
       required:
@@ -319,56 +416,42 @@ components:
         origin_promo:
           type: number
           description: Стоимость без наценки с учетом промо.
-    CheckContractStatusRequest:
+    CancelContractRequest:
       type: object
-      description: Запрос на получение информации о договоре.
+      description: Запрос на полную отмену договора.
       required:
       - contract_id
       properties:
         contract_id:
           type: integer
-          description: Номер договора в системе Uzum Nasiya.
+          description: 'Внутренний идентификатор договора (order),
+
+            полученный из метода создания договора `/api/v1/orders`.
+
+            '
           example: 5511
-    CreateOrderProduct:
+    VerifySmsCodeRequest:
       type: object
+      description: Запрос на подтверждение SMS-кода.
       required:
-      - amount
-      - name
-      - price
-      - category
-      - unit_id
+      - phone
+      - contract_id
+      - code
       properties:
-        amount:
-          type: integer
-          description: Количество товара.
-          example: 1
-        name:
+        phone:
           type: string
-          description: Наименование товара.
-          example: Product 1
-        price:
-          type: number
-          description: Стоимость товара без наценки Uzum Nasiya.
-          example: 1000
-        category:
+          description: Номер телефона клиента.
+          example: '998909531494'
+        contract_id:
           type: integer
-          description: Категория товара.
-          example: 12
-        unit_id:
-          type: integer
-          description: Тип единицы измерения (шт, кг, мл).
-          example: 1
-        product_id:
-          type: integer
-          description: ID товара у партнера.
-          example: 1
-        imei:
+          description: Идентификатор договора.
+          example: 12454
+        code:
           type: string
-          description: IMEI устройства (если применимо).
-          example: '213421341234134'
-    CheckContractStatusResponse:
+          description: SMS-код.
+          example: '975498'
+    CalculateResponse:
       type: object
-      description: Ответ метода проверки статуса договора.
       required:
       - status
       - error
@@ -376,125 +459,67 @@ components:
       properties:
         status:
           type: string
-          description: Общий результат выполнения запроса.
+          example: success
+          description: Статус выполнения запроса.
+        error:
+          type: array
+          items:
+            type: object
+          example: []
+          description: Массив ошибок.
+        data:
+          type: array
+          description: Список доступных тарифных планов.
+          items:
+            $ref: '#/components/schemas/CalculatedTariff'
+    SendSmsCodeRequest:
+      type: object
+      description: Запрос на отправку SMS-кода.
+      required:
+      - phone
+      - contract_id
+      properties:
+        phone:
+          type: string
+          description: Номер телефона клиента.
+          example: '998909531494'
+        contract_id:
+          type: integer
+          description: Идентификатор договора в системе Uzum Nasiya.
+          example: 12454
+    CreateOrderResponse:
+      type: object
+      required:
+      - status
+      - error
+      - data
+      properties:
+        status:
+          type: string
+          description: Статус выполнения запроса.
           example: success
         error:
           type: array
-          description: Массив ошибок.
           items:
             type: object
           example: []
         data:
-          $ref: '#/components/schemas/ContractStatusData'
-    CreatedContractProduct:
+          $ref: '#/components/schemas/CreateOrderData'
+    CalculateRequest:
       type: object
       required:
-      - amount
-      - name
-      - price
-      - category
-      - unit_id
-      - sum
-      - origin
+      - user_id
+      - products
       properties:
-        amount:
+        user_id:
           type: integer
-          description: Количество товара.
-        name:
-          type: string
-          description: Наименование товара.
-        imei:
-          type: string
-          description: IMEI устройства.
-        price:
-          type: number
-          description: Стоимость товара без наценки.
-        category:
-          type: integer
-          description: Категория товара.
-        unit_id:
-          type: integer
-          description: Тип единицы измерения.
-        product_id:
-          type: integer
-          description: ID товара у партнера.
-        sum:
-          type: number
-          description: Стоимость товара с наценкой × количество.
-        origin:
-          type: number
-          description: Стоимость товара без наценки.
-    ContractStatusData:
-      type: object
-      description: Детальная информация о договоре.
-      required:
-      - id
-      - contract_id
-      - type
-      - created_at
-      - updated_at
-      - contract_status
-      properties:
-        id:
-          type: integer
-          description: Внутренний порядковый идентификатор записи.
-          example: 106
-        contract_id:
-          type: integerй
-          description: Номер договора в системе Uzum Nasiya.
-          example: 343
-        type:
-          type: string
-          description: Тип договора (например mfo).
-          example: mfo
-        myid_attempts:
-          type: integer
-          description: Количество попыток прохождения регистрации через MyID.
-          example: 0
-        created_at:
-          type: string
-          format: date-time
-          description: Дата и время создания договора.
-          example: '2022-12-07T08:24:15.000000Z'
-        updated_at:
-          type: string
-          format: date-time
-          description: Дата и время последнего обновления договора.
-          example: '2022-12-07T08:27:17.000000Z'
-        contract_status:
-          type: integer
-          enum:
-          - 0
-          - 1
-          - 2
-          - 3
-          - 4
-          - 5
-          - 9
-          description: 'Статус договора
-
-            '
-          example: 5
-        status:
-          type: integer
-          description: 'Статус страниц процесса активации договора (внутренний параметр системы).
-
-            Не используется партнерами.
-
-            '
-          example: 50
-        qr_status:
-          type: integer
-          description: 'Тип договора (внутренний параметр системы).
-
-            Не используется партнерами.
-
-            '
-          example: 0
-        is_signed:
-          type: boolean
-          description: Наличие подписи договора в системе Uzum Nasiya.
-          example: true
+          description: ID пользователя в системе Uzum Nasiya.
+          example: 108
+        products:
+          type: array
+          description: Список товаров для расчета.
+          items:
+            $ref: '#/components/schemas/CalculateProductRequest'
     ConfirmContractErrorResponse:
       type: object
       description: Ошибка подтверждения договора.
@@ -539,45 +564,160 @@ components:
 
             '
           example: 4010
-    AvailablePeriodMFO:
+    BuyerStatusRequest:
       type: object
-      description: Тарифный период, доступный пользователю.
       required:
-      - period
-      - title_uz
-      - title_ru
-      - original_markup
-      - available_balance
-      - discount_markup
+      - phone
       properties:
+        phone:
+          type: integer
+          description: Номер телефона в формате 998XXXXXXXXX — 12 цифр.
+          example: 998947871030
+    CreateOrderData:
+      type: object
+      required:
+      - paymart_client
+      - cart
+      - client_act_pdf
+      - webview_path
+      properties:
+        paymart_client:
+          type: object
+          description: Информация о созданном договоре.
+          required:
+          - fio
+          - phone
+          - order
+          - contract_id
+          - created_at
+          - price_month
+          - total
+          - available_balance
+          - mini_balance
+          properties:
+            fio:
+              type: string
+              description: ФИО пользователя в системе Uzum Nasiya.
+            phone:
+              type: string
+              description: Номер телефона пользователя.
+            order:
+              type: integer
+              description: 'Внутренний идентификатор договора.
+
+                Используется при отмене договора.
+
+                '
+            contract_id:
+              type: integer
+              description: Номер договора между пользователем и Uzum Nasiya.
+            created_at:
+              type: string
+              description: Дата создания договора.
+              example: 21.12.2022
+            price_month:
+              type: string
+              description: Ежемесячный платеж пользователя.
+            total:
+              type: string
+              description: Общая стоимость товаров с наценкой.
+            available_balance:
+              type: string
+              description: Доступный лимит пользователя (12 месяцев).
+            mini_balance:
+              type: string
+              description: Доступный лимит пользователя (3 месяца).
+        cart:
+          type: array
+          description: Список товаров, вошедших в договор.
+          items:
+            $ref: '#/components/schemas/CreatedContractProduct'
+        client_act_pdf:
+          type: string
+          description: Ссылка на PDF акт пользователя.
+        webview_path:
+          type: string
+          description: URL для открытия WebView подписания договора.
+    CreatedContractProduct:
+      type: object
+      required:
+      - amount
+      - name
+      - price
+      - category
+      - unit_id
+      - sum
+      - origin
+      properties:
+        amount:
+          type: integer
+          description: Количество товара.
+        name:
+          type: string
+          description: Наименование товара.
+        imei:
+          type: string
+          description: IMEI устройства.
+        price:
+          type: number
+          description: Стоимость товара без наценки.
+        category:
+          type: integer
+          description: Категория товара.
+        unit_id:
+          type: integer
+          description: Тип единицы измерения.
+        product_id:
+          type: integer
+          description: ID товара у партнера.
+        sum:
+          type: number
+          description: Стоимость товара с наценкой × количество.
+        origin:
+          type: number
+          description: Стоимость товара без наценки.
+    CreateOrderRequest:
+      type: object
+      required:
+      - user_id
+      - period
+      - products
+      properties:
+        user_id:
+          type: integer
+          description: ID пользователя в системе Uzum Nasiya.
+          example: 6759428
         period:
           type: string
-          description: 'Идентификатор тарифа.
+          description: 'Идентификатор тарифного плана.
 
-            Передается в поле `period` при создании договора.
+            Должен соответствовать значению `tariff`,
+
+            полученному из метода `/api/v1/orders/calculate`.
 
             '
-          example: 6 Default
-        title_uz:
+          example: 12 Default
+        callback:
           type: string
-          description: Название тарифа на узбекском языке.
-          example: 6 Oy
-        title_ru:
+          description: 'URL для возврата пользователя после завершения подписания.
+
+            Необязательное поле.
+
+            '
+          example: https://uzum.uz
+        ext_order_id:
           type: string
-          description: Название тарифа на русском языке.
-          example: 6 Месяц
-        original_markup:
-          type: integer
-          description: Базовая комиссия по тарифу (в процентах).
-          example: 26
-        available_balance:
-          type: string
-          description: Доступный лимит по данному тарифу.
-          example: '0.00'
-        discount_markup:
-          type: integer
-          description: Комиссия с учетом персональной скидки.
-          example: 26
+          description: 'Внешний идентификатор договора у партнера.
+
+            Используется для сопоставления заказов.
+
+            '
+          example: ORDER-454
+        products:
+          type: array
+          description: Список товаров для оформления договора.
+          items:
+            $ref: '#/components/schemas/CreateOrderProduct'
     BuyerStatusDataMFO:
       type: object
       description: 'Объект с информацией о пользователе и доступных ему тарифных периодах.
@@ -690,224 +830,80 @@ components:
           type: boolean
           description: Признак наличия активных просроченных договоров.
           example: false
-    CalculateRequest:
+    ContractStatusData:
       type: object
+      description: Детальная информация о договоре.
       required:
-      - user_id
-      - products
-      properties:
-        user_id:
-          type: integer
-          description: ID пользователя в системе Uzum Nasiya.
-          example: 108
-        products:
-          type: array
-          description: Список товаров для расчета.
-          items:
-            $ref: '#/components/schemas/CalculateProductRequest'
-    BuyerStatusRequest:
-      type: object
-      required:
-      - phone
-      properties:
-        phone:
-          type: integer
-          description: Номер телефона в формате 998XXXXXXXXX — 12 цифр.
-          example: 998947871030
-    VerifySmsCodeResponse:
-      type: object
-      description: Ответ подтверждения SMS-кода.
-      required:
-      - status
-      - error
-      - data
-      properties:
-        status:
-          type: string
-          example: success
-          description: Статус выполнения запроса.
-        error:
-          type: array
-          description: Массив ошибок.
-          items:
-            type: object
-          example: []
-        data:
-          type: object
-          properties:
-            contract_id:
-              type: integer
-              description: Идентификатор активированного договора.
-              example: 12454
-            message:
-              type: string
-              description: Сообщение о результате активации.
-              example: Shartnoma muvaffaqiyatli tasdiqlandi!
-    VerifySmsCodeRequest:
-      type: object
-      description: Запрос на подтверждение SMS-кода.
-      required:
-      - phone
+      - id
       - contract_id
-      - code
+      - type
+      - created_at
+      - updated_at
+      - contract_status
       properties:
-        phone:
-          type: string
-          description: Номер телефона клиента.
-          example: '998909531494'
+        id:
+          type: integer
+          description: Внутренний порядковый идентификатор записи.
+          example: 106
         contract_id:
-          type: integer
-          description: Идентификатор договора.
-          example: 12454
-        code:
+          type: integerй
+          description: Номер договора в системе Uzum Nasiya.
+          example: 343
+        type:
           type: string
-          description: SMS-код.
-          example: '975498'
-    SendSmsCodeRequest:
-      type: object
-      description: Запрос на отправку SMS-кода.
-      required:
-      - phone
-      - contract_id
-      properties:
-        phone:
+          description: Тип договора (например mfo).
+          example: mfo
+        myid_attempts:
+          type: integer
+          description: Количество попыток прохождения регистрации через MyID.
+          example: 0
+        created_at:
           type: string
-          description: Номер телефона клиента.
-          example: '998909531494'
-        contract_id:
+          format: date-time
+          description: Дата и время создания договора.
+          example: '2022-12-07T08:24:15.000000Z'
+        updated_at:
+          type: string
+          format: date-time
+          description: Дата и время последнего обновления договора.
+          example: '2022-12-07T08:27:17.000000Z'
+        contract_status:
           type: integer
-          description: Идентификатор договора в системе Uzum Nasiya.
-          example: 12454
-    CalculateProductRequest:
-      type: object
-      required:
-      - price
-      - amount
-      - product_id
-      properties:
-        product_id:
-          type: integer
-          description: ID товара у партнера.
-          example: 1
-        price:
-          type: number
-          description: Стоимость одного товара без наценки Uzum Nasiya.
-          example: 10000
-        amount:
-          type: integer
-          description: Количество товара.
-          example: 2
-    CancelContractRequest:
-      type: object
-      description: Запрос на полную отмену договора.
-      required:
-      - contract_id
-      properties:
-        contract_id:
-          type: integer
-          description: 'Внутренний идентификатор договора (order),
-
-            полученный из метода создания договора `/api/v1/orders`.
+          enum:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 9
+          description: 'Статус договора
 
             '
-          example: 5511
-    SendSmsCodeResponse:
-      type: object
-      description: Ответ метода отправки SMS-кода.
-      required:
-      - status
-      - error
-      - data
-      properties:
+          example: 5
         status:
-          type: string
-          example: success
-          description: Статус выполнения запроса.
-        error:
-          type: array
-          description: Массив ошибок.
-          items:
-            type: object
-          example: []
-        data:
-          type: object
-          properties:
-            hashed:
-              type: string
-              description: Захешированный SMS-код.
-              example: $2y$10$B.ajVLZMnJZIk8nr6QbeveMP4w4ULF9M6Rr4ZfuZn
-            is_registered:
-              type: boolean
-              description: Признак регистрации пользователя в системе.
-              example: true
-    CreateOrderData:
-      type: object
-      required:
-      - paymart_client
-      - cart
-      - client_act_pdf
-      - webview_path
-      properties:
-        paymart_client:
-          type: object
-          description: Информация о созданном договоре.
-          required:
-          - fio
-          - phone
-          - order
-          - contract_id
-          - created_at
-          - price_month
-          - total
-          - available_balance
-          - mini_balance
-          properties:
-            fio:
-              type: string
-              description: ФИО пользователя в системе Uzum Nasiya.
-            phone:
-              type: string
-              description: Номер телефона пользователя.
-            order:
-              type: integer
-              description: 'Внутренний идентификатор договора.
+          type: integer
+          description: 'Статус страниц процесса активации договора (внутренний параметр системы).
 
-                Используется при отмене договора.
+            Не используется партнерами.
 
-                '
-            contract_id:
-              type: integer
-              description: Номер договора между пользователем и Uzum Nasiya.
-            created_at:
-              type: string
-              description: Дата создания договора.
-              example: 21.12.2022
-            price_month:
-              type: string
-              description: Ежемесячный платеж пользователя.
-            total:
-              type: string
-              description: Общая стоимость товаров с наценкой.
-            available_balance:
-              type: string
-              description: Доступный лимит пользователя (12 месяцев).
-            mini_balance:
-              type: string
-              description: Доступный лимит пользователя (3 месяца).
-        cart:
-          type: array
-          description: Список товаров, вошедших в договор.
-          items:
-            $ref: '#/components/schemas/CreatedContractProduct'
-        client_act_pdf:
-          type: string
-          description: Ссылка на PDF акт пользователя.
-        webview_path:
-          type: string
-          description: URL для открытия WebView подписания договора.
-    ConfirmContractResponse:
+            '
+          example: 50
+        qr_status:
+          type: integer
+          description: 'Тип договора (внутренний параметр системы).
+
+            Не используется партнерами.
+
+            '
+          example: 0
+        is_signed:
+          type: boolean
+          description: Наличие подписи договора в системе Uzum Nasiya.
+          example: true
+    CancelContractResponse:
       type: object
-      description: Ответ при успешной активации договора.
+      description: Ответ метода полной отмены договора.
       required:
       - status
       - error
@@ -916,38 +912,71 @@ components:
       properties:
         status:
           type: string
-          description: Статус выполнения запроса.
+          description: Общий результат выполнения запроса.
           example: success
         error:
           type: array
-          description: Массив ошибок. При успешном ответе — пустой.
+          description: Массив ошибок.
           items:
             type: object
           example: []
         data:
-          type: object
-          description: Данные по активированному договору.
-          required:
-          - client_act_pdf
-          properties:
-            client_act_pdf:
-              type: string
-              description: Ссылка на подписанный пользователем акт.
-              example: https://ari.paymart.uz/storage/contract/968.pdf
+          type: array
+          description: Массив даных. В этом ответе — пустой.
+          items:
+            type: object
+          example: []
         response_code:
           type: integer
-          description: "Код результата выполнения метода:\n\n0    — RESPONSE_SUCCESS  \n4004 — RESPONSE_CONTRACT_NOT_FOUND  \n4009 — RESPONSE_CONTRACT_INCORRECT_STATUS  \n4010 — RESPONSE_CONTRACT_ALREADY_ACTIVATED  \n5003 — RESPONSE_PARTNER_ACCESS_DENIED  \n5005 — RESPONSE_INVALID_PARTNER_DATA  \n1000 — RESPONSE_TECHNICAL_ERROR  \n\nПри получении 1000 или 5XX рекомендуется повторить запрос.\nПри других кодах необходимо проверить входные параметры.\n"
+          description: "Код результата выполнения метода полной отмены договора:\n\n`0`    — RESPONSE_SUCCESS  \n`4004` — RESPONSE_CONTRACT_NOT_FOUND  \n`4009` — RESPONSE_CONTRACT_INCORRECT_STATUS  \n`4005` — RESPONSE_INVALID_CONTRACT_DATA  \n`1000` — RESPONSE_TECHNICAL_ERROR  \n`6001` — RESPONSE_MAX_REQUEST_LIMIT  \n\nПри получении 1000 или 5XX — повторите запрос.\n"
           enum:
           - 0
           - 4004
           - 4009
-          - 4010
-          - 5003
-          - 5005
+          - 4005
           - 1000
-          example: 0
-    CreateOrderResponse:
+          - 6001
+          example: 4004
+    CreateOrderProduct:
       type: object
+      required:
+      - amount
+      - name
+      - price
+      - category
+      - unit_id
+      properties:
+        amount:
+          type: integer
+          description: Количество товара.
+          example: 1
+        name:
+          type: string
+          description: Наименование товара.
+          example: Product 1
+        price:
+          type: number
+          description: Стоимость товара без наценки Uzum Nasiya.
+          example: 1000
+        category:
+          type: integer
+          description: Категория товара.
+          example: 12
+        unit_id:
+          type: integer
+          description: Тип единицы измерения (шт, кг, мл).
+          example: 1
+        product_id:
+          type: integer
+          description: ID товара у партнера.
+          example: 1
+        imei:
+          type: string
+          description: IMEI устройства (если применимо).
+          example: '213421341234134'
+    CheckContractStatusResponse:
+      type: object
+      description: Ответ метода проверки статуса договора.
       required:
       - status
       - error
@@ -955,15 +984,45 @@ components:
       properties:
         status:
           type: string
-          description: Статус выполнения запроса.
+          description: Общий результат выполнения запроса.
           example: success
         error:
           type: array
+          description: Массив ошибок.
           items:
             type: object
           example: []
         data:
-          $ref: '#/components/schemas/CreateOrderData'
+          $ref: '#/components/schemas/ContractStatusData'
+    BuyerStatusResponseMFO:
+      title: МФО
+      type: object
+      description: Ответ метода проверки статуса пользователя.
+      required:
+      - status
+      - error
+      - data
+      properties:
+        status:
+          type: string
+          description: 'Статус выполнения запроса.
+
+            Для успешного ответа возвращается значение `success`.
+
+            '
+          example: success
+        error:
+          type: array
+          description: 'Массив ошибок.
+
+            При успешном выполнении запроса возвращается пустой массив.
+
+            '
+          items:
+            type: object
+          example: []
+        data:
+          $ref: '#/components/schemas/BuyerStatusDataMFO'
     CalculatedTariff:
       type: object
       required:
@@ -1072,93 +1131,9 @@ components:
           description: Пересчитанные товары по данному тарифу.
           items:
             $ref: '#/components/schemas/CalculatedProduct'
-    CreateOrderRequest:
+    VerifySmsCodeResponse:
       type: object
-      required:
-      - user_id
-      - period
-      - products
-      properties:
-        user_id:
-          type: integer
-          description: ID пользователя в системе Uzum Nasiya.
-          example: 6759428
-        period:
-          type: string
-          description: 'Идентификатор тарифного плана.
-
-            Должен соответствовать значению `tariff`,
-
-            полученному из метода `/api/v1/orders/calculate`.
-
-            '
-          example: 12 Default
-        callback:
-          type: string
-          description: 'URL для возврата пользователя после завершения подписания.
-
-            Необязательное поле.
-
-            '
-          example: https://uzum.uz
-        ext_order_id:
-          type: string
-          description: 'Внешний идентификатор договора у партнера.
-
-            Используется для сопоставления заказов.
-
-            '
-          example: ORDER-454
-        products:
-          type: array
-          description: Список товаров для оформления договора.
-          items:
-            $ref: '#/components/schemas/CreateOrderProduct'
-    BuyerStatusResponseMFO:
-      title: МФО
-      type: object
-      description: Ответ метода проверки статуса пользователя.
-      required:
-      - status
-      - error
-      - data
-      properties:
-        status:
-          type: string
-          description: 'Статус выполнения запроса.
-
-            Для успешного ответа возвращается значение `success`.
-
-            '
-          example: success
-        error:
-          type: array
-          description: 'Массив ошибок.
-
-            При успешном выполнении запроса возвращается пустой массив.
-
-            '
-          items:
-            type: object
-          example: []
-        data:
-          $ref: '#/components/schemas/BuyerStatusDataMFO'
-    ConfirmContractRequest:
-      type: object
-      description: Запрос на подтверждение (активацию) договора.
-      required:
-      - contract_id
-      properties:
-        contract_id:
-          type: integer
-          description: 'Идентификатор договора в системе Uzum Nasiya.
-
-            Получается при создании договора.
-
-            '
-          example: 5511
-    CalculateResponse:
-      type: object
+      description: Ответ подтверждения SMS-кода.
       required:
       - status
       - error
@@ -1170,16 +1145,67 @@ components:
           description: Статус выполнения запроса.
         error:
           type: array
+          description: Массив ошибок.
           items:
             type: object
           example: []
-          description: Массив ошибок.
         data:
-          type: array
-          description: Список доступных тарифных планов.
-          items:
-            $ref: '#/components/schemas/CalculatedTariff'
+          type: object
+          properties:
+            contract_id:
+              type: integer
+              description: Идентификатор активированного договора.
+              example: 12454
+            message:
+              type: string
+              description: Сообщение о результате активации.
+              example: Shartnoma muvaffaqiyatli tasdiqlandi!
+    CalculateProductRequest:
+      type: object
+      required:
+      - price
+      - amount
+      - product_id
+      properties:
+        product_id:
+          type: integer
+          description: ID товара у партнера.
+          example: 1
+        price:
+          type: number
+          description: Стоимость одного товара без наценки Uzum Nasiya.
+          example: 10000
+        amount:
+          type: integer
+          description: Количество товара.
+          example: 2
   responses:
+    Forbidden:
+      description: Доступ запрещён
+      content:
+        application/json:
+          schema:
+            required:
+            - message
+            type: object
+            properties:
+              message:
+                type: string
+                example: Forbidden
+                description: Сообщение об ошибке доступа.
+    Unauthorized:
+      description: Ошибка авторизации
+      content:
+        application/json:
+          schema:
+            required:
+            - message
+            type: object
+            properties:
+              message:
+                type: string
+                example: Unauthenticated
+                description: Сообщение об ошибке авторизации.
     BadRequest:
       description: Ошибка валидации
       content:
@@ -1216,32 +1242,6 @@ components:
                 type: array
                 items: {}
                 description: Массив с информацией. Пустой при ошибке.
-    Forbidden:
-      description: Доступ запрещён
-      content:
-        application/json:
-          schema:
-            required:
-            - message
-            type: object
-            properties:
-              message:
-                type: string
-                example: Forbidden
-                description: Сообщение об ошибке доступа.
-    Unauthorized:
-      description: Ошибка авторизации
-      content:
-        application/json:
-          schema:
-            required:
-            - message
-            type: object
-            properties:
-              message:
-                type: string
-                example: Unauthenticated
-                description: Сообщение об ошибке авторизации.
   securitySchemes:
     BearerAuth:
       type: http
