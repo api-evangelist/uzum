@@ -197,6 +197,91 @@ paths:
                       schema: {}
 components:
   schemas:
+    BusinessEventType:
+      title: BusinessEventType
+      enum:
+      - FORM_CLOSED
+      type: string
+      description: An enumeration.
+    ReverseCommand:
+      title: ReverseCommand
+      required:
+      - orderId
+      - amount
+      type: object
+      properties:
+        orderId:
+          title: Orderid
+          type: string
+          description: Payment identifier
+          format: uuid
+        amount:
+          title: Amount
+          minimum: 1
+          type: integer
+          description: Amount to reverse in tiyins
+    ErrorCode:
+      title: ErrorCode
+      type: integer
+    Complete2SPResponse:
+      title: Complete2SPResponse
+      required:
+      - operationId
+      type: object
+      properties:
+        operationId:
+          title: Operationid
+          type: string
+          description: Operation ID on the Uzum Checkout side
+          format: uuid
+    PaymentOperationType:
+      title: PaymentOperationType
+      enum:
+      - AUTHORIZE
+      - COMPLETE
+      - REFUND
+      - REVERSE
+      - TOP_UP_COMPLETED
+      type: string
+      description: An enumeration.
+    ReceiptType:
+      title: ReceiptType
+      enum:
+      - PURCHASE
+      - PREPAID
+      - REFUND
+      type: string
+      description: An enumeration.
+    BusinessEvent:
+      title: BusinessEvent
+      required:
+      - orderId
+      - orderNumber
+      - eventType
+      - actionCode
+      - actionCodeDescription
+      type: object
+      properties:
+        orderId:
+          title: Orderid
+          type: string
+          description: Order ID on the Checkout side
+        orderNumber:
+          title: Ordernumber
+          type: string
+          description: Order ID on the merchant's side
+        eventType:
+          allOf:
+          - $ref: '#/components/schemas/BusinessEventType'
+          description: Business event type
+        actionCode:
+          allOf:
+          - $ref: '#/components/schemas/ErrorCode'
+          description: Event code
+        actionCodeDescription:
+          title: Actioncodedescription
+          type: string
+          description: Event code description
     Complete2SPCommand:
       title: Complete2SPCommand
       required:
@@ -214,8 +299,21 @@ components:
           minimum: 1
           type: integer
           description: Amount for Complete in tiyins
-    Complete2SPResponse:
-      title: Complete2SPResponse
+    ApiResponse_ReverseResponse_:
+      title: ApiResponse[ReverseResponse]
+      required:
+      - errorCode
+      type: object
+      properties:
+        errorCode:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          title: Message
+          type: string
+        result:
+          $ref: '#/components/schemas/ReverseResponse'
+    ReverseResponse:
+      title: ReverseResponse
       required:
       - operationId
       type: object
@@ -223,8 +321,48 @@ components:
         operationId:
           title: Operationid
           type: string
-          description: Operation ID on the Uzum Checkout side
+          description: Operation ID on the checkout side
           format: uuid
+    ReceiptGeneratedCallbackData:
+      title: ReceiptGeneratedCallbackData
+      required:
+      - orderId
+      - receiptType
+      - receiptUrl
+      type: object
+      properties:
+        orderId:
+          title: Orderid
+          type: string
+          description: Order ID on Checkout side
+        receiptType:
+          allOf:
+          - $ref: '#/components/schemas/ReceiptType'
+          description: Receipt type
+        receiptUrl:
+          title: Receipturl
+          type: string
+          description: Link to the receipt
+    ApiResponse_Complete2SPResponse_:
+      title: ApiResponse[Complete2SPResponse]
+      required:
+      - errorCode
+      type: object
+      properties:
+        errorCode:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          title: Message
+          type: string
+        result:
+          $ref: '#/components/schemas/Complete2SPResponse'
+    CallbackOperationState:
+      title: CallbackOperationState
+      enum:
+      - SUCCESS
+      - FAIL
+      type: string
+      description: An enumeration.
     AcquiringCallbackData:
       title: AcquiringCallbackData
       required:
@@ -265,144 +403,6 @@ components:
           title: Rrn
           type: string
           description: Unique identifier of the banking transaction
-    BusinessEvent:
-      title: BusinessEvent
-      required:
-      - orderId
-      - orderNumber
-      - eventType
-      - actionCode
-      - actionCodeDescription
-      type: object
-      properties:
-        orderId:
-          title: Orderid
-          type: string
-          description: Order ID on the Checkout side
-        orderNumber:
-          title: Ordernumber
-          type: string
-          description: Order ID on the merchant's side
-        eventType:
-          allOf:
-          - $ref: '#/components/schemas/BusinessEventType'
-          description: Business event type
-        actionCode:
-          allOf:
-          - $ref: '#/components/schemas/ErrorCode'
-          description: Event code
-        actionCodeDescription:
-          title: Actioncodedescription
-          type: string
-          description: Event code description
-    ReverseCommand:
-      title: ReverseCommand
-      required:
-      - orderId
-      - amount
-      type: object
-      properties:
-        orderId:
-          title: Orderid
-          type: string
-          description: Payment identifier
-          format: uuid
-        amount:
-          title: Amount
-          minimum: 1
-          type: integer
-          description: Amount to reverse in tiyins
-    ApiResponse_ReverseResponse_:
-      title: ApiResponse[ReverseResponse]
-      required:
-      - errorCode
-      type: object
-      properties:
-        errorCode:
-          $ref: '#/components/schemas/ErrorCode'
-        message:
-          title: Message
-          type: string
-        result:
-          $ref: '#/components/schemas/ReverseResponse'
-    ApiResponse_Complete2SPResponse_:
-      title: ApiResponse[Complete2SPResponse]
-      required:
-      - errorCode
-      type: object
-      properties:
-        errorCode:
-          $ref: '#/components/schemas/ErrorCode'
-        message:
-          title: Message
-          type: string
-        result:
-          $ref: '#/components/schemas/Complete2SPResponse'
-    ReverseResponse:
-      title: ReverseResponse
-      required:
-      - operationId
-      type: object
-      properties:
-        operationId:
-          title: Operationid
-          type: string
-          description: Operation ID on the checkout side
-          format: uuid
-    BusinessEventType:
-      title: BusinessEventType
-      enum:
-      - FORM_CLOSED
-      type: string
-      description: An enumeration.
-    PaymentOperationType:
-      title: PaymentOperationType
-      enum:
-      - AUTHORIZE
-      - COMPLETE
-      - REFUND
-      - REVERSE
-      - TOP_UP_COMPLETED
-      type: string
-      description: An enumeration.
-    CallbackOperationState:
-      title: CallbackOperationState
-      enum:
-      - SUCCESS
-      - FAIL
-      type: string
-      description: An enumeration.
-    ErrorCode:
-      title: ErrorCode
-      type: integer
-    ReceiptGeneratedCallbackData:
-      title: ReceiptGeneratedCallbackData
-      required:
-      - orderId
-      - receiptType
-      - receiptUrl
-      type: object
-      properties:
-        orderId:
-          title: Orderid
-          type: string
-          description: Order ID on Checkout side
-        receiptType:
-          allOf:
-          - $ref: '#/components/schemas/ReceiptType'
-          description: Receipt type
-        receiptUrl:
-          title: Receipturl
-          type: string
-          description: Link to the receipt
-    ReceiptType:
-      title: ReceiptType
-      enum:
-      - PURCHASE
-      - PREPAID
-      - REFUND
-      type: string
-      description: An enumeration.
 x-tagGroups:
 - name: API
   tags:

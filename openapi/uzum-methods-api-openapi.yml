@@ -183,89 +183,170 @@ paths:
         '401':
           $ref: '#/components/responses/AuthErrorResponse_2'
 components:
-  responses:
-    ReversalResponse:
-      description: 'Response fields
-
-        '
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ReversalResponse'
-    CheckOrderResponse:
-      description: 'Response fields
-
-        '
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/CheckOrderResponse'
-    AuthErrorResponse:
-      description: 'If an error occurred during authorization
-
-        '
-    CreateOrderResponse:
-      description: 'Response fields
-
-        '
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/CreateOrderResponse'
-    CancelResponse:
-      description: 'Атрибуты ответа
-
-        '
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/CancelResponse'
-    FiscalResponse:
-      description: 'Response fields
-
-        '
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/FiscalResponse'
-    PaymentResponse:
-      description: 'Response attributes
-
-        '
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/PaymentResponse'
-    StatusResponse:
-      description: 'Response attributes
-
-        '
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/StatusResponse'
-    ReversalResponse_2:
-      description: 'Response attributes
-
-        '
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ReversalResponse_2'
-    AuthErrorResponse_2:
-      description: 'Authorization Error
-
-        '
-    FiscalResponse_2:
-      description: 'Response attributes
-
-        '
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/FiscalResponse_2'
   schemas:
-    CheckOrderRequest:
+    CancelResponse:
+      type: object
+      properties:
+        payment_id:
+          description: 'Order id from the request.
+
+            '
+          type: string
+          example: a98dcb7e-5b6e-431d-b780-5fd7d93d7e3d
+        payment_status:
+          description: '`CANCELLED` - order is cancelled.
+
+            '
+          type: string
+          example: CANCELLED
+        error_code:
+          description: '0 - success
+
+
+            400 - error during cancellation if current status COMPLETED, EXPIRED
+
+            '
+          type: integer
+          format: int32
+          example: 0
+        error_message:
+          description: '`this.order.has.already.be.paid.for` - order was already paid (COMPLETED)
+
+
+            `order.id.is.expired` - order is expired (EXPIRED)
+
+            '
+          type:
+          - string
+          - 'null'
+      required:
+      - payment_id
+      - payment_status
+      - error_code
+    CreateOrderRequest:
+      type: object
+      properties:
+        amount:
+          description: 'Payment amount in tiyins.
+
+            '
+          type: integer
+          format: int64
+          example: 100000
+        order_id:
+          description: 'Unique sale number (Shopping Cart): The unique order number in the partner''s system.
+
+
+            The partner is responsible for ensuring the uniqueness of the `order_id`.
+
+            If the `order_id` is not unique, the payment will not be processed.
+
+            '
+          type: string
+          example: a98dcb7e-5b6e-431d-b780-5fd7d93d7e3d
+        service_id:
+          description: 'Partner ID number in Uzum Bank.
+
+            '
+          type: integer
+          format: int64
+          example: 111
+        details:
+          description: 'Details of the order.
+
+            '
+          type: object
+          example:
+            fio: Laziz Djurayev
+            something: something value
+      required:
+      - amount
+      - order_id
+      - service_id
+    FiscalRequest:
+      type: object
+      properties:
+        payment_id:
+          description: 'Transaction identifier in the bank''s system.
+
+            '
+          type: string
+          example: c4f89d18-62b1-4b08-9256-3a8d7d60f28a
+        service_id:
+          description: 'Partner ID number in Uzum Bank.
+
+            '
+          type: integer
+          format: int64
+          example: 111
+        fiscal_url:
+          description: 'Link to fiscal receipt.
+
+
+            May contain special symbols, in this case the Unscape operation is necessary
+
+            '
+          type: string
+          example: http://…
+      required:
+      - fiscal_url
+      - service_id
+      - payment_id
+    ReversalRequest:
+      type: object
+      properties:
+        service_id:
+          description: 'Partner ID number in Uzum Bank.
+
+            '
+          type: integer
+          format: int64
+          example: 111
+        payment_id:
+          description: 'Payment transaction ID.
+
+            '
+          type: string
+          example: c4f89d18-62b1-4b08-9256-3a8d7d60f28a
+      required:
+      - service_id
+      - payment_id
+    ReversalResponse:
+      type: object
+      properties:
+        payment_id:
+          description: 'Transaction identifier in the bank''s system.
+
+            '
+          type: string
+          example: c4f89d18-62b1-4b08-9256-3a8d7d60f28a
+        payment_status:
+          description: '<br/>Transaction status:
+
+
+            `REVERSE_PENDING` - Waiting for the transaction to be canceled.
+
+
+            `REVERSED` - Successful transaction cancellation.
+
+            '
+          type: string
+          enum:
+          - REVERSE_PENDING
+          - REVERSED
+          example: REVERSED
+        error_code:
+          description: '0 - Success
+
+            '
+          type: integer
+          format: int32
+          example: 0
+      required:
+      - payment_id
+      - payment_status
+      - error_code
+    CancelRequest:
       type: object
       properties:
         order_id:
@@ -337,64 +418,25 @@ components:
       - payment_id
       - payment_status
       - error_code
-    CancelResponse:
+    CheckOrderRequest:
       type: object
       properties:
-        payment_id:
-          description: 'Order id from the request.
+        order_id:
+          description: 'Unique id of order.
 
             '
           type: string
           example: a98dcb7e-5b6e-431d-b780-5fd7d93d7e3d
-        payment_status:
-          description: '`CANCELLED` - order is cancelled.
-
-            '
-          type: string
-          example: CANCELLED
-        error_code:
-          description: '0 - success
-
-
-            400 - error during cancellation if current status COMPLETED, EXPIRED
+        service_id:
+          description: 'Partner ID number in Uzum Bank.
 
             '
           type: integer
-          format: int32
-          example: 0
-        error_message:
-          description: '`this.order.has.already.be.paid.for` - order was already paid (COMPLETED)
-
-
-            `order.id.is.expired` - order is expired (EXPIRED)
-
-            '
-          type:
-          - string
-          - 'null'
+          format: int64
+          example: 111
       required:
-      - payment_id
-      - payment_status
-      - error_code
-    CreateOrderResponse:
-      type: object
-      properties:
-        payment_link:
-          description: 'The data for generating QR.
-
-            '
-          type: string
-          example: https://www.apelsin.uz/open-service?serviceId=498615418&orderId=a98dcb7e-5b6e-431d-b780-5fd7d93d7e3d
-        error_code:
-          description: '0 - Success
-
-            '
-          type: integer
-          format: int32
-          example: 0
-      required:
-      - payment_link
-      - error_code
+      - order_id
+      - service_id
     CheckOrderResponse:
       type: object
       properties:
@@ -476,137 +518,15 @@ components:
       - payment_id
       - payment_status
       - error_code
-    ReversalRequest:
+    CreateOrderResponse:
       type: object
       properties:
-        service_id:
-          description: 'Partner ID number in Uzum Bank.
-
-            '
-          type: integer
-          format: int64
-          example: 111
-        payment_id:
-          description: 'Payment transaction ID.
+        payment_link:
+          description: 'The data for generating QR.
 
             '
           type: string
-          example: c4f89d18-62b1-4b08-9256-3a8d7d60f28a
-      required:
-      - service_id
-      - payment_id
-    CancelRequest:
-      type: object
-      properties:
-        order_id:
-          description: 'Unique id of order.
-
-            '
-          type: string
-          example: a98dcb7e-5b6e-431d-b780-5fd7d93d7e3d
-        service_id:
-          description: 'Partner ID number in Uzum Bank.
-
-            '
-          type: integer
-          format: int64
-          example: 111
-      required:
-      - order_id
-      - service_id
-    CreateOrderRequest:
-      type: object
-      properties:
-        amount:
-          description: 'Payment amount in tiyins.
-
-            '
-          type: integer
-          format: int64
-          example: 100000
-        order_id:
-          description: 'Unique sale number (Shopping Cart): The unique order number in the partner''s system.
-
-
-            The partner is responsible for ensuring the uniqueness of the `order_id`.
-
-            If the `order_id` is not unique, the payment will not be processed.
-
-            '
-          type: string
-          example: a98dcb7e-5b6e-431d-b780-5fd7d93d7e3d
-        service_id:
-          description: 'Partner ID number in Uzum Bank.
-
-            '
-          type: integer
-          format: int64
-          example: 111
-        details:
-          description: 'Details of the order.
-
-            '
-          type: object
-          example:
-            fio: Laziz Djurayev
-            something: something value
-      required:
-      - amount
-      - order_id
-      - service_id
-    FiscalRequest:
-      type: object
-      properties:
-        payment_id:
-          description: 'Transaction identifier in the bank''s system.
-
-            '
-          type: string
-          example: c4f89d18-62b1-4b08-9256-3a8d7d60f28a
-        service_id:
-          description: 'Partner ID number in Uzum Bank.
-
-            '
-          type: integer
-          format: int64
-          example: 111
-        fiscal_url:
-          description: 'Link to fiscal receipt.
-
-
-            May contain special symbols, in this case the Unscape operation is necessary
-
-            '
-          type: string
-          example: http://…
-      required:
-      - fiscal_url
-      - service_id
-      - payment_id
-    ReversalResponse:
-      type: object
-      properties:
-        payment_id:
-          description: 'Transaction identifier in the bank''s system.
-
-            '
-          type: string
-          example: c4f89d18-62b1-4b08-9256-3a8d7d60f28a
-        payment_status:
-          description: '<br/>Transaction status:
-
-
-            `REVERSE_PENDING` - Waiting for the transaction to be canceled.
-
-
-            `REVERSED` - Successful transaction cancellation.
-
-            '
-          type: string
-          enum:
-          - REVERSE_PENDING
-          - REVERSED
-          example: REVERSED
+          example: https://www.apelsin.uz/open-service?serviceId=498615418&orderId=a98dcb7e-5b6e-431d-b780-5fd7d93d7e3d
         error_code:
           description: '0 - Success
 
@@ -615,9 +535,37 @@ components:
           format: int32
           example: 0
       required:
-      - payment_id
-      - payment_status
+      - payment_link
       - error_code
+    FiscalRequest_2:
+      type: object
+      properties:
+        payment_id:
+          description: 'The unique identifier of the operation in the Uzum Bank system.
+
+            '
+          type: string
+          example: a98dcb7e-5b6e-431d-b780-5fd7d93d7e3d
+        service_id:
+          description: 'The unique identifier of the partner in the Uzum Bank system.
+
+            '
+          type: integer
+          format: int64
+          example: 1
+        fiscal_url:
+          description: 'Link to Fiscal Receipt.
+
+
+            The link may contain special characters. In such cases, an **Unescape** operation is required to process the link correctly.
+
+            '
+          type: string
+          example: http://…
+      required:
+      - fiscal_url
+      - service_id
+      - payment_id
     ReversalRequest_2:
       type: object
       properties:
@@ -637,6 +585,37 @@ components:
       required:
       - service_id
       - payment_id
+    ReversalResponse_2:
+      type: object
+      properties:
+        payment_id:
+          description: 'The unique identifier of the operation in the Uzum Bank system.
+
+            '
+          type: string
+          example: a98dcb7e-5b6e-431d-b780-5fd7d93d7e3d
+        payment_status:
+          description: '<br/> Transaction Status:
+
+
+            `REVERSED` - The transaction was successfully reversed (cancelled).
+
+            '
+          type: string
+          enum:
+          - REVERSED
+          example: REVERSED
+        error_code:
+          description: '0 - Success
+
+            '
+          type: integer
+          format: int32
+          example: 0
+      required:
+      - payment_id
+      - payment_status
+      - error_code
     StatusResponse:
       type: object
       properties:
@@ -680,54 +659,6 @@ components:
       - payment_id
       - payment_status
       - error_code
-    StatusRequest:
-      type: object
-      properties:
-        payment_id:
-          description: 'The unique identifier of the operation in the Uzum Bank system.
-
-            '
-          type: string
-          example: a98dcb7e-5b6e-431d-b780-5fd7d93d7e3d
-        service_id:
-          description: 'The unique identifier of the partner in the Uzum Bank system.
-
-            '
-          type: integer
-          format: int64
-          example: 1
-      required:
-      - payment_id
-      - service_id
-    FiscalRequest_2:
-      type: object
-      properties:
-        payment_id:
-          description: 'The unique identifier of the operation in the Uzum Bank system.
-
-            '
-          type: string
-          example: a98dcb7e-5b6e-431d-b780-5fd7d93d7e3d
-        service_id:
-          description: 'The unique identifier of the partner in the Uzum Bank system.
-
-            '
-          type: integer
-          format: int64
-          example: 1
-        fiscal_url:
-          description: 'Link to Fiscal Receipt.
-
-
-            The link may contain special characters. In such cases, an **Unescape** operation is required to process the link correctly.
-
-            '
-          type: string
-          example: http://…
-      required:
-      - fiscal_url
-      - service_id
-      - payment_id
     PaymentRequest:
       type: object
       properties:
@@ -857,6 +788,25 @@ components:
       - client_phone_number
       - card_type
       - processing_reference_number
+    StatusRequest:
+      type: object
+      properties:
+        payment_id:
+          description: 'The unique identifier of the operation in the Uzum Bank system.
+
+            '
+          type: string
+          example: a98dcb7e-5b6e-431d-b780-5fd7d93d7e3d
+        service_id:
+          description: 'The unique identifier of the partner in the Uzum Bank system.
+
+            '
+          type: integer
+          format: int64
+          example: 1
+      required:
+      - payment_id
+      - service_id
     FiscalResponse_2:
       type: object
       properties:
@@ -900,74 +850,88 @@ components:
       - payment_id
       - payment_status
       - error_code
+  responses:
+    CreateOrderResponse:
+      description: 'Response fields
+
+        '
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateOrderResponse'
+    CheckOrderResponse:
+      description: 'Response fields
+
+        '
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CheckOrderResponse'
+    ReversalResponse:
+      description: 'Response fields
+
+        '
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ReversalResponse'
+    FiscalResponse:
+      description: 'Response fields
+
+        '
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FiscalResponse'
+    AuthErrorResponse:
+      description: 'If an error occurred during authorization
+
+        '
+    CancelResponse:
+      description: 'Атрибуты ответа
+
+        '
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CancelResponse'
+    AuthErrorResponse_2:
+      description: 'Authorization Error
+
+        '
+    PaymentResponse:
+      description: 'Response attributes
+
+        '
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PaymentResponse'
+    StatusResponse:
+      description: 'Response attributes
+
+        '
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StatusResponse'
     ReversalResponse_2:
-      type: object
-      properties:
-        payment_id:
-          description: 'The unique identifier of the operation in the Uzum Bank system.
+      description: 'Response attributes
 
-            '
-          type: string
-          example: a98dcb7e-5b6e-431d-b780-5fd7d93d7e3d
-        payment_status:
-          description: '<br/> Transaction Status:
+        '
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ReversalResponse_2'
+    FiscalResponse_2:
+      description: 'Response attributes
 
-
-            `REVERSED` - The transaction was successfully reversed (cancelled).
-
-            '
-          type: string
-          enum:
-          - REVERSED
-          example: REVERSED
-        error_code:
-          description: '0 - Success
-
-            '
-          type: integer
-          format: int32
-          example: 0
-      required:
-      - payment_id
-      - payment_status
-      - error_code
+        '
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FiscalResponse_2'
   requestBodies:
-    ReversalRequest:
-      description: 'Request fields
-
-        '
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ReversalRequest'
-    CancelRequest:
-      description: 'Атрибуты запроса
-
-        '
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/CancelRequest'
-    FiscalRequest:
-      description: 'Request fields
-
-        '
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/FiscalRequest'
-    CreateOrderRequest:
-      description: 'Request fields
-
-        '
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/CreateOrderRequest'
     CheckOrderRequest:
       description: 'Request fields
 
@@ -977,24 +941,42 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/CheckOrderRequest'
-    PaymentRequest:
-      description: 'Request attributes
+    CreateOrderRequest:
+      description: 'Request fields
 
         '
       required: true
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/PaymentRequest'
-    ReversalRequest_2:
-      description: 'Request attributes
+            $ref: '#/components/schemas/CreateOrderRequest'
+    ReversalRequest:
+      description: 'Request fields
 
         '
       required: true
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ReversalRequest_2'
+            $ref: '#/components/schemas/ReversalRequest'
+    FiscalRequest:
+      description: 'Request fields
+
+        '
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FiscalRequest'
+    CancelRequest:
+      description: 'Атрибуты запроса
+
+        '
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CancelRequest'
     FiscalRequest_2:
       description: 'Request attributes
 
@@ -1004,6 +986,15 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/FiscalRequest_2'
+    PaymentRequest:
+      description: 'Request attributes
+
+        '
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PaymentRequest'
     StatusRequest:
       description: 'Request attributes
 
@@ -1013,6 +1004,15 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/StatusRequest'
+    ReversalRequest_2:
+      description: 'Request attributes
+
+        '
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ReversalRequest_2'
 x-refined-from:
 - uzum-dynamicqr-openapi.yaml
 - uzum-fastpay-openapi.yaml

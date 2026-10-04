@@ -223,20 +223,61 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
-    FilterTime:
+    ServiceParameters:
       required:
-      - from
-      - to
+      - key
+      - value
       type: object
+      example:
+        type: NUMBER
+        key: customer
+        value: '0662601'
       properties:
-        from:
+        type:
+          description: Service user data item type
           type: string
-          description: Start date and time for filtering in UTC
-          example: '2024-10-19T09:55:30.250'
-        to:
+          examples:
+          - NUMBER
+          - STRING
+        key:
+          description: Service user data item key
           type: string
-          description: End date and time for filtering in UTC
-          example: '2024-10-22T09:55:30.250'
+          examples:
+          - customer
+          - customer_type
+        value:
+          description: Service user data item value
+          type: string
+          examples:
+          - '0662601'
+          - '02'
+    PaymentListResponse:
+      type: object
+      required:
+      - paginationResponse
+      - paymentList
+      properties:
+        paymentList:
+          type: array
+          example:
+          - paymentId: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+            externalPaymentId: trx_2026_04191234
+            serviceId: 812812812
+            payerAmount: 60000
+            payerCurrency: RUB
+            paymentAmount: 1000000
+            paymentCurrency: UZS
+            exchangeRate: '155.12'
+            serviceParameters:
+            - type: NUMBER
+              key: customer
+              value: '0662601'
+            status: REGISTERED
+            createdDateTime: '2026-04-19T09:55:30.250'
+          items:
+            $ref: '#/components/schemas/PaymentResponse'
+        paginationResponse:
+          $ref: '#/components/schemas/PaginationResponse'
     PersonalData:
       required:
       - personFullName
@@ -266,167 +307,110 @@ components:
           type: string
           description: Passport details. Series and number
           example: '4109355455'
-    PaymentRequest:
+    ServiceListResponse:
       type: object
       required:
-      - externalPaymentId
+      - serviceList
+      - paginationResponse
       properties:
-        externalPaymentId:
-          type: string
-          description: Payment identifier in the partner system
-          examples:
-          - trx_2026_04191234
-          - 9250a95e-99bf-4975-9adc-9fbd1a78c27f
-    PaymentListRequest:
-      required:
-      - createTime
-      - limit
-      - page
-      type: object
-      properties:
-        createTime:
-          $ref: '#/components/schemas/FilterTime'
-        status:
-          type: string
-          enum:
-          - SUCCESS
-          - REGISTERED
-          - APPROVED
-          - PENDING
-          - FAILED
-        page:
-          minimum: 1
-          type: integer
-          format: int32
-        limit:
-          maximum: 100
-          minimum: 1
-          type: integer
-          format: int32
-    CheckServiceResponse:
-      type: object
+        serviceList:
+          type: array
+          example:
+          - serviceId: 812812812
+            name: Kashkadarya Region Tax Service
+            minAmount: 100
+            maxAmount: 500000000
+            isFixedAmount: true
+            fields:
+            - key: soato
+              title: District
+              type: N
+              regex: ^[a-zA-Z0-9\-]{4,18}$
+              values:
+              - code: '22201'
+                name: Altynsay district
+          items:
+            $ref: '#/components/schemas/Service'
+        paginationResponse:
+          $ref: '#/components/schemas/PaginationResponse'
+    Service:
       required:
       - serviceId
-      - payerCurrency
-      - paymentAmount
-      - paymentCurrency
-      - serviceParameters
+      - name
+      - fields
+      type: object
       properties:
         serviceId:
+          description: Service identifier
           type: integer
-          description: Service identifier for the cross-border payment
           format: int64
           examples:
           - 812812812
           - 4924665
-        payerAmount:
+        name:
+          description: Service name
+          type: string
+          examples:
+          - Kashkadarya Region Tax Service
+          - Coffeego.uz
+        minAmount:
+          description: Minimum payment amount for the service in tiyin
           type: integer
           format: int64
-          description: Partner payment amount in minor currency units
           examples:
-          - 60000
-        payerCurrency:
-          type: string
-          description: Partner payment currency
-          enum:
-          - RUB
-          - UZS
-        paymentAmount:
+          - 100
+        maxAmount:
+          description: Maximum payment amount for the service in tiyin
           type: integer
           format: int64
-          description: Service payment amount in minor currency units
           examples:
-          - 1000000
-        paymentCurrency:
-          type: string
-          description: Service payment currency
-          enum:
-          - UZS
-        exchangeRate:
-          description: Conversion rate. Required if conversion is performed on the partner side.
-          type: string
-          examples:
-          - '155.12'
-        serviceParameters:
-          description: Array of user data for the service
+          - 500000000
+        isFixedAmount:
+          description: Flag showing that /check_service must be called to receive the payment amount
+          type:
+          - boolean
+          - 'null'
+          default: true
+        fields:
           type: array
           example:
-          - type: NUMBER
-            key: customer
-            value: '0662601'
+          - key: soato
+            title: District
+            type: N
+            regex: ^[a-zA-Z0-9\-]{4,18}$
+            values:
+            - code: '22201'
+              name: Altynsay district
           items:
-            $ref: '#/components/schemas/ServiceParameters'
-    ErrorResponse:
+            $ref: '#/components/schemas/ServiceField'
+    ErrorDetails:
       required:
-      - errorCode
-      - errorMessage
+      - message
+      - field
       type: object
       properties:
-        errorCode:
-          type: integer
-          description: Integer error code
-          example: 81
-        errorMessage:
+        field:
           type: string
-          description: Error text
-          example: Internal error
-        errorDetails:
-          type: array
-          description: Error description
-          items:
-            $ref: '#/components/schemas/ErrorDetails'
-    PaginationResponse:
-      type: object
-      properties:
-        totalRecords:
-          type: integer
-          description: Total number of records
-          example: 995
-        totalPages:
-          type: integer
-          description: Total number of pages with the given limit
-          example: 40
-        currentPage:
-          type: integer
-          description: Current page
-          example: 1
-        nextPage:
-          type: integer
-          description: Number of the next page of the response. 0 - page does not exist
-          example: 2
-        previousPage:
-          type: integer
-          description: Number of the previous page of the response. 0 - page does not exist
-          example: 0
-    CheckServiceRequest:
-      type: object
+          description: Field name from the request body
+          example: externalTransferId
+        message:
+          type: string
+          description: Error description in the specified field
+          example: Must not be null
+    FilterTime:
       required:
-      - serviceId
-      - serviceParameters
-      - payerCurrency
+      - from
+      - to
+      type: object
       properties:
-        payerCurrency:
+        from:
           type: string
-          description: Partner payment currency
-          enum:
-          - RUB
-          - UZS
-        serviceId:
-          type: integer
-          description: Service identifier for the cross-border payment
-          format: int64
-          examples:
-          - 812812812
-          - 4924665
-        serviceParameters:
-          description: Array of user data for the service
-          type: array
-          example:
-          - type: NUMBER
-            key: customer
-            value: '0662601'
-          items:
-            $ref: '#/components/schemas/ServiceParameters'
+          description: Start date and time for filtering in UTC
+          example: '2024-10-19T09:55:30.250'
+        to:
+          type: string
+          description: End date and time for filtering in UTC
+          example: '2024-10-22T09:55:30.250'
     CheckPaymentRequest:
       required:
       - externalPaymentId
@@ -499,109 +483,6 @@ components:
         payerInfo:
           type: object
           $ref: '#/components/schemas/PersonalData'
-    Service:
-      required:
-      - serviceId
-      - name
-      - fields
-      type: object
-      properties:
-        serviceId:
-          description: Service identifier
-          type: integer
-          format: int64
-          examples:
-          - 812812812
-          - 4924665
-        name:
-          description: Service name
-          type: string
-          examples:
-          - Kashkadarya Region Tax Service
-          - Coffeego.uz
-        minAmount:
-          description: Minimum payment amount for the service in tiyin
-          type: integer
-          format: int64
-          examples:
-          - 100
-        maxAmount:
-          description: Maximum payment amount for the service in tiyin
-          type: integer
-          format: int64
-          examples:
-          - 500000000
-        isFixedAmount:
-          description: Flag showing that /check_service must be called to receive the payment amount
-          type:
-          - boolean
-          - 'null'
-          default: true
-        fields:
-          type: array
-          example:
-          - key: soato
-            title: District
-            type: N
-            regex: ^[a-zA-Z0-9\-]{4,18}$
-            values:
-            - code: '22201'
-              name: Altynsay district
-          items:
-            $ref: '#/components/schemas/ServiceField'
-    ServiceListResponse:
-      type: object
-      required:
-      - serviceList
-      - paginationResponse
-      properties:
-        serviceList:
-          type: array
-          example:
-          - serviceId: 812812812
-            name: Kashkadarya Region Tax Service
-            minAmount: 100
-            maxAmount: 500000000
-            isFixedAmount: true
-            fields:
-            - key: soato
-              title: District
-              type: N
-              regex: ^[a-zA-Z0-9\-]{4,18}$
-              values:
-              - code: '22201'
-                name: Altynsay district
-          items:
-            $ref: '#/components/schemas/Service'
-        paginationResponse:
-          $ref: '#/components/schemas/PaginationResponse'
-    PaymentListResponse:
-      type: object
-      required:
-      - paginationResponse
-      - paymentList
-      properties:
-        paymentList:
-          type: array
-          example:
-          - paymentId: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
-            externalPaymentId: trx_2026_04191234
-            serviceId: 812812812
-            payerAmount: 60000
-            payerCurrency: RUB
-            paymentAmount: 1000000
-            paymentCurrency: UZS
-            exchangeRate: '155.12'
-            serviceParameters:
-            - type: NUMBER
-              key: customer
-              value: '0662601'
-            status: REGISTERED
-            createdDateTime: '2026-04-19T09:55:30.250'
-          items:
-            $ref: '#/components/schemas/PaymentResponse'
-        paginationResponse:
-          $ref: '#/components/schemas/PaginationResponse'
     CheckPaymentResponse:
       type: object
       description: Returns all payment fields available when the response is generated.
@@ -678,63 +559,41 @@ components:
           - REGISTERED
           - APPROVED
           - FAILED
-    ServiceListRequest:
-      type: object
-      required:
-      - page
-      - limit
-      properties:
-        page:
-          minimum: 1
-          type: integer
-          format: int32
-        limit:
-          maximum: 100
-          minimum: 1
-          type: integer
-          format: int32
-    ErrorDetails:
-      required:
-      - message
-      - field
-      type: object
-      properties:
-        field:
-          type: string
-          description: Field name from the request body
-          example: externalTransferId
-        message:
-          type: string
-          description: Error description in the specified field
-          example: Must not be null
-    ServiceParameters:
+    ServiceField:
       required:
       - key
-      - value
+      - type
+      - title
       type: object
-      example:
-        type: NUMBER
-        key: customer
-        value: '0662601'
       properties:
-        type:
-          description: Service user data item type
-          type: string
-          examples:
-          - NUMBER
-          - STRING
         key:
-          description: Service user data item key
           type: string
+          description: Field key
           examples:
-          - customer
-          - customer_type
-        value:
-          description: Service user data item value
+          - soato
+        title:
           type: string
+          description: Field name
           examples:
-          - '0662601'
-          - '02'
+          - District
+        type:
+          type: string
+          description: 'Field type: `S` — string, `N` — number, `E` — selection from the `values` dictionary.'
+          enum:
+          - S
+          - N
+          - E
+        regex:
+          type:
+          - string
+          - 'null'
+          examples:
+          - ^[a-zA-Z0-9\-]{4,18}$
+        values:
+          description: Field value dictionary
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceFieldValue'
     PaymentResponse:
       type: object
       description: Returns all payment fields available when the response is generated.
@@ -832,6 +691,122 @@ components:
           format: uri
           examples:
           - https://ofd.uz/epi?t=EZ000000000296&r=51&c=20230807182725&s=176112857133
+    CheckServiceRequest:
+      type: object
+      required:
+      - serviceId
+      - serviceParameters
+      - payerCurrency
+      properties:
+        payerCurrency:
+          type: string
+          description: Partner payment currency
+          enum:
+          - RUB
+          - UZS
+        serviceId:
+          type: integer
+          description: Service identifier for the cross-border payment
+          format: int64
+          examples:
+          - 812812812
+          - 4924665
+        serviceParameters:
+          description: Array of user data for the service
+          type: array
+          example:
+          - type: NUMBER
+            key: customer
+            value: '0662601'
+          items:
+            $ref: '#/components/schemas/ServiceParameters'
+    PaginationResponse:
+      type: object
+      properties:
+        totalRecords:
+          type: integer
+          description: Total number of records
+          example: 995
+        totalPages:
+          type: integer
+          description: Total number of pages with the given limit
+          example: 40
+        currentPage:
+          type: integer
+          description: Current page
+          example: 1
+        nextPage:
+          type: integer
+          description: Number of the next page of the response. 0 - page does not exist
+          example: 2
+        previousPage:
+          type: integer
+          description: Number of the previous page of the response. 0 - page does not exist
+          example: 0
+    PaymentRequest:
+      type: object
+      required:
+      - externalPaymentId
+      properties:
+        externalPaymentId:
+          type: string
+          description: Payment identifier in the partner system
+          examples:
+          - trx_2026_04191234
+          - 9250a95e-99bf-4975-9adc-9fbd1a78c27f
+    CheckServiceResponse:
+      type: object
+      required:
+      - serviceId
+      - payerCurrency
+      - paymentAmount
+      - paymentCurrency
+      - serviceParameters
+      properties:
+        serviceId:
+          type: integer
+          description: Service identifier for the cross-border payment
+          format: int64
+          examples:
+          - 812812812
+          - 4924665
+        payerAmount:
+          type: integer
+          format: int64
+          description: Partner payment amount in minor currency units
+          examples:
+          - 60000
+        payerCurrency:
+          type: string
+          description: Partner payment currency
+          enum:
+          - RUB
+          - UZS
+        paymentAmount:
+          type: integer
+          format: int64
+          description: Service payment amount in minor currency units
+          examples:
+          - 1000000
+        paymentCurrency:
+          type: string
+          description: Service payment currency
+          enum:
+          - UZS
+        exchangeRate:
+          description: Conversion rate. Required if conversion is performed on the partner side.
+          type: string
+          examples:
+          - '155.12'
+        serviceParameters:
+          description: Array of user data for the service
+          type: array
+          example:
+          - type: NUMBER
+            key: customer
+            value: '0662601'
+          items:
+            $ref: '#/components/schemas/ServiceParameters'
     ServiceFieldValue:
       type: object
       description: Field value dictionary item
@@ -854,41 +829,66 @@ components:
           - Angor district
           - Baysun district
           - Bandikhan district
-    ServiceField:
+    PaymentListRequest:
       required:
-      - key
-      - type
-      - title
+      - createTime
+      - limit
+      - page
       type: object
       properties:
-        key:
+        createTime:
+          $ref: '#/components/schemas/FilterTime'
+        status:
           type: string
-          description: Field key
-          examples:
-          - soato
-        title:
-          type: string
-          description: Field name
-          examples:
-          - District
-        type:
-          type: string
-          description: 'Field type: `S` — string, `N` — number, `E` — selection from the `values` dictionary.'
           enum:
-          - S
-          - N
-          - E
-        regex:
-          type:
-          - string
-          - 'null'
-          examples:
-          - ^[a-zA-Z0-9\-]{4,18}$
-        values:
-          description: Field value dictionary
+          - SUCCESS
+          - REGISTERED
+          - APPROVED
+          - PENDING
+          - FAILED
+        page:
+          minimum: 1
+          type: integer
+          format: int32
+        limit:
+          maximum: 100
+          minimum: 1
+          type: integer
+          format: int32
+    ErrorResponse:
+      required:
+      - errorCode
+      - errorMessage
+      type: object
+      properties:
+        errorCode:
+          type: integer
+          description: Integer error code
+          example: 81
+        errorMessage:
+          type: string
+          description: Error text
+          example: Internal error
+        errorDetails:
           type: array
+          description: Error description
           items:
-            $ref: '#/components/schemas/ServiceFieldValue'
+            $ref: '#/components/schemas/ErrorDetails'
+    ServiceListRequest:
+      type: object
+      required:
+      - page
+      - limit
+      properties:
+        page:
+          minimum: 1
+          type: integer
+          format: int32
+        limit:
+          maximum: 100
+          minimum: 1
+          type: integer
+          format: int32
   securitySchemes:
     basicAuth:
       type: http

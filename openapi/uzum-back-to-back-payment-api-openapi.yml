@@ -40,19 +40,6 @@ paths:
                 $ref: '#/components/schemas/ApiResponse_GetCertificateResponse_'
 components:
   schemas:
-    ApiResponse_GetCertificateResponse_:
-      title: ApiResponse[GetCertificateResponse]
-      required:
-      - errorCode
-      type: object
-      properties:
-        errorCode:
-          $ref: '#/components/schemas/ErrorCode'
-        message:
-          title: Message
-          type: string
-        result:
-          $ref: '#/components/schemas/GetCertificateResponse'
     GetCertificateResponse:
       title: GetCertificateResponse
       required:
@@ -68,6 +55,19 @@ components:
           title: Fingerprint
           type: string
           description: Certificate fingerprint (base64)
+    ApiResponse_GetCertificateResponse_:
+      title: ApiResponse[GetCertificateResponse]
+      required:
+      - errorCode
+      type: object
+      properties:
+        errorCode:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          title: Message
+          type: string
+        result:
+          $ref: '#/components/schemas/GetCertificateResponse'
     ErrorCode:
       title: ErrorCode
       type: integer

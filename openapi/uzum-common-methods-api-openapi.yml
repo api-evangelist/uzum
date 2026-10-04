@@ -251,211 +251,15 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
-    ConvertRequest:
+    TransferStatusRequest:
       required:
-      - amount
-      - currencyFrom
-      - currencyTo
-      - direction
+      - externalTransferId
       type: object
       properties:
-        amount:
-          type: integer
-          description: Amount to convert (in minimum currency units)
-          example: 40000
-        currencyFrom:
+        externalTransferId:
           type: string
-          description: Source currency (ISO 4217)
-          example: RUB
-        currencyTo:
-          type: string
-          description: Target currency (ISO 4217)
-          example: UZS
-        direction:
-          type: string
-          description: Transfer direction
-          example: TO_UZ
-          enum:
-          - TO_UZ
-          - FROM_UZ
-    FilterTime:
-      required:
-      - from
-      - to
-      type: object
-      properties:
-        from:
-          type: string
-          description: Start date and time for filtering in UTC
-          example: '2024-10-19T09:55:30.250'
-        to:
-          type: string
-          description: End date and time for filtering in UTC
-          example: '2024-10-22T09:55:30.250'
-    TransferListRequest:
-      required:
-      - createTime
-      - limit
-      - page
-      type: object
-      properties:
-        createTime:
-          description: Object with creation time filters
-          allOf:
-          - $ref: '#/components/schemas/FilterTime'
-        status:
-          type: string
-          description: Operation status. If operations are to be retrieved in all statuses, this field is not specified in the request body
-          example: APPROVED
-          enum:
-          - REGISTERED
-          - PENDING
-          - APPROVED
-          - SUCCESS
-          - FAILED
-          - REVERSED
-        transferType:
-          type: string
-          description: Transfer direction
-          example: TO_UZ
-          enum:
-          - FROM_UZ
-          - TO_UZ
-        page:
-          type: integer
-          description: Requested response page number
-          example: 1
-          default: 1
-        limit:
-          type: integer
-          description: Number of response records per page. Maximum - 100
-          example: 25
-          default: 25
-    ErrorDetails:
-      required:
-      - message
-      - field
-      type: object
-      properties:
-        field:
-          type: string
-          description: Field name from the request body
-          example: externalTransferId
-        message:
-          type: string
-          description: Error description in the specified field
-          example: Must not be null
-    ClosingBalanceResponse:
-      type: object
-      properties:
-        accountNumber:
-          description: Account number, for which the information is displayed
-          type: string
-          example: '22618000790000077701'
-        accountName:
-          description: Account name
-          type: string
-          example: Deposit account for (SUPER-PAY)
-        closingBalance:
-          description: Outgoing balance on the partner's account in fractional units of the account currency
-          type: integer
-          example: 8459900
-        currency:
-          description: Account currency (ISO 4217 code)
-          type: string
-          minLength: 3
-          maxLength: 3
-          example: USD
-    AccountOperationsResponse:
-      type: object
-      properties:
-        accountNumber:
-          description: Account number, for which the information is displayed
-          type: string
-          example: '22618000790000077701'
-        accountName:
-          description: Account name
-          type: string
-          example: Deposit account for (SUPER-PAY)
-        closingBalance:
-          description: Balance on the partner's account in fractional units of the currency at the end of the time period
-          type: integer
-          example: 8059900
-        openingBalance:
-          description: Balance on the partner's account in fractional units of the currency at the beginning of the time period
-          type: integer
-          example: 8459900
-        currency:
-          description: Account currency (ISO 4217 code)
-          type: string
-          minLength: 3
-          maxLength: 3
-          example: USD
-        operationsInfo:
-          type: array
-          items:
-            $ref: '#/components/schemas/OperationInfo'
-    ErrorResponse:
-      required:
-      - errorCode
-      - errorMessage
-      type: object
-      properties:
-        errorCode:
-          type: integer
-          description: Integer error code
-          example: 81
-        errorMessage:
-          type: string
-          description: Error text
-          example: Internal error
-        errorDetails:
-          type: array
-          description: Error description
-          items:
-            $ref: '#/components/schemas/ErrorDetails'
-    OperationInfo:
-      type: object
-      properties:
-        date:
-          description: Current operation date
-          type: string
-          format: date
-        documentNumber:
-          description: Document number
-          type: string
-          example: '11363893'
-        senderAccount:
-          description: Payer's account number
-          type: string
-          example: '28896850100001190019'
-        senderName:
-          description: Payer's name
-          type: string
-          example: Deposit account for (SUPER-PAY)
-        receiverAccount:
-          description: Recipient's account number
-          type: string
-          example: '28896850100001190019'
-        receiverName:
-          description: Recipient's name
-          type: string
-          example: Transit account for money transfers (SUPER-PAY) Uzcard
-        type:
-          description: Turnover type (Debit Turnover or Credit Turnover)
-          type: string
-          enum:
-          - DEBIT
-          - CREDIT
-        amount:
-          description: Turnover in the fractional units of the account's currency. Example, 1 dollar is 100 cents or 100 fractional units.
-          type: number
-          format: integer
-          example: 11223
-        details:
-          description: Payment purpose
-          type: string
-          example: Commissioned amount by Humo Bank for October 24, 2024, according to the distribution order No. ОД2510/10 dated October 25, 2024.
+          description: Transfer ID in the partner's system
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
     PaginationResponse:
       type: object
       properties:
@@ -479,10 +283,6 @@ components:
           type: integer
           description: Number of the previous page of the response. 0 - page does not exist
           example: 0
-    TransferListResponse:
-      type: array
-      items:
-        $ref: '#/components/schemas/TransferResponse'
     TransferStatusResponse:
       required:
       - completedDateTime
@@ -582,6 +382,101 @@ components:
           type: string
           description: Card token
           example: vlKeomyUYGh8ktD+1hvI68kuApMKq1s8uyfgvHA=
+    ErrorDetails:
+      required:
+      - message
+      - field
+      type: object
+      properties:
+        field:
+          type: string
+          description: Field name from the request body
+          example: externalTransferId
+        message:
+          type: string
+          description: Error description in the specified field
+          example: Must not be null
+    ClosingBalanceResponse:
+      type: object
+      properties:
+        accountNumber:
+          description: Account number, for which the information is displayed
+          type: string
+          example: '22618000790000077701'
+        accountName:
+          description: Account name
+          type: string
+          example: Deposit account for (SUPER-PAY)
+        closingBalance:
+          description: Outgoing balance on the partner's account in fractional units of the account currency
+          type: integer
+          example: 8459900
+        currency:
+          description: Account currency (ISO 4217 code)
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: USD
+    ConvertRequest:
+      required:
+      - amount
+      - currencyFrom
+      - currencyTo
+      - direction
+      type: object
+      properties:
+        amount:
+          type: integer
+          description: Amount to convert (in minimum currency units)
+          example: 40000
+        currencyFrom:
+          type: string
+          description: Source currency (ISO 4217)
+          example: RUB
+        currencyTo:
+          type: string
+          description: Target currency (ISO 4217)
+          example: UZS
+        direction:
+          type: string
+          description: Transfer direction
+          example: TO_UZ
+          enum:
+          - TO_UZ
+          - FROM_UZ
+    inline_response_200:
+      type: object
+      properties:
+        paginationResponse:
+          $ref: '#/components/schemas/PaginationResponse'
+        transferList:
+          $ref: '#/components/schemas/TransferListResponse'
+    FilterTime:
+      required:
+      - from
+      - to
+      type: object
+      properties:
+        from:
+          type: string
+          description: Start date and time for filtering in UTC
+          example: '2024-10-19T09:55:30.250'
+        to:
+          type: string
+          description: End date and time for filtering in UTC
+          example: '2024-10-22T09:55:30.250'
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: integer
+          example: 0
+        errorMessage:
+          type: string
+          example: string
+        errorDetails:
+          type: object
+          additionalProperties: true
     ConvertResponse:
       required:
       - amountFrom
@@ -611,18 +506,49 @@ components:
           type: string
           description: Conversion rate
           example: '140.0000'
-    Error:
+    TransferListRequest:
+      required:
+      - createTime
+      - limit
+      - page
       type: object
       properties:
-        errorCode:
-          type: integer
-          example: 0
-        errorMessage:
+        createTime:
+          description: Object with creation time filters
+          allOf:
+          - $ref: '#/components/schemas/FilterTime'
+        status:
           type: string
-          example: string
-        errorDetails:
-          type: object
-          additionalProperties: true
+          description: Operation status. If operations are to be retrieved in all statuses, this field is not specified in the request body
+          example: APPROVED
+          enum:
+          - REGISTERED
+          - PENDING
+          - APPROVED
+          - SUCCESS
+          - FAILED
+          - REVERSED
+        transferType:
+          type: string
+          description: Transfer direction
+          example: TO_UZ
+          enum:
+          - FROM_UZ
+          - TO_UZ
+        page:
+          type: integer
+          description: Requested response page number
+          example: 1
+          default: 1
+        limit:
+          type: integer
+          description: Number of response records per page. Maximum - 100
+          example: 25
+          default: 25
+    TransferListResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/TransferResponse'
     TransferResponse:
       required:
       - completedDateTime
@@ -714,22 +640,96 @@ components:
           - SUCCESS
           - FAILED
           - REVERSED
-    TransferStatusRequest:
-      required:
-      - externalTransferId
+    OperationInfo:
       type: object
       properties:
-        externalTransferId:
+        date:
+          description: Current operation date
           type: string
-          description: Transfer ID in the partner's system
-          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
-    inline_response_200:
+          format: date
+        documentNumber:
+          description: Document number
+          type: string
+          example: '11363893'
+        senderAccount:
+          description: Payer's account number
+          type: string
+          example: '28896850100001190019'
+        senderName:
+          description: Payer's name
+          type: string
+          example: Deposit account for (SUPER-PAY)
+        receiverAccount:
+          description: Recipient's account number
+          type: string
+          example: '28896850100001190019'
+        receiverName:
+          description: Recipient's name
+          type: string
+          example: Transit account for money transfers (SUPER-PAY) Uzcard
+        type:
+          description: Turnover type (Debit Turnover or Credit Turnover)
+          type: string
+          enum:
+          - DEBIT
+          - CREDIT
+        amount:
+          description: Turnover in the fractional units of the account's currency. Example, 1 dollar is 100 cents or 100 fractional units.
+          type: number
+          format: integer
+          example: 11223
+        details:
+          description: Payment purpose
+          type: string
+          example: Commissioned amount by Humo Bank for October 24, 2024, according to the distribution order No. ОД2510/10 dated October 25, 2024.
+    AccountOperationsResponse:
       type: object
       properties:
-        paginationResponse:
-          $ref: '#/components/schemas/PaginationResponse'
-        transferList:
-          $ref: '#/components/schemas/TransferListResponse'
+        accountNumber:
+          description: Account number, for which the information is displayed
+          type: string
+          example: '22618000790000077701'
+        accountName:
+          description: Account name
+          type: string
+          example: Deposit account for (SUPER-PAY)
+        closingBalance:
+          description: Balance on the partner's account in fractional units of the currency at the end of the time period
+          type: integer
+          example: 8059900
+        openingBalance:
+          description: Balance on the partner's account in fractional units of the currency at the beginning of the time period
+          type: integer
+          example: 8459900
+        currency:
+          description: Account currency (ISO 4217 code)
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: USD
+        operationsInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperationInfo'
+    ErrorResponse:
+      required:
+      - errorCode
+      - errorMessage
+      type: object
+      properties:
+        errorCode:
+          type: integer
+          description: Integer error code
+          example: 81
+        errorMessage:
+          type: string
+          description: Error text
+          example: Internal error
+        errorDetails:
+          type: array
+          description: Error description
+          items:
+            $ref: '#/components/schemas/ErrorDetails'
   securitySchemes:
     basicAuth:
       type: http
