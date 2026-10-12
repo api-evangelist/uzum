@@ -1,0 +1,16 @@
+generated: '2026-10-12'
+method: none
+source:
+- https://zapier.com/apps/uzum/integrations
+- https://n8n.io/integrations/uzum/
+- https://composio.dev/toolkits/uzum
+- https://monid.ai/tools/uzum
+checked:
+- https://composio.dev/toolkits/uzum
+- https://monid.ai/tools/uzum
+- https://n8n.io/integrations/uzum/
+- https://zapier.com/apps/uzum/integrations
+summary: null
+marketplace_apps: []
+edges: []
+templates: []
