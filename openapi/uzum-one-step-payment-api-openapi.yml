@@ -228,76 +228,27 @@ paths:
                       schema: {}
 components:
   schemas:
-    BindingPaymentParams:
-      title: BindingPaymentParams
-      required:
-      - operationType
-      type: object
-      properties:
-        operationType:
-          title: Operationtype
-          enum:
-          - BINDING
-          type: string
-          description: BINDING - card binding;
-        phoneNumber:
-          title: Phonenumber
-          type: string
-          description: Phone number only for top up
-    MobileTopUpPaymentParams:
-      title: MobileTopUpPaymentParams
-      required:
-      - operationType
-      - phoneNumber
-      type: object
-      properties:
-        operationType:
-          title: Operationtype
-          enum:
-          - MOBILE_TOP_UP
-          type: string
-          description: MOBILE_TOP_UP - mobile balance topping up;
-        phoneNumber:
-          title: Phonenumber
-          type: string
-          description: Mobile number for topping up
-    Cart:
-      title: Cart
-      type: object
-      description: Info about cart
-      required:
-      - cartId
-      - items
-      - total
-      properties:
-        cartId:
-          title: Cartid
-          type: string
-          description: Cart ID on the merchant's side
-        receiptType:
-          allOf:
-          - $ref: '#/components/schemas/RegisterReceiptType'
-          description: Type of fiscal receipt
-        items:
-          title: Items
-          type: array
-          items:
-            $ref: '#/components/schemas/CartItem'
-        total:
-          title: Total
-          type: integer
-          description: Total cart cost
-    OrderBingingRequest:
-      title: OrderBingingRequest
+    ErrorCode:
+      title: ErrorCode
+      type: integer
+    OrderMobileTopUpRegisterRequest:
+      title: OrderMobileTopUpRegisterRequest
       required:
       - clientId
       - currency
       - orderNumber
-      - viewType
       - paymentParams
       - sessionTimeoutSecs
+      - amount
+      - merchantParams
       type: object
       properties:
+        amount:
+          title: Amount
+          maximum: 999999999999
+          minimum: 1
+          type: integer
+          description: Payment amount (in tiyins, no commission)
         clientId:
           title: Clientid
           type: string
@@ -321,28 +272,15 @@ components:
           minLength: 1
           type: string
           description: Order ID on the merchant's side
-        successUrl:
-          title: Successurl
-          maxLength: 2083
-          minLength: 1
-          type: string
-          description: URL to redirect if the payment is successful
-          format: uri
-        failureUrl:
-          title: Failureurl
-          maxLength: 2083
-          minLength: 1
-          type: string
-          description: Redirect URL if payment fails
-          format: uri
-        viewType:
-          allOf:
-          - $ref: '#/components/schemas/PaymentViewType'
-          description: Payment page display type
         paymentParams:
           title: Paymentparams
           allOf:
-          - $ref: '#/components/schemas/BindingPaymentParams'
+          - $ref: '#/components/schemas/MobileTopUpPaymentParams'
+          description: Additional merchant's parameters
+        merchantParams:
+          title: merchantParams
+          allOf:
+          - $ref: '#/components/schemas/MobileTopUpMerchantParams'
           description: Additional merchant's parameters
         sessionTimeoutSecs:
           title: Sessiontimeoutsecs
@@ -350,61 +288,23 @@ components:
           minimum: 600
           type: integer
           description: Maximum session duration in seconds
-    ApiResponse_RefundResponse_:
-      title: ApiResponse[RefundResponse]
+    RefundResponse:
+      title: RefundResponse
       required:
-      - errorCode
+      - operationId
       type: object
       properties:
-        errorCode:
-          $ref: '#/components/schemas/ErrorCode'
-        message:
-          title: Message
+        operationId:
+          title: Operationid
           type: string
-        result:
-          $ref: '#/components/schemas/RefundResponse'
-    ReceiptGeneratedCallbackData:
-      title: ReceiptGeneratedCallbackData
-      required:
-      - orderId
-      - receiptType
-      - receiptUrl
-      type: object
-      properties:
-        orderId:
-          title: Orderid
-          type: string
-          description: Order ID on Checkout side
-        receiptType:
-          allOf:
-          - $ref: '#/components/schemas/ReceiptType'
-          description: Receipt type
-        receiptUrl:
-          title: Receipturl
-          type: string
-          description: Link to the receipt
-    BusinessEventType:
-      title: BusinessEventType
-      enum:
-      - FORM_CLOSED
-      type: string
-      description: An enumeration.
-    PaymentRegisterResponse:
-      title: PaymentRegisterResponse
-      required:
-      - orderId
-      - paymentRedirectUrl
-      type: object
-      properties:
-        orderId:
-          title: Orderid
-          type: string
-          description: Order ID
+          description: Operation ID on the checkout side
           format: uuid
-        paymentRedirectUrl:
-          title: Paymentredirecturl
-          type: string
-          description: Payment page URL
+    Currency:
+      title: Currency
+      enum:
+      - 860
+      type: integer
+      description: An enumeration.
     AcquiringPaymentParams:
       title: AcquiringPaymentParams
       required:
@@ -430,13 +330,23 @@ components:
           title: Force3Ds
           type: boolean
           description: Forcing payment to 3DS
-    PayType:
-      title: PayType
-      enum:
-      - ONE_STEP
-      - TWO_STEP
-      type: string
-      description: An enumeration.
+    MobileTopUpPaymentParams:
+      title: MobileTopUpPaymentParams
+      required:
+      - operationType
+      - phoneNumber
+      type: object
+      properties:
+        operationType:
+          title: Operationtype
+          enum:
+          - MOBILE_TOP_UP
+          type: string
+          description: MOBILE_TOP_UP - mobile balance topping up;
+        phoneNumber:
+          title: Phonenumber
+          type: string
+          description: Mobile number for topping up
     FiscalizationCartItemRequest:
       title: FiscalizationCartItemRequest
       required:
@@ -459,15 +369,22 @@ components:
           title: Receiptparams
           allOf:
           - $ref: '#/components/schemas/UZReceiptParams'
-    MobileTopUpMerchantParams:
-      title: MobileTopUpMerchantParams
+    TechCardParams:
+      title: TechCardParams
+      required:
+      - operationType
       type: object
       properties:
-        cart:
-          title: Cart
-          allOf:
-          - $ref: '#/components/schemas/MobileTopUpCartRequest'
-          description: Information about cart
+        operationType:
+          title: Operationtype
+          enum:
+          - TECH_CARD
+          type: string
+          description: TECH_CARD - payment pay technical installment card ;
+        phoneNumber:
+          title: Phonenumber
+          type: string
+          description: Client mobile number
     MobileTopUpCartRequest:
       title: MobileTopUpCartRequest
       required:
@@ -495,22 +412,178 @@ components:
           title: Total
           type: integer
           description: General cost of the cart
-    TechCardParams:
-      title: TechCardParams
+    AcquiringCallbackData:
+      title: AcquiringCallbackData
       required:
+      - orderId
+      - operationState
       - operationType
+      - orderNumber
       type: object
       properties:
+        orderId:
+          title: Orderid
+          type: string
+          description: Order ID on the Checkout side
+        operationState:
+          allOf:
+          - $ref: '#/components/schemas/CallbackOperationState'
+          description: Operation status
         operationType:
-          title: Operationtype
+          allOf:
+          - $ref: '#/components/schemas/PaymentOperationType'
+          description: Operation type
+        cardType:
+          title: Card Type
+          description: "Type of card used for the transaction:\n* `1` – Corporate card  \n* `2` – Personal card\n"
+          type: integer
           enum:
-          - TECH_CARD
+          - 1
+          - 2
+        merchantOperationId:
+          title: Merchantoperationid
           type: string
-          description: TECH_CARD - payment pay technical installment card ;
-        phoneNumber:
-          title: Phonenumber
+          description: "Operation ID on the merchant's side, will be returned if it was\n passed when initializing the operation"
+        orderNumber:
+          title: Ordernumber
           type: string
-          description: Client mobile number
+          description: Order ID on the merchant's side
+        rrn:
+          title: Rrn
+          type: string
+          description: Unique identifier of the banking transaction
+    BusinessEventType:
+      title: BusinessEventType
+      enum:
+      - FORM_CLOSED
+      type: string
+      description: An enumeration.
+    PaymentRegisterResponse:
+      title: PaymentRegisterResponse
+      required:
+      - orderId
+      - paymentRedirectUrl
+      type: object
+      properties:
+        orderId:
+          title: Orderid
+          type: string
+          description: Order ID
+          format: uuid
+        paymentRedirectUrl:
+          title: Paymentredirecturl
+          type: string
+          description: Payment page URL
+    MobileTopUpCartItemRequest:
+      title: MobileTopUpCartItemRequest
+      required:
+      - title
+      - productId
+      - quantity
+      - unitPrice
+      - total
+      - receiptParams
+      type: object
+      properties:
+        title:
+          title: Title
+          maxLength: 63
+          type: string
+          description: Product name
+        productId:
+          title: Productid
+          type: string
+          description: Product ID on the merchant's side
+        quantity:
+          title: Quantity
+          type: integer
+          description: Quantity of items in the order
+        unitPrice:
+          title: Unitprice
+          type: integer
+          description: Price for one unit of the product in minimal currency units
+        total:
+          title: Total
+          type: integer
+          description: General amount of the product in the order
+        receiptParams:
+          title: Receiptparams
+          allOf:
+          - $ref: '#/components/schemas/UZReceiptParams'
+          description: Information for receipt fiscalization. Additional information on the link https://www.inplat-tech.ru/docs/ofd/v.2/
+    PaymentViewType:
+      title: PaymentViewType
+      enum:
+      - WEB_VIEW
+      - IFRAME
+      - REDIRECT
+      type: string
+      description: An enumeration.
+    BusinessEvent:
+      title: BusinessEvent
+      required:
+      - orderId
+      - orderNumber
+      - eventType
+      - actionCode
+      - actionCodeDescription
+      type: object
+      properties:
+        orderId:
+          title: Orderid
+          type: string
+          description: Order ID on the Checkout side
+        orderNumber:
+          title: Ordernumber
+          type: string
+          description: Order ID on the merchant's side
+        eventType:
+          allOf:
+          - $ref: '#/components/schemas/BusinessEventType'
+          description: Business event type
+        actionCode:
+          allOf:
+          - $ref: '#/components/schemas/ErrorCode'
+          description: Event code
+        actionCodeDescription:
+          title: Actioncodedescription
+          type: string
+          description: Event code description
+    CartItem:
+      title: CartItem
+      required:
+      - title
+      - productId
+      - quantity
+      - unitPrice
+      - total
+      type: object
+      properties:
+        title:
+          title: Title
+          type: string
+          description: Name of the product
+        productId:
+          title: Productid
+          type: string
+          description: Product ID on the merchant's side
+        quantity:
+          title: Quantity
+          type: integer
+          description: Quantity of items in the order
+        unitPrice:
+          title: Unitprice
+          type: integer
+          description: Price per unit of items in tiyins
+        total:
+          title: Total
+          type: integer
+          description: Total price of all goods of the same type:unit_price * quantity
+        receiptParams:
+          title: Receiptparams
+          allOf:
+          - $ref: '#/components/schemas/UZReceiptParams'
+          description: Data for autofiscalization. Additional information about fiscalization to link https://www.inplat-tech.ru/docs/ofd/v.2/
     PaymentOperationType:
       title: PaymentOperationType
       enum:
@@ -521,22 +594,8 @@ components:
       - TOP_UP_COMPLETED
       type: string
       description: An enumeration.
-    PaymentViewType:
-      title: PaymentViewType
-      enum:
-      - WEB_VIEW
-      - IFRAME
-      - REDIRECT
-      type: string
-      description: An enumeration.
-    Currency:
-      title: Currency
-      enum:
-      - 860
-      type: integer
-      description: An enumeration.
-    ApiResponse_PaymentRegisterResponse_:
-      title: ApiResponse[PaymentRegisterResponse]
+    ApiResponse_RefundResponse_:
+      title: ApiResponse[RefundResponse]
       required:
       - errorCode
       type: object
@@ -547,69 +606,7 @@ components:
           title: Message
           type: string
         result:
-          $ref: '#/components/schemas/PaymentRegisterResponse'
-    LocaleType:
-      title: LocaleType
-      enum:
-      - ru-RU
-      - uz-UZ
-      - en-EN
-      type: string
-      description: An enumeration.
-    RefundResponse:
-      title: RefundResponse
-      required:
-      - operationId
-      type: object
-      properties:
-        operationId:
-          title: Operationid
-          type: string
-          description: Operation ID on the checkout side
-          format: uuid
-    OrderTechCardRequest:
-      title: OrderTechCardRequest
-      required:
-      - clientId
-      - amount
-      - currency
-      - orderNumber
-      - paymentParams
-      - sessionTimeoutSecs
-      type: object
-      properties:
-        clientId:
-          title: Clientid
-          minLength: 1
-          type: string
-          description: Client ID
-        amount:
-          title: Amount
-          exclusiveMaximum: 999999999999
-          minimum: 1
-          type: integer
-          description: Payment amount  (in minimum currency units - tiyins, without commission)
-        currency:
-          allOf:
-          - $ref: '#/components/schemas/Currency'
-          description: Payment currency (ISO 4217 code)
-        orderNumber:
-          title: Ordernumber
-          maxLength: 36
-          minLength: 1
-          type: string
-          description: Payment ID on the merchant's side
-        paymentParams:
-          title: Paymentparams
-          allOf:
-          - $ref: '#/components/schemas/TechCardParams'
-          description: Additional payment parameters
-        sessionTimeoutSecs:
-          title: Sessiontimeoutsecs
-          maximum: 1800
-          minimum: 600
-          type: integer
-          description: Maximum session duration in seconds
+          $ref: '#/components/schemas/RefundResponse'
     OrderPaymentRequest:
       title: OrderPaymentRequest
       required:
@@ -701,124 +698,6 @@ components:
           minimum: 600
           type: integer
           description: Maximum session duration in seconds
-    RefundRequest:
-      title: RefundRequest
-      required:
-      - orderId
-      - amount
-      type: object
-      properties:
-        orderId:
-          title: Orderid
-          type: string
-          description: Order id
-          format: uuid
-        amount:
-          title: Amount
-          minimum: 1
-          maximum: 999999999999
-          type: integer
-          description: Amount of the refund
-        cart:
-          title: Cart
-          allOf:
-          - $ref: '#/components/schemas/FiscalizationCartRequest'
-          description: Cart for processing the refund. Filled in only when autofiscalization is enabled.
-    CallbackOperationState:
-      title: CallbackOperationState
-      enum:
-      - SUCCESS
-      - FAIL
-      type: string
-      description: An enumeration.
-    MobileTopUpCartItemRequest:
-      title: MobileTopUpCartItemRequest
-      required:
-      - title
-      - productId
-      - quantity
-      - unitPrice
-      - total
-      - receiptParams
-      type: object
-      properties:
-        title:
-          title: Title
-          maxLength: 63
-          type: string
-          description: Product name
-        productId:
-          title: Productid
-          type: string
-          description: Product ID on the merchant's side
-        quantity:
-          title: Quantity
-          type: integer
-          description: Quantity of items in the order
-        unitPrice:
-          title: Unitprice
-          type: integer
-          description: Price for one unit of the product in minimal currency units
-        total:
-          title: Total
-          type: integer
-          description: General amount of the product in the order
-        receiptParams:
-          title: Receiptparams
-          allOf:
-          - $ref: '#/components/schemas/UZReceiptParams'
-          description: Information for receipt fiscalization. Additional information on the link https://www.inplat-tech.ru/docs/ofd/v.2/
-    AcquiringCallbackData:
-      title: AcquiringCallbackData
-      required:
-      - orderId
-      - operationState
-      - operationType
-      - orderNumber
-      type: object
-      properties:
-        orderId:
-          title: Orderid
-          type: string
-          description: Order ID on the Checkout side
-        operationState:
-          allOf:
-          - $ref: '#/components/schemas/CallbackOperationState'
-          description: Operation status
-        operationType:
-          allOf:
-          - $ref: '#/components/schemas/PaymentOperationType'
-          description: Operation type
-        cardType:
-          title: Card Type
-          description: "Type of card used for the transaction:\n* `1` – Corporate card  \n* `2` – Personal card\n"
-          type: integer
-          enum:
-          - 1
-          - 2
-        merchantOperationId:
-          title: Merchantoperationid
-          type: string
-          description: "Operation ID on the merchant's side, will be returned if it was\n passed when initializing the operation"
-        orderNumber:
-          title: Ordernumber
-          type: string
-          description: Order ID on the merchant's side
-        rrn:
-          title: Rrn
-          type: string
-          description: Unique identifier of the banking transaction
-    ErrorCode:
-      title: ErrorCode
-      type: integer
-    ReceiptType:
-      title: ReceiptType
-      enum:
-      - PURCHASE
-      - PREPAID
-      - REFUND
-      type: string
-      description: An enumeration.
     UZReceiptParams:
       title: UZReceiptParams
       required:
@@ -873,54 +752,17 @@ components:
             type: string
           description: Array of product labels. Quantity of labels must correspond to the quantity of labelled items in the cart
       description: Data for autofiscalization
-    BusinessEvent:
-      title: BusinessEvent
-      required:
-      - orderId
-      - orderNumber
-      - eventType
-      - actionCode
-      - actionCodeDescription
-      type: object
-      properties:
-        orderId:
-          title: Orderid
-          type: string
-          description: Order ID on the Checkout side
-        orderNumber:
-          title: Ordernumber
-          type: string
-          description: Order ID on the merchant's side
-        eventType:
-          allOf:
-          - $ref: '#/components/schemas/BusinessEventType'
-          description: Business event type
-        actionCode:
-          allOf:
-          - $ref: '#/components/schemas/ErrorCode'
-          description: Event code
-        actionCodeDescription:
-          title: Actioncodedescription
-          type: string
-          description: Event code description
-    OrderMobileTopUpRegisterRequest:
-      title: OrderMobileTopUpRegisterRequest
+    OrderBingingRequest:
+      title: OrderBingingRequest
       required:
       - clientId
       - currency
       - orderNumber
+      - viewType
       - paymentParams
       - sessionTimeoutSecs
-      - amount
-      - merchantParams
       type: object
       properties:
-        amount:
-          title: Amount
-          maximum: 999999999999
-          minimum: 1
-          type: integer
-          description: Payment amount (in tiyins, no commission)
         clientId:
           title: Clientid
           type: string
@@ -944,15 +786,28 @@ components:
           minLength: 1
           type: string
           description: Order ID on the merchant's side
+        successUrl:
+          title: Successurl
+          maxLength: 2083
+          minLength: 1
+          type: string
+          description: URL to redirect if the payment is successful
+          format: uri
+        failureUrl:
+          title: Failureurl
+          maxLength: 2083
+          minLength: 1
+          type: string
+          description: Redirect URL if payment fails
+          format: uri
+        viewType:
+          allOf:
+          - $ref: '#/components/schemas/PaymentViewType'
+          description: Payment page display type
         paymentParams:
           title: Paymentparams
           allOf:
-          - $ref: '#/components/schemas/MobileTopUpPaymentParams'
-          description: Additional merchant's parameters
-        merchantParams:
-          title: merchantParams
-          allOf:
-          - $ref: '#/components/schemas/MobileTopUpMerchantParams'
+          - $ref: '#/components/schemas/BindingPaymentParams'
           description: Additional merchant's parameters
         sessionTimeoutSecs:
           title: Sessiontimeoutsecs
@@ -960,41 +815,19 @@ components:
           minimum: 600
           type: integer
           description: Maximum session duration in seconds
-    CartItem:
-      title: CartItem
+    ApiResponse_PaymentRegisterResponse_:
+      title: ApiResponse[PaymentRegisterResponse]
       required:
-      - title
-      - productId
-      - quantity
-      - unitPrice
-      - total
+      - errorCode
       type: object
       properties:
-        title:
-          title: Title
+        errorCode:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          title: Message
           type: string
-          description: Name of the product
-        productId:
-          title: Productid
-          type: string
-          description: Product ID on the merchant's side
-        quantity:
-          title: Quantity
-          type: integer
-          description: Quantity of items in the order
-        unitPrice:
-          title: Unitprice
-          type: integer
-          description: Price per unit of items in tiyins
-        total:
-          title: Total
-          type: integer
-          description: Total price of all goods of the same type:unit_price * quantity
-        receiptParams:
-          title: Receiptparams
-          allOf:
-          - $ref: '#/components/schemas/UZReceiptParams'
-          description: Data for autofiscalization. Additional information about fiscalization to link https://www.inplat-tech.ru/docs/ofd/v.2/
+        result:
+          $ref: '#/components/schemas/PaymentRegisterResponse'
     FiscalizationCartRequest:
       title: FiscalizationCartRequest
       required:
@@ -1014,6 +847,164 @@ components:
           items:
             $ref: '#/components/schemas/FiscalizationCartItemRequest'
           description: The composition of the cart
+    OrderTechCardRequest:
+      title: OrderTechCardRequest
+      required:
+      - clientId
+      - amount
+      - currency
+      - orderNumber
+      - paymentParams
+      - sessionTimeoutSecs
+      type: object
+      properties:
+        clientId:
+          title: Clientid
+          minLength: 1
+          type: string
+          description: Client ID
+        amount:
+          title: Amount
+          exclusiveMaximum: 999999999999
+          minimum: 1
+          type: integer
+          description: Payment amount  (in minimum currency units - tiyins, without commission)
+        currency:
+          allOf:
+          - $ref: '#/components/schemas/Currency'
+          description: Payment currency (ISO 4217 code)
+        orderNumber:
+          title: Ordernumber
+          maxLength: 36
+          minLength: 1
+          type: string
+          description: Payment ID on the merchant's side
+        paymentParams:
+          title: Paymentparams
+          allOf:
+          - $ref: '#/components/schemas/TechCardParams'
+          description: Additional payment parameters
+        sessionTimeoutSecs:
+          title: Sessiontimeoutsecs
+          maximum: 1800
+          minimum: 600
+          type: integer
+          description: Maximum session duration in seconds
+    Cart:
+      title: Cart
+      type: object
+      description: Info about cart
+      required:
+      - cartId
+      - items
+      - total
+      properties:
+        cartId:
+          title: Cartid
+          type: string
+          description: Cart ID on the merchant's side
+        receiptType:
+          allOf:
+          - $ref: '#/components/schemas/RegisterReceiptType'
+          description: Type of fiscal receipt
+        items:
+          title: Items
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        total:
+          title: Total
+          type: integer
+          description: Total cart cost
+    CallbackOperationState:
+      title: CallbackOperationState
+      enum:
+      - SUCCESS
+      - FAIL
+      type: string
+      description: An enumeration.
+    BindingPaymentParams:
+      title: BindingPaymentParams
+      required:
+      - operationType
+      type: object
+      properties:
+        operationType:
+          title: Operationtype
+          enum:
+          - BINDING
+          type: string
+          description: BINDING - card binding;
+        phoneNumber:
+          title: Phonenumber
+          type: string
+          description: Phone number only for top up
+    PayType:
+      title: PayType
+      enum:
+      - ONE_STEP
+      - TWO_STEP
+      type: string
+      description: An enumeration.
+    LocaleType:
+      title: LocaleType
+      enum:
+      - ru-RU
+      - uz-UZ
+      - en-EN
+      type: string
+      description: An enumeration.
+    RefundRequest:
+      title: RefundRequest
+      required:
+      - orderId
+      - amount
+      type: object
+      properties:
+        orderId:
+          title: Orderid
+          type: string
+          description: Order id
+          format: uuid
+        amount:
+          title: Amount
+          minimum: 1
+          maximum: 999999999999
+          type: integer
+          description: Amount of the refund
+        cart:
+          title: Cart
+          allOf:
+          - $ref: '#/components/schemas/FiscalizationCartRequest'
+          description: Cart for processing the refund. Filled in only when autofiscalization is enabled.
+    ReceiptType:
+      title: ReceiptType
+      enum:
+      - PURCHASE
+      - PREPAID
+      - REFUND
+      type: string
+      description: An enumeration.
+    ReceiptGeneratedCallbackData:
+      title: ReceiptGeneratedCallbackData
+      required:
+      - orderId
+      - receiptType
+      - receiptUrl
+      type: object
+      properties:
+        orderId:
+          title: Orderid
+          type: string
+          description: Order ID on Checkout side
+        receiptType:
+          allOf:
+          - $ref: '#/components/schemas/ReceiptType'
+          description: Receipt type
+        receiptUrl:
+          title: Receipturl
+          type: string
+          description: Link to the receipt
     RegisterReceiptType:
       title: RegisterReceiptType
       enum:
@@ -1021,6 +1012,15 @@ components:
       - PREPAID
       type: string
       description: An enumeration.
+    MobileTopUpMerchantParams:
+      title: MobileTopUpMerchantParams
+      type: object
+      properties:
+        cart:
+          title: Cart
+          allOf:
+          - $ref: '#/components/schemas/MobileTopUpCartRequest'
+          description: Information about cart
 x-tagGroups:
 - name: API
   tags:

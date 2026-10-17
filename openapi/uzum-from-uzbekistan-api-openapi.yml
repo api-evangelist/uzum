@@ -193,6 +193,77 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
+    CheckDebitResponse:
+      required:
+      - externalTransferId
+      - status
+      - transferId
+      type: object
+      properties:
+        externalTransferId:
+          type: string
+          description: Transfer ID on the partner's side
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        transferId:
+          type: string
+          description: Transfer ID on the Crossborder Transfer side
+          format: uuid
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        senderAmount:
+          type: integer
+          description: Sender's payment amount in minimal units
+          example: 13640000
+        senderCurrencyCode:
+          type: string
+          description: Sender's payment currency (ISO 4217 alphabetical code)
+          example: UZS
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        receiverAmount:
+          type: integer
+          description: Recipient's payment amount in minimal units
+          example: 40000
+        receiverCurrencyCode:
+          type: string
+          description: Recipient's currency (ISO 4217 alphabetical code)
+          example: RUB
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        exchangeRate:
+          type: string
+          description: Conversion rate from senderCurrencyCode to receiverCurrencyCode
+          example: '0.00000756'
+        status:
+          type: string
+          description: Transfer status
+          example: APPROVED
+          enum:
+          - REGISTERED
+          - PENDING
+          - APPROVED
+          - SUCCESS
+          - FAILED
+          - REVERSED
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: integer
+          example: 0
+        errorMessage:
+          type: string
+          example: string
+        errorDetails:
+          type: object
+          additionalProperties: true
     IdentityDocument:
       description: An object containing information about the identity document.
       type: object
@@ -237,24 +308,166 @@ components:
           minLength: 14
           maxLength: 14
           example: '30101800050014'
-    ReceiverInfo:
-      description: An object containing information about the identity of the transfer recipient.
+    CancelDebitRequest:
       required:
-      - personFullName
+      - externalTransferId
       type: object
       properties:
-        personFullName:
-          description: Recipient's full name (First, Middle, Last).
+        externalTransferId:
           type: string
-          example: O VON CHAN
+          description: Transfer ID in the partner's system
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        reason:
+          type: string
+          description: Cancelation reason
+          example: Debiting error
+    CheckDebitRequest:
+      required:
+      - externalTransferId
+      - receiver
+      - receiverAccount
+      - receiverCountry
+      - receiverCurrencyCode
+      - sender
+      - senderAmount
+      - senderCurrencyCode
+      - phone
+      type: object
+      properties:
+        clientId:
+          type: string
+          description: Client ID in the partner's system.
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        externalTransferId:
+          type: string
+          description: Transfer ID in the partner’s system.
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        receiverAccount:
+          type: string
+          description: Masked recipient’s card number or account number.
+          example: 553609******2598
+        senderCardToken:
+          type:
+          - string
+          - 'null'
+          description: Card token. Not sent if senderCardPan and senderCardExpireDate are provided.
+          example: vlKeomyUYGh8ktD+1hvI68kuApMKq1s8uyfgvHA=
+        senderCardPan:
+          type:
+          - string
+          - 'null'
+          description: Card PAN. Not sent if senderCardToken is provided.
+          example: '5536123443212699'
+        senderCardExpireDate:
+          type:
+          - string
+          - 'null'
+          description: Card expiration date in the format YYMM. Not sent if senderCardToken is provided.
+          example: '2811'
+        senderAmount:
+          type: integer
+          description: Sender’s payment amount in the minimal currency units.
+          example: 13640000
+        senderCurrencyCode:
+          type: string
+          description: Sender’s payment currency (ISO 4217 alphabetic code)
+          example: UZS
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        receiverAmount:
+          type: integer
+          description: Recipient’s payment amount in the smallest currency units.
+          example: 40000
+        receiverCurrencyCode:
+          type: string
+          description: Recipient’s payment currency (ISO 4217 alphabetic code).
+          example: RUB
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        exchangeRate:
+          type: string
+          description: Conversion rate from senderCurrencyCode to receiverCurrencyCode.
+          example: '0.00000756'
+        sender:
+          $ref: '#/components/schemas/SenderInfo'
+        receiver:
+          $ref: '#/components/schemas/ReceiverInfo'
+        receiverCountry:
+          maxLength: 2
+          minLength: 2
+          type: string
+          description: Recipient’s country (two-letter country code according to ISO 3166-1 Alpha-2).
+          example: RU
+        phone:
+          description: Sender’s phone number linked to the specified card.
+          type: string
+          pattern: \d{12}
+        smsHash:
+          description: SMS Hash
+          type: string
+          example: 2asio1
+    SenderInfo:
+      description: An object containing information about the identity of the transfer initiator.
+      required:
+      - personFirstName
+      - personLastName
+      - birthday
+      - birthPlace
+      - residencyCode
+      - document
+      type: object
+      properties:
+        personFirstName:
+          type: string
+          description: Sender’s first name.
+          example: NIKITA
+        personMiddleName:
+          type: string
+          description: Sender’s middle name.
+          example: IVANOVICH
+        personLastName:
+          type: string
+          description: Sender’s first name.
+          example: ABRAMOV
         birthday:
-          description: Date of birth in the format YYYY-MM-DD (ISO 8601)
           type: string
-          example: '1999-12-15'
+          description: Date of birth in the format YYYY-MM-DD (ISO 8601).
+          example: '2000-04-18'
         birthPlace:
           type: string
           description: Place of birth.
           example: NAMAGAN REGION
+        residencyCode:
+          description: "Residency code according to directory 027\n  \"1\" - Resident\n  \"2\" - Non-resident\n"
+          type: string
+          enum:
+          - '1'
+          - '2'
+          example: '1'
+        document:
+          $ref: '#/components/schemas/IdentityDocument'
+    ErrorDetails:
+      required:
+      - message
+      - field
+      type: object
+      properties:
+        field:
+          type: string
+          description: Field name from the request body
+          example: externalTransferId
+        message:
+          type: string
+          description: Error description in the specified field
+          example: Must not be null
     ResendOTPRequest:
       required:
       - externalTransferId
@@ -268,6 +481,21 @@ components:
           description: SMS Hash
           type: string
           example: 2asio1
+    ConfirmDebitRequest:
+      required:
+      - code
+      - externalTransferId
+      type: object
+      properties:
+        externalTransferId:
+          type: string
+          description: Transfer ID in the partner's system
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        code:
+          pattern: '[0-9a-zA-Z]{4,6}'
+          type: string
+          description: OTP code
+          example: '77777'
     TransferStatusResponse:
       required:
       - completedDateTime
@@ -367,252 +595,24 @@ components:
           type: string
           description: Card token
           example: vlKeomyUYGh8ktD+1hvI68kuApMKq1s8uyfgvHA=
-    ErrorDetails:
+    ReceiverInfo:
+      description: An object containing information about the identity of the transfer recipient.
       required:
-      - message
-      - field
+      - personFullName
       type: object
       properties:
-        field:
+        personFullName:
+          description: Recipient's full name (First, Middle, Last).
           type: string
-          description: Field name from the request body
-          example: externalTransferId
-        message:
-          type: string
-          description: Error description in the specified field
-          example: Must not be null
-    CancelDebitRequest:
-      required:
-      - externalTransferId
-      type: object
-      properties:
-        externalTransferId:
-          type: string
-          description: Transfer ID in the partner's system
-          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
-        reason:
-          type: string
-          description: Cancelation reason
-          example: Debiting error
-    ConfirmDebitRequest:
-      required:
-      - code
-      - externalTransferId
-      type: object
-      properties:
-        externalTransferId:
-          type: string
-          description: Transfer ID in the partner's system
-          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
-        code:
-          pattern: '[0-9a-zA-Z]{4,6}'
-          type: string
-          description: OTP code
-          example: '77777'
-    Error:
-      type: object
-      properties:
-        errorCode:
-          type: integer
-          example: 0
-        errorMessage:
-          type: string
-          example: string
-        errorDetails:
-          type: object
-          additionalProperties: true
-    SenderInfo:
-      description: An object containing information about the identity of the transfer initiator.
-      required:
-      - personFirstName
-      - personLastName
-      - birthday
-      - birthPlace
-      - residencyCode
-      - document
-      type: object
-      properties:
-        personFirstName:
-          type: string
-          description: Sender’s first name.
-          example: NIKITA
-        personMiddleName:
-          type: string
-          description: Sender’s middle name.
-          example: IVANOVICH
-        personLastName:
-          type: string
-          description: Sender’s first name.
-          example: ABRAMOV
+          example: O VON CHAN
         birthday:
+          description: Date of birth in the format YYYY-MM-DD (ISO 8601)
           type: string
-          description: Date of birth in the format YYYY-MM-DD (ISO 8601).
-          example: '2000-04-18'
+          example: '1999-12-15'
         birthPlace:
           type: string
           description: Place of birth.
           example: NAMAGAN REGION
-        residencyCode:
-          description: "Residency code according to directory 027\n  \"1\" - Resident\n  \"2\" - Non-resident\n"
-          type: string
-          enum:
-          - '1'
-          - '2'
-          example: '1'
-        document:
-          $ref: '#/components/schemas/IdentityDocument'
-    CheckDebitRequest:
-      required:
-      - externalTransferId
-      - receiver
-      - receiverAccount
-      - receiverCountry
-      - receiverCurrencyCode
-      - sender
-      - senderAmount
-      - senderCurrencyCode
-      - phone
-      type: object
-      properties:
-        clientId:
-          type: string
-          description: Client ID in the partner's system.
-          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
-        externalTransferId:
-          type: string
-          description: Transfer ID in the partner’s system.
-          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
-        receiverAccount:
-          type: string
-          description: Masked recipient’s card number or account number.
-          example: 553609******2598
-        senderCardToken:
-          type:
-          - string
-          - 'null'
-          description: Card token. Not sent if senderCardPan and senderCardExpireDate are provided.
-          example: vlKeomyUYGh8ktD+1hvI68kuApMKq1s8uyfgvHA=
-        senderCardPan:
-          type:
-          - string
-          - 'null'
-          description: Card PAN. Not sent if senderCardToken is provided.
-          example: '5536123443212699'
-        senderCardExpireDate:
-          type:
-          - string
-          - 'null'
-          description: Card expiration date in the format YYMM. Not sent if senderCardToken is provided.
-          example: '2811'
-        senderAmount:
-          type: integer
-          description: Sender’s payment amount in the minimal currency units.
-          example: 13640000
-        senderCurrencyCode:
-          type: string
-          description: Sender’s payment currency (ISO 4217 alphabetic code)
-          example: UZS
-          enum:
-          - UZS
-          - RUB
-          - USD
-          - EUR
-          - TJS
-        receiverAmount:
-          type: integer
-          description: Recipient’s payment amount in the smallest currency units.
-          example: 40000
-        receiverCurrencyCode:
-          type: string
-          description: Recipient’s payment currency (ISO 4217 alphabetic code).
-          example: RUB
-          enum:
-          - UZS
-          - RUB
-          - USD
-          - EUR
-          - TJS
-        exchangeRate:
-          type: string
-          description: Conversion rate from senderCurrencyCode to receiverCurrencyCode.
-          example: '0.00000756'
-        sender:
-          $ref: '#/components/schemas/SenderInfo'
-        receiver:
-          $ref: '#/components/schemas/ReceiverInfo'
-        receiverCountry:
-          maxLength: 2
-          minLength: 2
-          type: string
-          description: Recipient’s country (two-letter country code according to ISO 3166-1 Alpha-2).
-          example: RU
-        phone:
-          description: Sender’s phone number linked to the specified card.
-          type: string
-          pattern: \d{12}
-        smsHash:
-          description: SMS Hash
-          type: string
-          example: 2asio1
-    CheckDebitResponse:
-      required:
-      - externalTransferId
-      - status
-      - transferId
-      type: object
-      properties:
-        externalTransferId:
-          type: string
-          description: Transfer ID on the partner's side
-          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
-        transferId:
-          type: string
-          description: Transfer ID on the Crossborder Transfer side
-          format: uuid
-          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
-        senderAmount:
-          type: integer
-          description: Sender's payment amount in minimal units
-          example: 13640000
-        senderCurrencyCode:
-          type: string
-          description: Sender's payment currency (ISO 4217 alphabetical code)
-          example: UZS
-          enum:
-          - UZS
-          - RUB
-          - USD
-          - EUR
-          - TJS
-        receiverAmount:
-          type: integer
-          description: Recipient's payment amount in minimal units
-          example: 40000
-        receiverCurrencyCode:
-          type: string
-          description: Recipient's currency (ISO 4217 alphabetical code)
-          example: RUB
-          enum:
-          - UZS
-          - RUB
-          - USD
-          - EUR
-          - TJS
-        exchangeRate:
-          type: string
-          description: Conversion rate from senderCurrencyCode to receiverCurrencyCode
-          example: '0.00000756'
-        status:
-          type: string
-          description: Transfer status
-          example: APPROVED
-          enum:
-          - REGISTERED
-          - PENDING
-          - APPROVED
-          - SUCCESS
-          - FAILED
-          - REVERSED
     ErrorResponse:
       required:
       - errorCode

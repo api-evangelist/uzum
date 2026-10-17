@@ -225,13 +225,93 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
-    ReceiverCardsByPANRequest:
+    Error:
       type: object
       properties:
-        cardPan:
-          description: Recipient’s card number
+        errorCode:
+          type: integer
+          example: 0
+        errorMessage:
           type: string
-          example: '9860101111115488'
+          example: string
+        errorDetails:
+          type: object
+          additionalProperties: true
+    CheckCreditResponse:
+      required:
+      - externalTransferId
+      - status
+      - transferId
+      type: object
+      properties:
+        externalTransferId:
+          type: string
+          description: Payment identificator on the partner's side
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        transferId:
+          type: string
+          description: Payment identificator on the Uzum Crossborder Transfer side
+          format: uuid
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        senderAmount:
+          type: integer
+          description: Amount sent by the payment sender in minimum currency units
+          example: 40000
+        senderCurrencyCode:
+          type: string
+          description: Currency of the payment sender (ISO 4217 alphabetic code)
+          example: RUB
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        receiverPaymentSystem:
+          type: string
+          description: Payment system of the recipient's card
+          enum:
+          - HUMO
+          - UZCARD
+          - MASTERCARD
+          - VISA
+        receiverAmount:
+          type: integer
+          description: Amount received by the recipient in minimum currency units
+          example: 13640000
+        receiverCurrencyCode:
+          type: string
+          description: Currency of the payment recipient (ISO 4217 alphabetic code)
+          example: UZS
+          enum:
+          - UZS
+          - RUB
+          - USD
+          - EUR
+          - TJS
+        receiverCardholderName:
+          type: string
+          description: Cardholder's name
+          example: Ivanov Ivan
+        receiverCardNumber:
+          type: string
+          description: Masked card number of the recipient
+          example: 986010******5488
+        exchangeRate:
+          type: string
+          description: Conversion rate from senderCurrencyCode to receiverCurrencyCode
+          example: '140.0000'
+        status:
+          type: string
+          description: Transfer status in Crossborder Transfer
+          example: REGISTERED
+          enum:
+          - REGISTERED
+          - PENDING
+          - APPROVED
+          - SUCCESS
+          - FAILED
+          - REVERSED
     ReceiverBanksResponse:
       type: object
       properties:
@@ -276,6 +356,20 @@ components:
             - HMK
             - MKR
             - UZB
+    ConfirmCreditRequest:
+      required:
+      - externalTransferId
+      type: object
+      properties:
+        externalTransferId:
+          type: string
+          description: Payment identificator on the partner's side.
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
+        transferId:
+          type: string
+          description: Payment identificator on the Uzum Crossborder Transfer side
+          format: uuid
+          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
     CardResponse:
       type: object
       required:
@@ -352,35 +446,17 @@ components:
           description: Masked card number.
           type: string
           example: '**9010'
-    PersonalData:
-      required:
-      - personFullName
+    ReceiverCardsByPhoneResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/CardResponse'
+    ReceiverCardsByPANRequest:
       type: object
       properties:
-        personFullName:
+        cardPan:
+          description: Recipient’s card number
           type: string
-          description: User's name (full name).
-          example: ABRAMOV NIKITA YUREVICH
-        birthday:
-          type: string
-          description: Date of birth in the format YYYY-MM-DD
-          example: '2000-04-18'
-        birthPlace:
-          type: string
-          description: Place of birth
-          example: Moscow
-        nationality:
-          type: string
-          description: Citizenship code according to ISO 3166-1
-          example: '860'
-        address:
-          type: string
-          description: Address of residence
-          example: Moscow, Tayninskaya 15
-        passport:
-          type: string
-          description: Passport details. Series and number
-          example: '4109355455'
+          example: '9860101111115488'
     ErrorDetails:
       required:
       - message
@@ -395,140 +471,6 @@ components:
           type: string
           description: Error description in the specified field
           example: Must not be null
-    CheckCreditResponse:
-      required:
-      - externalTransferId
-      - status
-      - transferId
-      type: object
-      properties:
-        externalTransferId:
-          type: string
-          description: Payment identificator on the partner's side
-          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
-        transferId:
-          type: string
-          description: Payment identificator on the Uzum Crossborder Transfer side
-          format: uuid
-          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
-        senderAmount:
-          type: integer
-          description: Amount sent by the payment sender in minimum currency units
-          example: 40000
-        senderCurrencyCode:
-          type: string
-          description: Currency of the payment sender (ISO 4217 alphabetic code)
-          example: RUB
-          enum:
-          - UZS
-          - RUB
-          - USD
-          - EUR
-          - TJS
-        receiverPaymentSystem:
-          type: string
-          description: Payment system of the recipient's card
-          enum:
-          - HUMO
-          - UZCARD
-          - MASTERCARD
-          - VISA
-        receiverAmount:
-          type: integer
-          description: Amount received by the recipient in minimum currency units
-          example: 13640000
-        receiverCurrencyCode:
-          type: string
-          description: Currency of the payment recipient (ISO 4217 alphabetic code)
-          example: UZS
-          enum:
-          - UZS
-          - RUB
-          - USD
-          - EUR
-          - TJS
-        receiverCardholderName:
-          type: string
-          description: Cardholder's name
-          example: Ivanov Ivan
-        receiverCardNumber:
-          type: string
-          description: Masked card number of the recipient
-          example: 986010******5488
-        exchangeRate:
-          type: string
-          description: Conversion rate from senderCurrencyCode to receiverCurrencyCode
-          example: '140.0000'
-        status:
-          type: string
-          description: Transfer status in Crossborder Transfer
-          example: REGISTERED
-          enum:
-          - REGISTERED
-          - PENDING
-          - APPROVED
-          - SUCCESS
-          - FAILED
-          - REVERSED
-    Error:
-      type: object
-      properties:
-        errorCode:
-          type: integer
-          example: 0
-        errorMessage:
-          type: string
-          example: string
-        errorDetails:
-          type: object
-          additionalProperties: true
-    ReceiverBanksRequest:
-      type: object
-      required:
-      - phoneNumber
-      properties:
-        phone:
-          description: Recipient's phone number
-          type: string
-          pattern: ^\d{12}$
-          example: '998910142976'
-    ConfirmCreditRequest:
-      required:
-      - externalTransferId
-      type: object
-      properties:
-        externalTransferId:
-          type: string
-          description: Payment identificator on the partner's side.
-          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
-        transferId:
-          type: string
-          description: Payment identificator on the Uzum Crossborder Transfer side
-          format: uuid
-          example: a7dc3714-eb07-4ef9-bf97-a1f2b1af219b
-    ReceiverCardsByPhoneResponse:
-      type: array
-      items:
-        $ref: '#/components/schemas/CardResponse'
-    ErrorResponse:
-      required:
-      - errorCode
-      - errorMessage
-      type: object
-      properties:
-        errorCode:
-          type: integer
-          description: Integer error code
-          example: 81
-        errorMessage:
-          type: string
-          description: Error text
-          example: Internal error
-        errorDetails:
-          type: array
-          description: Error description
-          items:
-            $ref: '#/components/schemas/ErrorDetails'
     TransferResponse:
       required:
       - completedDateTime
@@ -620,14 +562,54 @@ components:
           - SUCCESS
           - FAILED
           - REVERSED
-    ReceiverCardsByPhoneRequest:
+    PersonalData:
+      required:
+      - personFullName
       type: object
       properties:
-        phone:
-          description: Phone number linked to the card
+        personFullName:
           type: string
-          pattern: ^\d{12}$
-          example: '998910142976'
+          description: User's name (full name).
+          example: ABRAMOV NIKITA YUREVICH
+        birthday:
+          type: string
+          description: Date of birth in the format YYYY-MM-DD
+          example: '2000-04-18'
+        birthPlace:
+          type: string
+          description: Place of birth
+          example: Moscow
+        nationality:
+          type: string
+          description: Citizenship code according to ISO 3166-1
+          example: '860'
+        address:
+          type: string
+          description: Address of residence
+          example: Moscow, Tayninskaya 15
+        passport:
+          type: string
+          description: Passport details. Series and number
+          example: '4109355455'
+    ErrorResponse:
+      required:
+      - errorCode
+      - errorMessage
+      type: object
+      properties:
+        errorCode:
+          type: integer
+          description: Integer error code
+          example: 81
+        errorMessage:
+          type: string
+          description: Error text
+          example: Internal error
+        errorDetails:
+          type: array
+          description: Error description
+          items:
+            $ref: '#/components/schemas/ErrorDetails'
     CheckCreditRequest:
       required:
       - externalTransferId
@@ -766,6 +748,24 @@ components:
           description: Recepient's ersonal data
           allOf:
           - $ref: '#/components/schemas/PersonalData'
+    ReceiverCardsByPhoneRequest:
+      type: object
+      properties:
+        phone:
+          description: Phone number linked to the card
+          type: string
+          pattern: ^\d{12}$
+          example: '998910142976'
+    ReceiverBanksRequest:
+      type: object
+      required:
+      - phoneNumber
+      properties:
+        phone:
+          description: Recipient's phone number
+          type: string
+          pattern: ^\d{12}$
+          example: '998910142976'
   securitySchemes:
     basicAuth:
       type: http
